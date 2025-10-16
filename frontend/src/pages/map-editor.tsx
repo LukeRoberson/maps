@@ -211,6 +211,21 @@ const DrawControls: React.FC<DrawControlsProps> = ({
   return null;
 };
 
+// Component to capture map instance for setting default view
+interface MapViewControllerProps {
+  onMapReady: (map: L.Map) => void;
+}
+
+const MapViewController: React.FC<MapViewControllerProps> = ({ onMapReady }) => {
+  const map = useMap();
+  
+  useEffect(() => {
+    onMapReady(map);
+  }, [map, onMapReady]);
+  
+  return null;
+};
+
 const MapEditor: React.FC = () => {
   const { projectId, mapAreaId } = useParams<{
     projectId: string;
@@ -234,6 +249,7 @@ const MapEditor: React.FC = () => {
   const [isEditingName, setIsEditingName] = useState(false);
   const [editingName, setEditingName] = useState('');
   const [pendingBoundaryEdit, setPendingBoundaryEdit] = useState<[number, number][] | null>(null);
+  const [mapInstance, setMapInstance] = useState<L.Map | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -520,6 +536,26 @@ const MapEditor: React.FC = () => {
     alert('Export functionality will capture the map as PNG');
   };
 
+  const handleSetDefaultView = async (): Promise<void> => {
+    if (!mapInstance || !mapAreaId) return;
+
+    const center = mapInstance.getCenter();
+    const zoom = mapInstance.getZoom();
+
+    try {
+      const updated = await apiClient.updateMapArea(parseInt(mapAreaId), {
+        default_center_lat: center.lat,
+        default_center_lon: center.lng,
+        default_zoom: zoom,
+      });
+      setMapArea(updated);
+      alert(`Default view saved!\nCenter: ${center.lat.toFixed(6)}, ${center.lng.toFixed(6)}\nZoom: ${zoom}`);
+    } catch (error) {
+      console.error('Failed to set default view:', error);
+      alert('Failed to save default view. Please try again.');
+    }
+  };
+
   if (loading) {
     return <div className="loading">Loading map...</div>;
   }
@@ -566,6 +602,11 @@ const MapEditor: React.FC = () => {
           {boundary && (
             <p className="boundary-status">
               ✓ Boundary defined ({boundary.coordinates.length} points)
+            </p>
+          )}
+          {mapArea.default_center_lat && mapArea.default_center_lon && (
+            <p className="boundary-status">
+              ✓ Default view set (zoom {mapArea.default_zoom})
             </p>
           )}
         </div>
@@ -650,6 +691,13 @@ const MapEditor: React.FC = () => {
               >
                 {boundary ? 'Edit Boundary' : 'Define Boundary'}
               </button>
+              <button
+                className="btn btn-secondary"
+                onClick={handleSetDefaultView}
+                title="Set current map view as default for this map"
+              >
+                Set Default View
+              </button>
               <button className="btn btn-success" onClick={handleExport}>
                 Export PNG
               </button>
@@ -667,10 +715,14 @@ const MapEditor: React.FC = () => {
       <div className="map-container">
         <MapContainer
           key={`map-${mapAreaId}`}
-          center={[project.center_lat, project.center_lon]}
-          zoom={project.zoom_level}
+          center={[
+            mapArea.default_center_lat ?? project.center_lat,
+            mapArea.default_center_lon ?? project.center_lon,
+          ]}
+          zoom={mapArea.default_zoom ?? project.zoom_level}
           style={{ height: '100%', width: '100%' }}
         >
+          <MapViewController onMapReady={setMapInstance} />
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

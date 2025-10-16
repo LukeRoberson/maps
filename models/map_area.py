@@ -17,6 +17,9 @@ class MapArea:
         name (str): Area name
         area_type (str): Type of area (master, suburb, individual)
         boundary_id (Optional[int]): Associated boundary ID
+        default_center_lat (Optional[float]): Default map center latitude
+        default_center_lon (Optional[float]): Default map center longitude
+        default_zoom (Optional[int]): Default map zoom level
         created_at (datetime): Creation timestamp
         updated_at (datetime): Last update timestamp
     
@@ -38,6 +41,9 @@ class MapArea:
         area_type: str,
         parent_id: Optional[int] = None,
         boundary_id: Optional[int] = None,
+        default_center_lat: Optional[float] = None,
+        default_center_lon: Optional[float] = None,
+        default_zoom: Optional[int] = None,
         id: Optional[int] = None,
         created_at: Optional[datetime] = None,
         updated_at: Optional[datetime] = None
@@ -51,6 +57,9 @@ class MapArea:
             area_type (str): Type of area
             parent_id (Optional[int]): Parent area ID
             boundary_id (Optional[int]): Boundary ID
+            default_center_lat (Optional[float]): Default center latitude
+            default_center_lon (Optional[float]): Default center longitude
+            default_zoom (Optional[int]): Default zoom level
             id (Optional[int]): Map area ID
             created_at (Optional[datetime]): Creation timestamp
             updated_at (Optional[datetime]): Update timestamp
@@ -74,6 +83,9 @@ class MapArea:
         self.name = name
         self.area_type = area_type
         self.boundary_id = boundary_id
+        self.default_center_lat = default_center_lat
+        self.default_center_lon = default_center_lon
+        self.default_zoom = default_zoom
         self.created_at = created_at or datetime.utcnow()
         self.updated_at = updated_at or datetime.utcnow()
 
@@ -92,6 +104,9 @@ class MapArea:
             'name': self.name,
             'area_type': self.area_type,
             'boundary_id': self.boundary_id,
+            'default_center_lat': self.default_center_lat,
+            'default_center_lon': self.default_center_lon,
+            'default_zoom': self.default_zoom,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
@@ -126,6 +141,9 @@ class MapArea:
             name=data['name'],
             area_type=data['area_type'],
             boundary_id=data.get('boundary_id'),
+            default_center_lat=data.get('default_center_lat'),
+            default_center_lon=data.get('default_center_lon'),
+            default_zoom=data.get('default_zoom'),
             created_at=created_at,
             updated_at=updated_at
         )

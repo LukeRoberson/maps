@@ -57,9 +57,10 @@ class MapAreaService:
         query = """
             INSERT INTO map_areas (
                 project_id, parent_id, name,
-                area_type, boundary_id
+                area_type, boundary_id,
+                default_center_lat, default_center_lon, default_zoom
             )
-            VALUES (?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """
         
         cursor = self.db.execute(
@@ -69,7 +70,10 @@ class MapAreaService:
                 map_area.parent_id,
                 map_area.name,
                 map_area.area_type,
-                map_area.boundary_id
+                map_area.boundary_id,
+                map_area.default_center_lat,
+                map_area.default_center_lon,
+                map_area.default_zoom
             )
         )
         
@@ -101,6 +105,9 @@ class MapAreaService:
                 name=row['name'],
                 area_type=row['area_type'],
                 boundary_id=row['boundary_id'],
+                default_center_lat=row['default_center_lat'],
+                default_center_lon=row['default_center_lon'],
+                default_zoom=row['default_zoom'],
                 created_at=datetime.fromisoformat(row['created_at']),
                 updated_at=datetime.fromisoformat(row['updated_at'])
             )
@@ -148,6 +155,9 @@ class MapAreaService:
                     name=row['name'],
                     area_type=row['area_type'],
                     boundary_id=row['boundary_id'],
+                    default_center_lat=row['default_center_lat'],
+                    default_center_lon=row['default_center_lon'],
+                    default_zoom=row['default_zoom'],
                     created_at=datetime.fromisoformat(row['created_at']),
                     updated_at=datetime.fromisoformat(row['updated_at'])
                 )
@@ -171,7 +181,6 @@ class MapAreaService:
         
         all_areas = self.list_map_areas(project_id)
         
-        area_dict = {area.id: area for area in all_areas}
         hierarchy = {'master': None, 'suburbs': [], 'individuals': []}
         
         for area in all_areas:
@@ -200,7 +209,14 @@ class MapAreaService:
             Optional[MapArea]: Updated map area if found, None otherwise
         """
         
-        allowed_fields = ['name', 'parent_id', 'boundary_id']
+        allowed_fields = [
+            'name',
+            'parent_id',
+            'boundary_id',
+            'default_center_lat',
+            'default_center_lon',
+            'default_zoom'
+        ]
         
         set_clauses = []
         values = []

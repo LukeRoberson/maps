@@ -16,6 +16,9 @@ export interface MapArea {
   name: string;
   area_type: 'master' | 'suburb' | 'individual';
   boundary_id?: number;
+  default_center_lat?: number;
+  default_center_lon?: number;
+  default_zoom?: number;
   created_at?: string;
   updated_at?: string;
 }
