@@ -2,7 +2,7 @@
 Boundary service for business logic operations.
 """
 
-from typing import List, Optional
+from typing import List, Optional, Tuple
 import json
 from datetime import datetime
 
@@ -27,6 +27,8 @@ class BoundaryService:
             Update a boundary
         delete_boundary:
             Delete a boundary
+        is_within_boundary:
+            Check if coordinates are within a boundary
     """
 
     def __init__(self) -> None:
@@ -38,6 +40,63 @@ class BoundaryService:
         """
         
         self.db = get_db()
+
+    def _point_in_polygon(
+        self,
+        point: Tuple[float, float],
+        polygon: List[List[float]]
+    ) -> bool:
+        """
+        Check if a point is inside a polygon using ray casting algorithm.
+        
+        Args:
+            point (Tuple[float, float]): Point coordinates [lat, lon]
+            polygon (List[List[float]]): Polygon coordinates
+        
+        Returns:
+            bool: True if point is inside polygon
+        """
+        
+        x, y = point
+        n = len(polygon)
+        inside = False
+        
+        j = n - 1
+        for i in range(n):
+            xi, yi = polygon[i]
+            xj, yj = polygon[j]
+            
+            intersect = ((yi > y) != (yj > y)) and \
+                (x < (xj - xi) * (y - yi) / (yj - yi) + xi)
+            if intersect:
+                inside = not inside
+            
+            j = i
+        
+        return inside
+
+    def is_within_boundary(
+        self,
+        coordinates: List[List[float]],
+        parent_boundary: List[List[float]]
+    ) -> bool:
+        """
+        Check if all coordinates are within a parent boundary.
+        
+        Args:
+            coordinates (List[List[float]]): Coordinates to check
+            parent_boundary (List[List[float]]): Parent boundary coordinates
+        
+        Returns:
+            bool: True if all coordinates are within parent boundary
+        """
+        
+        for coord in coordinates:
+            point = (coord[0], coord[1])
+            if not self._point_in_polygon(point, parent_boundary):
+                return False
+        
+        return True
 
     def create_boundary(
         self,

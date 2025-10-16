@@ -125,6 +125,29 @@ const ProjectView: React.FC = () => {
     }
   };
 
+  const handleDelete = async (
+    mapArea: MapArea,
+    type: 'suburb' | 'individual'
+  ): Promise<void> => {
+    const confirmMessage =
+      type === 'suburb'
+        ? `Are you sure you want to delete "${mapArea.name}" and all its individual maps? This cannot be undone.`
+        : `Are you sure you want to delete "${mapArea.name}"? This cannot be undone.`;
+
+    if (!confirm(confirmMessage)) {
+      return;
+    }
+
+    try {
+      await apiClient.deleteMapArea(mapArea.id!);
+      // Reload the project to reflect changes
+      await loadProject();
+    } catch (error) {
+      console.error('Failed to delete map area:', error);
+      alert('Failed to delete. Please try again.');
+    }
+  };
+
   if (loading) {
     return <div className="loading">Loading project...</div>;
   }
@@ -268,6 +291,12 @@ const ProjectView: React.FC = () => {
                           >
                             Edit
                           </button>
+                          <button
+                            className="btn btn-sm btn-danger"
+                            onClick={() => handleDelete(node.suburb, 'suburb')}
+                          >
+                            Delete
+                          </button>
                         </>
                       )}
                     </div>
@@ -328,6 +357,12 @@ const ProjectView: React.FC = () => {
                                       }
                                     >
                                       Open
+                                    </button>
+                                    <button
+                                      className="btn btn-sm btn-danger"
+                                      onClick={() => handleDelete(individual, 'individual')}
+                                    >
+                                      Delete
                                     </button>
                                   </>
                                 )}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MapContainer, TileLayer, useMap, Polygon, Tooltip } from 'react-leaflet';
 import L from 'leaflet';
@@ -17,6 +17,50 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
 });
 
+// Utility function to check if all points are within a boundary polygon
+const isWithinBoundary = (
+  points: [number, number][],
+  boundary: [number, number][]
+): boolean => {
+  // Use Leaflet's polygon contains method for accurate point-in-polygon testing
+  const boundaryPolygon = L.polygon(boundary);
+  
+  for (const point of points) {
+    const latLng = L.latLng(point[0], point[1]);
+    // Check if point is inside or on the boundary
+    if (!boundaryPolygon.getBounds().contains(latLng)) {
+      return false;
+    }
+    // More precise check using ray casting
+    const polygonPoints = boundary.map(coord => L.latLng(coord[0], coord[1]));
+    if (!isPointInPolygon(latLng, polygonPoints)) {
+      return false;
+    }
+  }
+  
+  return true;
+};
+
+// Ray casting algorithm for point-in-polygon test
+const isPointInPolygon = (point: L.LatLng, polygon: L.LatLng[]): boolean => {
+  let inside = false;
+  const x = point.lat;
+  const y = point.lng;
+  
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    const xi = polygon[i].lat;
+    const yi = polygon[i].lng;
+    const xj = polygon[j].lat;
+    const yj = polygon[j].lng;
+    
+    const intersect = ((yi > y) !== (yj > y)) &&
+      (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+    if (intersect) inside = !inside;
+  }
+  
+  return inside;
+};
+
 interface DrawControlsProps {
   mode: 'boundary' | 'annotation' | 'suburb' | 'individual';
   existingBoundary?: Boundary | null;
@@ -30,15 +74,21 @@ const DrawControls: React.FC<DrawControlsProps> = ({
   onBoundaryCreated,
 }) => {
   const map = useMap();
+  const editableLayerRef = useRef<L.Polygon | null>(null);
+  const boundaryLoadedRef = useRef<boolean>(false);
 
   useEffect(() => {
+    // Store created layers for cleanup
+    const createdLayers: L.Layer[] = [];
+
     // Initialize Geoman on the map
     map.pm.addControls({
       position: 'topright',
       drawMarker: mode === 'annotation',
       drawPolyline: mode === 'annotation',
-      drawRectangle: true,
-      drawPolygon: true,
+      // Only allow drawing new boundaries if one doesn't exist
+      drawRectangle: mode === 'boundary' && !existingBoundary ? true : mode !== 'boundary',
+      drawPolygon: mode === 'boundary' && !existingBoundary ? true : mode !== 'boundary',
       drawCircle: false,
       drawCircleMarker: false,
       drawText: false,
@@ -63,21 +113,54 @@ const DrawControls: React.FC<DrawControlsProps> = ({
     });
 
     // Load existing boundary into editable layer when in boundary mode
-    if (mode === 'boundary' && existingBoundary) {
+    // Only create the polygon once per boundary edit session
+    if (mode === 'boundary' && existingBoundary && !boundaryLoadedRef.current) {
       const polygon = L.polygon(existingBoundary.coordinates, {
         color: '#3498db',
         weight: 3,
         fillColor: '#3498db',
         fillOpacity: 0.2,
+        smoothFactor: 1,
       }).addTo(map);
       
-      // Enable editing for this layer
-      (polygon as any).pm.enable();
+      editableLayerRef.current = polygon;
+      boundaryLoadedRef.current = true;
+      createdLayers.push(polygon);
+      
+      // Enable editing for this layer with Geoman
+      polygon.pm.enable({
+        allowSelfIntersection: false,
+        preventMarkerRemoval: false,
+        snappable: true,
+        snapDistance: 20,
+      });
+      
+      // Listen to vertex drag events for real-time updates
+      polygon.on('pm:vertexadded pm:vertexremoved pm:markerdrag pm:markerdragend', () => {
+        // Force redraw during vertex manipulation
+        polygon.redraw();
+      });
+      
+      // Listen to edit events on this specific layer
+      polygon.on('pm:edit', (e: any) => {
+        console.log('Boundary edited!', e);
+        if (onBoundaryCreated) {
+          const geoJSON = polygon.toGeoJSON();
+          if (geoJSON.geometry.type === 'Polygon') {
+            const coordinates = geoJSON.geometry.coordinates[0].map(
+              (coord: number[]) => [coord[1], coord[0]] as [number, number]
+            );
+            console.log('New coordinates:', coordinates);
+            onBoundaryCreated(coordinates);
+          }
+        }
+      });
     }
 
     // Handle shape creation
-    map.on('pm:create', (e: any) => {
+    const handleCreate = (e: any) => {
       const layer = e.layer;
+      createdLayers.push(layer);
 
       if ((mode === 'boundary' || mode === 'suburb' || mode === 'individual') && onBoundaryCreated) {
         // Extract coordinates from the drawn shape
@@ -95,31 +178,35 @@ const DrawControls: React.FC<DrawControlsProps> = ({
       } else {
         console.log('Shape created:', e.shape, layer.toGeoJSON());
       }
-    });
-
-    // Handle shape editing
-    map.on('pm:edit', (e: any) => {
-      if ((mode === 'boundary' || mode === 'suburb' || mode === 'individual') && onBoundaryCreated) {
-        const layer = e.layer;
-        const geoJSON = layer.toGeoJSON();
-        let coordinates: [number, number][] = [];
-
-        if (geoJSON.geometry.type === 'Polygon') {
-          coordinates = geoJSON.geometry.coordinates[0].map(
-            (coord: number[]) => [coord[1], coord[0]] as [number, number]
-          );
-          onBoundaryCreated(coordinates);
-        }
-      }
-    });
-
-    // Cleanup on unmount
-    return () => {
-      map.pm.removeControls();
-      map.off('pm:create');
-      map.off('pm:edit');
     };
-  }, [map, mode, existingBoundary, onBoundaryCreated]);
+
+    map.on('pm:create', handleCreate);
+
+    // Cleanup on unmount or mode change
+    return () => {
+      map.off('pm:create', handleCreate);
+      map.pm.removeControls();
+      
+      // Clear the refs when cleaning up
+      if (editableLayerRef.current && map.hasLayer(editableLayerRef.current)) {
+        map.removeLayer(editableLayerRef.current);
+      }
+      editableLayerRef.current = null;
+      boundaryLoadedRef.current = false;
+      
+      // Remove all layers created by this component
+      createdLayers.forEach(layer => {
+        if (map.hasLayer(layer)) {
+          map.removeLayer(layer);
+        }
+      });
+    };
+  }, [map, mode, onBoundaryCreated, existingBoundary]);
+
+  // Reset the loaded flag when existingBoundary changes
+  useEffect(() => {
+    boundaryLoadedRef.current = false;
+  }, [existingBoundary]);
 
   return null;
 };
@@ -146,6 +233,7 @@ const MapEditor: React.FC = () => {
   const [pendingIndividualCoordinates, setPendingIndividualCoordinates] = useState<[number, number][] | null>(null);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editingName, setEditingName] = useState('');
+  const [pendingBoundaryEdit, setPendingBoundaryEdit] = useState<[number, number][] | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -241,12 +329,17 @@ const MapEditor: React.FC = () => {
     }
   };
 
-  const handleBoundaryCreated = async (
+  const handleBoundaryCreated = useCallback(async (
     coordinates: [number, number][]
   ): Promise<void> => {
     if (!mapAreaId) return;
 
     if (mode === 'suburb') {
+      // Validate that suburb is within master boundary
+      if (boundary && !isWithinBoundary(coordinates, boundary.coordinates)) {
+        alert('Error: Suburb boundary must be completely within the master map boundary. Please draw within the red boundary.');
+        return;
+      }
       // Store coordinates and show dialog to name the suburb
       setPendingSuburbCoordinates(coordinates);
       setShowSuburbDialog(true);
@@ -254,38 +347,39 @@ const MapEditor: React.FC = () => {
     }
 
     if (mode === 'individual') {
+      // Validate that individual map is within suburb boundary
+      if (boundary && !isWithinBoundary(coordinates, boundary.coordinates)) {
+        alert('Error: Individual map boundary must be completely within the suburb boundary. Please draw within the blue boundary.');
+        return;
+      }
       // Store coordinates and show dialog to name the individual map
       setPendingIndividualCoordinates(coordinates);
       setShowIndividualDialog(true);
       return;
     }
 
-    try {
+    // In boundary mode with existing boundary, store pending edit
+    if (mode === 'boundary') {
       if (boundary) {
-        // Update existing boundary
-        const updated = await apiClient.updateBoundary(
-          boundary.id!,
-          coordinates
-        );
-        setBoundary(updated);
-        alert('Boundary updated successfully!');
+        setPendingBoundaryEdit(coordinates);
+        return;
       } else {
         // Create new boundary
-        const created = await apiClient.createBoundary({
-          map_area_id: parseInt(mapAreaId),
-          coordinates,
-        });
-        setBoundary(created);
-        alert('Boundary created successfully!');
+        try {
+          const created = await apiClient.createBoundary({
+            map_area_id: parseInt(mapAreaId),
+            coordinates,
+          });
+          setBoundary(created);
+          alert('Boundary created successfully!');
+          setMode('annotation');
+        } catch (error) {
+          console.error('Failed to create boundary:', error);
+          alert('Failed to create boundary. Please try again.');
+        }
       }
-
-      // Switch back to annotation mode
-      setMode('annotation');
-    } catch (error) {
-      console.error('Failed to save boundary:', error);
-      alert('Failed to save boundary. Please try again.');
     }
-  };
+  }, [mapAreaId, mode, boundary]);
 
   const handleCreateSuburb = async (): Promise<void> => {
     if (!projectId || !suburbName || !pendingSuburbCoordinates) return;
@@ -326,6 +420,31 @@ const MapEditor: React.FC = () => {
     setSuburbName('');
     setPendingSuburbCoordinates(null);
     setMode('annotation');
+  };
+
+  const saveBoundaryEdit = async (): Promise<void> => {
+    if (!boundary || !pendingBoundaryEdit) return;
+
+    try {
+      const updated = await apiClient.updateBoundary(
+        boundary.id!,
+        pendingBoundaryEdit
+      );
+      setBoundary(updated);
+      setPendingBoundaryEdit(null);
+      setMode('annotation');
+      alert('Boundary updated successfully!');
+    } catch (error) {
+      console.error('Failed to save boundary:', error);
+      alert('Failed to save boundary. Please try again.');
+    }
+  };
+
+  const cancelBoundaryEdit = (): void => {
+    setPendingBoundaryEdit(null);
+    setMode('annotation');
+    // Reload to reset the boundary display
+    loadMapData();
   };
 
   const handleCreateIndividual = async (): Promise<void> => {
@@ -451,7 +570,25 @@ const MapEditor: React.FC = () => {
           )}
         </div>
         <div className="editor-actions">
-          {mode === 'boundary' ? (
+          {mode === 'boundary' && pendingBoundaryEdit ? (
+            <>
+              <button
+                className="btn btn-success"
+                onClick={saveBoundaryEdit}
+              >
+                Save Boundary
+              </button>
+              <button
+                className="btn btn-outline"
+                onClick={cancelBoundaryEdit}
+              >
+                Cancel
+              </button>
+              <p className="mode-hint">
+                Changes detected. Click "Save Boundary" to keep your edits.
+              </p>
+            </>
+          ) : mode === 'boundary' ? (
             <>
               <button
                 className="btn btn-outline"
@@ -461,7 +598,7 @@ const MapEditor: React.FC = () => {
               </button>
               <p className="mode-hint">
                 {boundary
-                  ? 'Click "Edit layers" button on the map, then modify the boundary and click "Save"'
+                  ? 'Click "Edit layers" button on the map to modify the boundary'
                   : 'Draw a polygon or rectangle to define the boundary'}
               </p>
             </>
@@ -529,6 +666,7 @@ const MapEditor: React.FC = () => {
 
       <div className="map-container">
         <MapContainer
+          key={`map-${mapAreaId}`}
           center={[project.center_lat, project.center_lon]}
           zoom={project.zoom_level}
           style={{ height: '100%', width: '100%' }}
@@ -598,7 +736,14 @@ const MapEditor: React.FC = () => {
           })}
           <DrawControls
             mode={mode}
-            existingBoundary={mode === 'boundary' ? boundary : null}
+            existingBoundary={
+              mode === 'boundary' && boundary
+                ? {
+                    ...boundary,
+                    coordinates: pendingBoundaryEdit || boundary.coordinates,
+                  }
+                : null
+            }
             onBoundaryCreated={handleBoundaryCreated}
           />
         </MapContainer>

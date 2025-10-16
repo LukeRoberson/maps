@@ -6,7 +6,7 @@ from flask import Blueprint, request, jsonify
 from typing import Dict, Any
 
 from models import Boundary
-from services import BoundaryService
+from services import BoundaryService, MapAreaService
 
 boundaries_bp = Blueprint(
     'boundaries',
@@ -14,6 +14,7 @@ boundaries_bp = Blueprint(
     url_prefix='/api/boundaries'
 )
 boundary_service = BoundaryService()
+map_area_service = MapAreaService()
 
 
 @boundaries_bp.route('/map-area/<int:map_area_id>', methods=['GET'])
@@ -63,6 +64,36 @@ def create_boundary() -> Dict[str, Any]:
                 return jsonify(
                     {'error': f'Missing required field: {field}'}
                 ), 400
+        
+        # Get the map area to check if it has a parent
+        map_area = map_area_service.get_map_area(data['map_area_id'])
+        if not map_area:
+            return jsonify({'error': 'Map area not found'}), 404
+        
+        # If map area has a parent, validate boundary is within parent
+        if map_area.parent_id:
+            parent_boundary = boundary_service.get_by_map_area(
+                map_area.parent_id
+            )
+            
+            if parent_boundary:
+                is_valid = boundary_service.is_within_boundary(
+                    data['coordinates'],
+                    parent_boundary.coordinates
+                )
+                
+                if not is_valid:
+                    area_type = 'Individual map' if \
+                        map_area.area_type == 'individual' else 'Suburb'
+                    parent_type = 'suburb' if \
+                        map_area.area_type == 'individual' else \
+                        'master map'
+                    
+                    return jsonify({
+                        'error': f'{area_type} boundary must be '
+                                 f'completely within the {parent_type} '
+                                 f'boundary'
+                    }), 400
         
         boundary = Boundary(
             map_area_id=data['map_area_id'],
