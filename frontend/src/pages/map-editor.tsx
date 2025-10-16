@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { MapContainer, TileLayer, useMap, Polygon, Tooltip } from 'react-leaflet';
+import { MapContainer, TileLayer, useMap, Polygon, Tooltip, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import '@geoman-io/leaflet-geoman-free';
 import '@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css';
@@ -226,6 +226,66 @@ const MapViewController: React.FC<MapViewControllerProps> = ({ onMapReady }) => 
   return null;
 };
 
+// Component to add a fade overlay outside the boundary
+interface BoundaryFadeOverlayProps {
+  boundary: Boundary;
+}
+
+const BoundaryFadeOverlay: React.FC<BoundaryFadeOverlayProps> = ({ boundary }) => {
+  const map = useMap();
+  const overlayLayerRef = useRef<L.Polygon | null>(null);
+
+  useEffect(() => {
+    // Create a world-sized polygon with a hole for the boundary
+    // This creates the inverse mask effect
+    const worldBounds = [
+      [-90, -180],
+      [-90, 180],
+      [90, 180],
+      [90, -180],
+      [-90, -180],
+    ] as [number, number][];
+
+    // Create a polygon with a hole (the boundary area)
+    // The first array is the outer ring (world), the second is the hole (boundary)
+    const polygonWithHole = L.polygon(
+      [worldBounds, boundary.coordinates],
+      {
+        color: 'transparent',
+        fillColor: '#ffffff',
+        fillOpacity: 0.4,
+        interactive: false,
+        pane: 'overlayPane',
+      }
+    );
+
+    // Add to map
+    polygonWithHole.addTo(map);
+    overlayLayerRef.current = polygonWithHole;
+
+    // Update map events to detect when we need to update the overlay
+    const updateOverlay = (): void => {
+      // Force redraw if needed
+      if (overlayLayerRef.current) {
+        overlayLayerRef.current.redraw();
+      }
+    };
+
+    map.on('zoomend moveend', updateOverlay);
+
+    // Cleanup
+    return () => {
+      map.off('zoomend moveend', updateOverlay);
+      if (overlayLayerRef.current) {
+        map.removeLayer(overlayLayerRef.current);
+        overlayLayerRef.current = null;
+      }
+    };
+  }, [map, boundary]);
+
+  return null;
+};
+
 const MapEditor: React.FC = () => {
   const { projectId, mapAreaId } = useParams<{
     projectId: string;
@@ -234,6 +294,8 @@ const MapEditor: React.FC = () => {
   const [project, setProject] = useState<Project | null>(null);
   const [mapArea, setMapArea] = useState<MapArea | null>(null);
   const [boundary, setBoundary] = useState<Boundary | null>(null);
+  const [parentMapArea, setParentMapArea] = useState<MapArea | null>(null);
+  const [parentBoundary, setParentBoundary] = useState<Boundary | null>(null);
   const [suburbs, setSuburbs] = useState<MapArea[]>([]);
   const [suburbBoundaries, setSuburbBoundaries] = useState<Record<number, Boundary>>({});
   const [individuals, setIndividuals] = useState<MapArea[]>([]);
@@ -276,6 +338,30 @@ const MapEditor: React.FC = () => {
       } catch (error) {
         // Boundary might not exist yet, that's ok
         console.log('No boundary found for this map area');
+      }
+
+      // If this is a suburb or individual map, load the parent (master or suburb) boundary
+      if (mapAreaData.parent_id) {
+        try {
+          const parentData = await apiClient.getMapArea(mapAreaData.parent_id);
+          setParentMapArea(parentData);
+          
+          // Load parent boundary
+          try {
+            const parentBoundaryData = await apiClient.getBoundaryByMapArea(
+              mapAreaData.parent_id
+            );
+            setParentBoundary(parentBoundaryData);
+          } catch (error) {
+            console.log('No boundary found for parent map area');
+          }
+        } catch (error) {
+          console.error('Failed to load parent map area:', error);
+        }
+      } else {
+        // Clear parent data if this is a master map
+        setParentMapArea(null);
+        setParentBoundary(null);
       }
 
       // Load child map areas based on type
@@ -604,6 +690,11 @@ const MapEditor: React.FC = () => {
               ✓ Boundary defined ({boundary.coordinates.length} points)
             </p>
           )}
+          {parentBoundary && (mapArea.area_type === 'suburb' || mapArea.area_type === 'individual') && (
+            <p className="boundary-status" style={{ color: '#e74c3c' }}>
+              ⓘ {parentMapArea?.area_type === 'master' ? 'Master' : 'Suburb'} boundary shown (dashed lines)
+            </p>
+          )}
           {mapArea.default_center_lat && mapArea.default_center_lon && (
             <p className="boundary-status">
               ✓ Default view set (zoom {mapArea.default_zoom})
@@ -727,6 +818,24 @@ const MapEditor: React.FC = () => {
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
+          {boundary && mode !== 'boundary' && mapArea.area_type === 'master' && (
+            <BoundaryFadeOverlay boundary={boundary} />
+          )}
+          {parentBoundary && mode !== 'boundary' && (mapArea.area_type === 'suburb' || mapArea.area_type === 'individual') && (
+            <>
+              <BoundaryFadeOverlay boundary={parentBoundary} />
+              <Polygon
+                positions={parentBoundary.coordinates}
+                pathOptions={{
+                  color: '#e74c3c',
+                  weight: 3,
+                  fillColor: 'transparent',
+                  fillOpacity: 0,
+                  dashArray: '10, 10',
+                }}
+              />
+            </>
+          )}
           {boundary && mode !== 'boundary' && (
             <Polygon
               positions={boundary.coordinates}
