@@ -2,12 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MapContainer, TileLayer, useMap, Polygon, Tooltip } from 'react-leaflet';
 import L from 'leaflet';
-import 'leaflet-draw';
+import '@geoman-io/leaflet-geoman-free';
+import '@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css';
 import { apiClient } from '@/services/api-client';
 import type { MapArea, Project, Boundary } from '@/types';
 import './map-editor.css';
 import 'leaflet/dist/leaflet.css';
-import 'leaflet-draw/dist/leaflet.draw.css';
 
 // Fix Leaflet default marker icon issue
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -23,7 +23,7 @@ interface DrawControlsProps {
   onBoundaryCreated?: (coordinates: [number, number][]) => void;
 }
 
-// Component to add drawing controls to the map
+// Component to add drawing controls to the map using Leaflet Geoman
 const DrawControls: React.FC<DrawControlsProps> = ({
   mode,
   existingBoundary,
@@ -32,8 +32,35 @@ const DrawControls: React.FC<DrawControlsProps> = ({
   const map = useMap();
 
   useEffect(() => {
-    const drawnItems = new L.FeatureGroup();
-    map.addLayer(drawnItems);
+    // Initialize Geoman on the map
+    map.pm.addControls({
+      position: 'topright',
+      drawMarker: mode === 'annotation',
+      drawPolyline: mode === 'annotation',
+      drawRectangle: true,
+      drawPolygon: true,
+      drawCircle: false,
+      drawCircleMarker: false,
+      drawText: false,
+      editMode: true,
+      dragMode: false,
+      cutPolygon: false,
+      removalMode: true,
+    });
+
+    // Configure drawing styles based on mode
+    const color = mode === 'boundary' || mode === 'suburb' || mode === 'individual' 
+      ? '#3498db' 
+      : '#2ecc71';
+
+    map.pm.setGlobalOptions({
+      pathOptions: {
+        color,
+        fillColor: color,
+        fillOpacity: 0.2,
+        weight: 3,
+      },
+    });
 
     // Load existing boundary into editable layer when in boundary mode
     if (mode === 'boundary' && existingBoundary) {
@@ -42,59 +69,15 @@ const DrawControls: React.FC<DrawControlsProps> = ({
         weight: 3,
         fillColor: '#3498db',
         fillOpacity: 0.2,
-      });
-      drawnItems.addLayer(polygon);
+      }).addTo(map);
+      
+      // Enable editing for this layer
+      (polygon as any).pm.enable();
     }
 
-    // Configure draw control based on mode
-    const drawConfig =
-      mode === 'boundary' || mode === 'suburb' || mode === 'individual'
-        ? {
-            position: 'topright' as const,
-            draw: {
-              polygon: {
-                allowIntersection: false,
-                showArea: true,
-              },
-              rectangle: {
-                showArea: true,
-              },
-              polyline: false,
-              circle: false,
-              circlemarker: false,
-              marker: false,
-            },
-            edit: {
-              featureGroup: drawnItems,
-              remove: true,
-            },
-          }
-        : {
-            position: 'topright' as const,
-            draw: {
-              polygon: {
-                allowIntersection: false,
-                showArea: true,
-              },
-              polyline: true,
-              rectangle: true,
-              circle: false,
-              circlemarker: false,
-              marker: true,
-            },
-            edit: {
-              featureGroup: drawnItems,
-              remove: true,
-            },
-          };
-
-    const drawControl = new L.Control.Draw(drawConfig);
-    map.addControl(drawControl);
-
-    // Handle draw events
-    map.on(L.Draw.Event.CREATED, (e: any) => {
+    // Handle shape creation
+    map.on('pm:create', (e: any) => {
       const layer = e.layer;
-      drawnItems.addLayer(layer);
 
       if ((mode === 'boundary' || mode === 'suburb' || mode === 'individual') && onBoundaryCreated) {
         // Extract coordinates from the drawn shape
@@ -110,35 +93,31 @@ const DrawControls: React.FC<DrawControlsProps> = ({
 
         onBoundaryCreated(coordinates);
       } else {
-        console.log('Shape created:', e.layerType, layer.toGeoJSON());
+        console.log('Shape created:', e.shape, layer.toGeoJSON());
       }
     });
 
-    map.on(L.Draw.Event.EDITED, (e: any) => {
+    // Handle shape editing
+    map.on('pm:edit', (e: any) => {
       if ((mode === 'boundary' || mode === 'suburb' || mode === 'individual') && onBoundaryCreated) {
-        // Handle edited boundary
-        const layers = e.layers;
-        layers.eachLayer((layer: any) => {
-          const geoJSON = layer.toGeoJSON();
-          if (geoJSON.geometry.type === 'Polygon') {
-            const coordinates = geoJSON.geometry.coordinates[0].map(
-              (coord: number[]) => [coord[1], coord[0]] as [number, number]
-            );
-            onBoundaryCreated(coordinates);
-          }
-        });
-      } else {
-        console.log('Shapes edited:', e.layers);
+        const layer = e.layer;
+        const geoJSON = layer.toGeoJSON();
+        let coordinates: [number, number][] = [];
+
+        if (geoJSON.geometry.type === 'Polygon') {
+          coordinates = geoJSON.geometry.coordinates[0].map(
+            (coord: number[]) => [coord[1], coord[0]] as [number, number]
+          );
+          onBoundaryCreated(coordinates);
+        }
       }
     });
 
-    map.on(L.Draw.Event.DELETED, (e: any) => {
-      console.log('Shapes deleted:', e.layers);
-    });
-
+    // Cleanup on unmount
     return () => {
-      map.removeControl(drawControl);
-      map.removeLayer(drawnItems);
+      map.pm.removeControls();
+      map.off('pm:create');
+      map.off('pm:edit');
     };
   }, [map, mode, existingBoundary, onBoundaryCreated]);
 
