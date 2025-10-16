@@ -165,6 +165,8 @@ const MapEditor: React.FC = () => {
   const [individualName, setIndividualName] = useState('');
   const [showIndividualDialog, setShowIndividualDialog] = useState(false);
   const [pendingIndividualCoordinates, setPendingIndividualCoordinates] = useState<[number, number][] | null>(null);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editingName, setEditingName] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -388,6 +390,34 @@ const MapEditor: React.FC = () => {
     setMode('annotation');
   };
 
+  const startRenaming = (): void => {
+    setIsEditingName(true);
+    setEditingName(mapArea?.name || '');
+  };
+
+  const cancelRenaming = (): void => {
+    setIsEditingName(false);
+    setEditingName('');
+  };
+
+  const handleRename = async (): Promise<void> => {
+    if (!mapAreaId || !editingName.trim()) {
+      cancelRenaming();
+      return;
+    }
+
+    try {
+      const updated = await apiClient.updateMapArea(parseInt(mapAreaId), {
+        name: editingName.trim(),
+      });
+      setMapArea(updated);
+      cancelRenaming();
+    } catch (error) {
+      console.error('Failed to rename map:', error);
+      alert('Failed to rename. Please try again.');
+    }
+  };
+
   const handleExport = async (): Promise<void> => {
     alert('Export functionality will capture the map as PNG');
   };
@@ -404,7 +434,34 @@ const MapEditor: React.FC = () => {
     <div className="map-editor-page">
       <div className="editor-header">
         <div>
-          <h2>{mapArea.name}</h2>
+          {isEditingName ? (
+            <input
+              type="text"
+              className="editor-title-input"
+              value={editingName}
+              onChange={(e) => setEditingName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleRename();
+                } else if (e.key === 'Escape') {
+                  cancelRenaming();
+                }
+              }}
+              onBlur={handleRename}
+              autoFocus
+            />
+          ) : (
+            <h2 onDoubleClick={startRenaming}>
+              {mapArea.name}
+              <button
+                className="btn-icon"
+                onClick={startRenaming}
+                title="Rename"
+              >
+                ✏️
+              </button>
+            </h2>
+          )}
           <p className="breadcrumb">
             {project.name} / {mapArea.area_type}
           </p>

@@ -11,6 +11,43 @@
   margin-bottom: 1.5rem;
 }
 
+.editor-header h2 {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-icon {
+  background: none;
+  border: none;
+  padding: 0.25rem;
+  font-size: 1rem;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.btn-icon:hover {
+  opacity: 1;
+}
+
+.editor-title-input {
+  font-size: 1.5rem;
+  font-weight: 600;
+  padding: 0.25rem 0.5rem;
+  border: 2px solid var(--primary-color);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-primary);
+  width: 400px;
+  max-width: 100%;
+}
+
+.editor-title-input:focus {
+  outline: none;
+  border-color: var(--primary-hover);
+}
+
 .breadcrumb {
   color: var(--text-secondary);
   font-size: 0.875rem;

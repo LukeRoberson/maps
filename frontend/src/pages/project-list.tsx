@@ -8,6 +8,8 @@ const ProjectList: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingProjectId, setEditingProjectId] = useState<number | null>(null);
+  const [editingName, setEditingName] = useState('');
   const [newProject, setNewProject] = useState({
     name: '',
     description: '',
@@ -65,6 +67,34 @@ const ProjectList: React.FC = () => {
     }
   };
 
+  const startRenaming = (project: Project): void => {
+    setEditingProjectId(project.id!);
+    setEditingName(project.name);
+  };
+
+  const cancelRenaming = (): void => {
+    setEditingProjectId(null);
+    setEditingName('');
+  };
+
+  const handleRename = async (projectId: number): Promise<void> => {
+    if (!editingName.trim()) {
+      cancelRenaming();
+      return;
+    }
+
+    try {
+      const updated = await apiClient.updateProject(projectId, {
+        name: editingName.trim(),
+      });
+      setProjects(projects.map((p) => (p.id === projectId ? updated : p)));
+      cancelRenaming();
+    } catch (error) {
+      console.error('Failed to rename project:', error);
+      alert('Failed to rename project. Please try again.');
+    }
+  };
+
   if (loading) {
     return <div className="loading">Loading projects...</div>;
   }
@@ -90,7 +120,27 @@ const ProjectList: React.FC = () => {
           {projects.map((project) => (
             <div key={project.id} className="project-card card">
               <div className="project-card-header">
-                <h3>{project.name}</h3>
+                {editingProjectId === project.id ? (
+                  <input
+                    type="text"
+                    className="rename-input"
+                    value={editingName}
+                    onChange={(e) => setEditingName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleRename(project.id!);
+                      } else if (e.key === 'Escape') {
+                        cancelRenaming();
+                      }
+                    }}
+                    onBlur={() => handleRename(project.id!)}
+                    autoFocus
+                  />
+                ) : (
+                  <h3 onDoubleClick={() => startRenaming(project)}>
+                    {project.name}
+                  </h3>
+                )}
               </div>
               <p className="project-description">{project.description}</p>
               <div className="project-card-footer">
@@ -100,6 +150,14 @@ const ProjectList: React.FC = () => {
                 >
                   Open
                 </button>
+                {editingProjectId !== project.id && (
+                  <button
+                    className="btn btn-sm btn-outline"
+                    onClick={() => startRenaming(project)}
+                  >
+                    Rename
+                  </button>
+                )}
                 <button
                   className="btn btn-danger"
                   onClick={() => handleDeleteProject(project.id!)}

@@ -150,6 +150,11 @@ select:focus {
   background-color: var(--bg-tertiary);
 }
 
+.btn-sm {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+}
+
 .card {
   background-color: var(--bg-primary);
   border-radius: var(--radius-lg);

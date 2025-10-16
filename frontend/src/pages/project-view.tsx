@@ -1,14 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { apiClient } from '@/services/api-client';
-import type { Project, MapHierarchy } from '@/types';
+import type { Project, MapArea } from '@/types';
 import './project-view.css';
+
+interface SuburbNode {
+  suburb: MapArea;
+  individuals: MapArea[];
+}
 
 const ProjectView: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const [project, setProject] = useState<Project | null>(null);
-  const [hierarchy, setHierarchy] = useState<MapHierarchy | null>(null);
+  const [master, setMaster] = useState<MapArea | null>(null);
+  const [suburbNodes, setSuburbNodes] = useState<SuburbNode[]>([]);
+  const [expandedSuburbs, setExpandedSuburbs] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(true);
+  const [editingMapId, setEditingMapId] = useState<number | null>(null);
+  const [editingName, setEditingName] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -19,12 +28,41 @@ const ProjectView: React.FC = () => {
     if (!projectId) return;
 
     try {
-      const [projectData, hierarchyData] = await Promise.all([
+      const [projectData, allMapAreas] = await Promise.all([
         apiClient.getProject(parseInt(projectId)),
-        apiClient.getMapHierarchy(parseInt(projectId)),
+        apiClient.listMapAreas(parseInt(projectId)),
       ]);
       setProject(projectData);
-      setHierarchy(hierarchyData);
+
+      // Build hierarchy
+      const masterMap = allMapAreas.find((m) => m.area_type === 'master');
+      setMaster(masterMap || null);
+
+      if (masterMap) {
+        // Get suburbs that belong to master
+        const suburbs = allMapAreas.filter(
+          (m) => m.area_type === 'suburb' && m.parent_id === masterMap.id
+        );
+
+        // For each suburb, get its individual maps
+        const nodes: SuburbNode[] = suburbs.map((suburb) => ({
+          suburb,
+          individuals: allMapAreas.filter(
+            (m) => m.area_type === 'individual' && m.parent_id === suburb.id
+          ),
+        }));
+
+        setSuburbNodes(nodes);
+        
+        // Auto-expand suburbs that have individual maps
+        const toExpand = new Set<number>();
+        nodes.forEach(node => {
+          if (node.individuals.length > 0) {
+            toExpand.add(node.suburb.id!);
+          }
+        });
+        setExpandedSuburbs(toExpand);
+      }
     } catch (error) {
       console.error('Failed to load project:', error);
     } finally {
@@ -44,6 +82,46 @@ const ProjectView: React.FC = () => {
       navigate(`/projects/${projectId}/maps/${mapArea.id}`);
     } catch (error) {
       console.error('Failed to create master map:', error);
+    }
+  };
+
+  const toggleSuburb = (suburbId: number): void => {
+    const newExpanded = new Set(expandedSuburbs);
+    if (newExpanded.has(suburbId)) {
+      newExpanded.delete(suburbId);
+    } else {
+      newExpanded.add(suburbId);
+    }
+    setExpandedSuburbs(newExpanded);
+  };
+
+  const startRenaming = (mapArea: MapArea): void => {
+    setEditingMapId(mapArea.id!);
+    setEditingName(mapArea.name);
+  };
+
+  const cancelRenaming = (): void => {
+    setEditingMapId(null);
+    setEditingName('');
+  };
+
+  const handleRename = async (mapAreaId: number): Promise<void> => {
+    if (!editingName.trim()) {
+      cancelRenaming();
+      return;
+    }
+
+    try {
+      await apiClient.updateMapArea(mapAreaId, {
+        name: editingName.trim(),
+      });
+      
+      // Reload the project to reflect changes
+      await loadProject();
+      cancelRenaming();
+    } catch (error) {
+      console.error('Failed to rename map area:', error);
+      alert('Failed to rename. Please try again.');
     }
   };
 
@@ -68,7 +146,7 @@ const ProjectView: React.FC = () => {
       </div>
 
       <div className="project-content">
-        {!hierarchy?.master ? (
+        {!master ? (
           <div className="empty-state card">
             <h3>Create Master Map</h3>
             <p>
@@ -80,65 +158,187 @@ const ProjectView: React.FC = () => {
             </button>
           </div>
         ) : (
-          <div className="map-hierarchy">
-            <div className="hierarchy-section">
-              <h3>Master Map</h3>
-              <div className="map-card card">
-                <h4>{hierarchy.master.name}</h4>
-                <button
-                  className="btn btn-primary"
-                  onClick={() =>
-                    navigate(
-                      `/projects/${projectId}/maps/${hierarchy.master?.id}`
-                    )
-                  }
-                >
-                  Edit
-                </button>
+          <div className="tree-view">
+            {/* Master Map */}
+            <div className="tree-node master-node">
+              <div className="tree-node-content">
+                <span className="tree-icon">🗺️</span>
+                {editingMapId === master.id ? (
+                  <input
+                    type="text"
+                    className="tree-rename-input"
+                    value={editingName}
+                    onChange={(e) => setEditingName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleRename(master.id!);
+                      } else if (e.key === 'Escape') {
+                        cancelRenaming();
+                      }
+                    }}
+                    onBlur={() => handleRename(master.id!)}
+                    autoFocus
+                  />
+                ) : (
+                  <span
+                    className="tree-label"
+                    onDoubleClick={() => startRenaming(master)}
+                  >
+                    {master.name}
+                  </span>
+                )}
+                {editingMapId !== master.id && (
+                  <>
+                    <button
+                      className="btn btn-sm btn-outline"
+                      onClick={() => startRenaming(master)}
+                    >
+                      Rename
+                    </button>
+                    <button
+                      className="btn btn-sm btn-outline"
+                      onClick={() => navigate(`/projects/${projectId}/maps/${master.id}`)}
+                    >
+                      Edit Master
+                    </button>
+                  </>
+                )}
               </div>
             </div>
 
-            {hierarchy.suburbs.length > 0 && (
-              <div className="hierarchy-section">
-                <h3>Suburbs</h3>
-                <div className="maps-grid">
-                  {hierarchy.suburbs.map((suburb) => (
-                    <div key={suburb.id} className="map-card card">
-                      <h4>{suburb.name}</h4>
-                      <button
-                        className="btn btn-primary"
-                        onClick={() =>
-                          navigate(`/projects/${projectId}/maps/${suburb.id}`)
-                        }
-                      >
-                        Edit
-                      </button>
-                    </div>
-                  ))}
-                </div>
+            {/* Suburbs */}
+            {suburbNodes.length === 0 ? (
+              <div className="empty-tree-message">
+                <p>No suburbs yet. Open the master map to add suburbs.</p>
               </div>
-            )}
-
-            {hierarchy.individuals.length > 0 && (
-              <div className="hierarchy-section">
-                <h3>Individual Maps</h3>
-                <div className="maps-grid">
-                  {hierarchy.individuals.map((individual) => (
-                    <div key={individual.id} className="map-card card">
-                      <h4>{individual.name}</h4>
+            ) : (
+              <div className="tree-children">
+                {suburbNodes.map((node) => (
+                  <div key={node.suburb.id} className="tree-node suburb-node">
+                    <div className="tree-node-content">
                       <button
-                        className="btn btn-primary"
-                        onClick={() =>
-                          navigate(
-                            `/projects/${projectId}/maps/${individual.id}`
-                          )
-                        }
+                        className="tree-toggle"
+                        onClick={() => toggleSuburb(node.suburb.id!)}
                       >
-                        Edit
+                        {expandedSuburbs.has(node.suburb.id!)
+                          ? '▼'
+                          : '▶'}
                       </button>
+                      <span className="tree-icon">📍</span>
+                      {editingMapId === node.suburb.id ? (
+                        <input
+                          type="text"
+                          className="tree-rename-input"
+                          value={editingName}
+                          onChange={(e) => setEditingName(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              handleRename(node.suburb.id!);
+                            } else if (e.key === 'Escape') {
+                              cancelRenaming();
+                            }
+                          }}
+                          onBlur={() => handleRename(node.suburb.id!)}
+                          autoFocus
+                        />
+                      ) : (
+                        <span
+                          className="tree-label"
+                          onDoubleClick={() => startRenaming(node.suburb)}
+                        >
+                          {node.suburb.name}
+                        </span>
+                      )}
+                      <span className="tree-count">
+                        {node.individuals.length} map{node.individuals.length !== 1 ? 's' : ''}
+                      </span>
+                      {editingMapId !== node.suburb.id && (
+                        <>
+                          <button
+                            className="btn btn-sm btn-outline"
+                            onClick={() => startRenaming(node.suburb)}
+                          >
+                            Rename
+                          </button>
+                          <button
+                            className="btn btn-sm btn-outline"
+                            onClick={() =>
+                              navigate(`/projects/${projectId}/maps/${node.suburb.id}`)
+                            }
+                          >
+                            Edit
+                          </button>
+                        </>
+                      )}
                     </div>
-                  ))}
-                </div>
+
+                    {/* Individual Maps */}
+                    {expandedSuburbs.has(node.suburb.id!) && (
+                      <div className="tree-children">
+                        {node.individuals.length === 0 ? (
+                          <div className="empty-tree-message">
+                            <p>No individual maps yet. Open this suburb to add them.</p>
+                          </div>
+                        ) : (
+                          node.individuals.map((individual) => (
+                            <div
+                              key={individual.id}
+                              className="tree-node individual-node"
+                            >
+                              <div className="tree-node-content">
+                                <span className="tree-icon">📄</span>
+                                {editingMapId === individual.id ? (
+                                  <input
+                                    type="text"
+                                    className="tree-rename-input"
+                                    value={editingName}
+                                    onChange={(e) => setEditingName(e.target.value)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') {
+                                        handleRename(individual.id!);
+                                      } else if (e.key === 'Escape') {
+                                        cancelRenaming();
+                                      }
+                                    }}
+                                    onBlur={() => handleRename(individual.id!)}
+                                    autoFocus
+                                  />
+                                ) : (
+                                  <span
+                                    className="tree-label"
+                                    onDoubleClick={() => startRenaming(individual)}
+                                  >
+                                    {individual.name}
+                                  </span>
+                                )}
+                                {editingMapId !== individual.id && (
+                                  <>
+                                    <button
+                                      className="btn btn-sm btn-outline"
+                                      onClick={() => startRenaming(individual)}
+                                    >
+                                      Rename
+                                    </button>
+                                    <button
+                                      className="btn btn-sm btn-primary"
+                                      onClick={() =>
+                                        navigate(
+                                          `/projects/${projectId}/maps/${individual.id}`
+                                        )
+                                      }
+                                    >
+                                      Open
+                                    </button>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
             )}
           </div>
