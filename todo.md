@@ -4,11 +4,14 @@
 
 - [x] When in suburb view, it is possible to delete the master map boundary (this should not be possible)
 - [x] When in individual map view, it is possible to delete the suburb map boundary (this should not be possible)
-- [ ] Layers: Let's me create an annotation without a layer being selected (however, it won't save)
-- [ ] Layers: Creating a marker and labeling it creates two labels; Only one after refreshing the page
-- [ ] Layers: Hiding a layer hides a marker, but not a polygon; The polygon fades a bit
-- [ ] Layers: Adding a text annotation pops up a box to add the label, then requires me to add the label in the UI anyway
-- [ ] UI: When adding a layer, the create and cancel buttons overhang the box on the right
+- [x] UI: When adding a layer, the create and cancel buttons overhang the box on the right
+- [x] If a layer is not selected and I try to create a polygon, the UI lets me do it (this should be prevented if a layer is not selected)
+- [x] When I click the 'eye' icon on a layer, polygons do not hide; The coloured area within the polygon fades, but the polygon and its label are still clearly visible
+- [ ] When I add a marker (annotation) and label it, two labels appear in the UI. The second label disappears when the next annotation is added, when something is deleted or added, or when the page is refreshed
+- [ ] When I add a text annotation, I get a pop up box to add the label. After entering the label, the UI still has a text box for me add the label
+- [ ] On a map with no layers, I create a new layer, and it appears to be selected by default. I try to create a new annotation, but I'm told to select a layer first. A refresh fixes the issue.
+- [ ] The 'edit annotations' button has two icons at once, the default one and a pencil
+- [ ] Deleting an annotation seems to work. However, after subsequent annotation edits or a refresh, the deleted annotations come back; It seems like they're initially removed from the UI, but not the database
 
 
 ## UI Improvements
@@ -37,12 +40,19 @@
   - [x] Require annotations to be created in a layer
   - [x] Option to hide or show a layer completely
 - [x] Add persistence, so annotations are saved to the database
-- [ ] Remove the 'rotate layers' tool
-- [ ] Remove the 'draw circle marker' tool
-- [ ] When placing an annotation, press 'escape' key to cancel placement
-- [ ] When placing an annotation, don't ask if we want to create a label, just create one
-- [ ] Enable renaming an annotation (text annotation can be renamed with the 'edit layers' tool, but no other type can)
-- [ ] Add a tool to delete an individual annotation within a layer
+- [x] Remove the 'rotate layers' tool
+- [x] Remove the 'draw circle marker' tool
+- [x] When placing an annotation, press 'escape' key to cancel placement
+- [x] When placing an annotation, don't ask if we want to create a label, just create one
+- [x] Rename the 'Edit layers' tool to 'Edit annotations'
+- [x] Edit annotations tool:
+  - [x] Currently allows editing the text of a text annotation
+  - [x] Enable editing the labels of any annotation
+  - [x] This should only be able to edit annotations in the selected layer
+- [x] Delete tool
+  - [x] Currently allows deleting a text annotation
+  - [x] Enable deleting any annotation
+  - [x] This should only be able to delete annotations in the currently selected layer
 
 
 ## Export
