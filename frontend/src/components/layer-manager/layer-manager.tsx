@@ -7,6 +7,8 @@ interface LayerManagerProps {
   mapAreaId: number;
   onLayersChange?: () => void;
   showToast?: (message: string, type: 'success' | 'error' | 'info' | 'warning') => void;
+  activeLayerId?: number | null;
+  onActiveLayerChange?: (layerId: number | null) => void;
 }
 
 /**
@@ -18,6 +20,8 @@ export const LayerManager: React.FC<LayerManagerProps> = ({
   mapAreaId,
   onLayersChange,
   showToast,
+  activeLayerId,
+  onActiveLayerChange,
 }) => {
   const [layers, setLayers] = useState<Layer[]>([]);
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
@@ -224,13 +228,26 @@ export const LayerManager: React.FC<LayerManagerProps> = ({
                           <>
                             <div className="layer-info">
                               <button
+                                onClick={() => onActiveLayerChange?.(layer.id!)}
+                                className={`btn-select ${activeLayerId === layer.id ? 'active' : ''}`}
+                                title={activeLayerId === layer.id ? 'Active layer' : 'Set as active layer'}
+                              >
+                                {activeLayerId === layer.id ? '●' : '○'}
+                              </button>
+                              <button
                                 onClick={() => handleToggleVisibility(layer)}
                                 className={`btn-visibility ${layer.visible ? 'visible' : 'hidden'}`}
                                 title={layer.visible ? 'Hide layer' : 'Show layer'}
                               >
                                 {layer.visible ? '👁' : '👁‍🗨'}
                               </button>
-                              <span className="layer-name">{layer.name}</span>
+                              <span 
+                                className={`layer-name ${activeLayerId === layer.id ? 'active' : ''}`}
+                                onClick={() => onActiveLayerChange?.(layer.id!)}
+                                style={{ cursor: 'pointer' }}
+                              >
+                                {layer.name}
+                              </span>
                             </div>
                             <div className="layer-actions">
                               <button

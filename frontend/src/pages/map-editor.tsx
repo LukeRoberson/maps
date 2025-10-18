@@ -6,7 +6,7 @@ import '@geoman-io/leaflet-geoman-free';
 import '@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css';
 import { apiClient } from '@/services/api-client';
 import { LayerManager } from '@/components/layer-manager';
-import type { MapArea, Project, Boundary } from '@/types';
+import type { MapArea, Project, Boundary, Layer, Annotation } from '@/types';
 import './map-editor.css';
 import 'leaflet/dist/leaflet.css';
 
@@ -76,6 +76,8 @@ interface DrawControlsProps {
   existingBoundary?: Boundary | null;
   onBoundaryCreated?: (coordinates: [number, number][]) => void;
   showToast?: (message: string, type: ToastType) => void;
+  activeLayerId?: number | null;
+  onAnnotationCreated?: (annotation: Annotation) => void;
 }
 
 // Component to add drawing controls to the map using Leaflet Geoman
@@ -84,6 +86,8 @@ const DrawControls: React.FC<DrawControlsProps> = ({
   existingBoundary,
   onBoundaryCreated,
   showToast,
+  activeLayerId,
+  onAnnotationCreated,
 }) => {
   const map = useMap();
   const editableLayerRef = useRef<L.Polygon | null>(null);
@@ -208,40 +212,103 @@ const DrawControls: React.FC<DrawControlsProps> = ({
 
         onBoundaryCreated(coordinates);
       } else if (mode === 'annotation') {
+        // Check if a layer is selected
+        if (!activeLayerId) {
+          if (showToast) {
+            showToast('Please select a layer before creating annotations', 'warning');
+          }
+          // Remove the layer that was just created
+          map.removeLayer(layer);
+          return;
+        }
+
         // Handle annotation creation
         console.log('Annotation created:', e.shape, layer.toGeoJSON());
         
-        // For text markers, prompt for label
-        if (e.shape === 'Text' || e.shape === 'Marker') {
-          const label = prompt('Enter label text:');
-          if (label) {
-            if (e.shape === 'Text') {
-              layer.setText(label);
-            } else {
-              layer.bindTooltip(label, { permanent: true, direction: 'top' });
-            }
-          }
-        }
+        let content: string | null = null;
+        const geoJSON = layer.toGeoJSON();
+        let coordinates: any;
+        let annotationType: 'marker' | 'line' | 'polygon' | 'text' = 'marker';
         
-        // For polygons, offer to add a label
-        if (e.shape === 'Polygon' || e.shape === 'Rectangle') {
+        // Determine annotation type and extract coordinates
+        if (e.shape === 'Text' || e.shape === 'Marker') {
+          annotationType = e.shape === 'Text' ? 'text' : 'marker';
+          content = prompt('Enter label text:');
+          if (!content) {
+            map.removeLayer(layer);
+            return;
+          }
+          
+          if (e.shape === 'Text') {
+            layer.setText(content);
+          } else {
+            layer.bindTooltip(content, { permanent: true, direction: 'top' });
+          }
+          
+          // Extract coordinates [lat, lng]
+          if (geoJSON.geometry.type === 'Point') {
+            coordinates = [geoJSON.geometry.coordinates[1], geoJSON.geometry.coordinates[0]];
+          }
+        } else if (e.shape === 'Line') {
+          annotationType = 'line';
+          if (geoJSON.geometry.type === 'LineString') {
+            coordinates = geoJSON.geometry.coordinates.map(
+              (coord: number[]) => [coord[1], coord[0]]
+            );
+          }
+        } else if (e.shape === 'Polygon' || e.shape === 'Rectangle') {
+          annotationType = 'polygon';
           const addLabel = confirm('Would you like to add a label to this polygon?');
           if (addLabel) {
-            const label = prompt('Enter label text:');
-            if (label) {
-              const center = layer.getBounds().getCenter();
-              layer.bindTooltip(label, {
+            content = prompt('Enter label text:');
+            if (content) {
+              layer.bindTooltip(content, {
                 permanent: true,
                 direction: 'center',
                 className: 'polygon-label'
               });
             }
           }
+          
+          if (geoJSON.geometry.type === 'Polygon') {
+            coordinates = geoJSON.geometry.coordinates[0].map(
+              (coord: number[]) => [coord[1], coord[0]]
+            );
+          }
+        } else if (e.shape === 'CircleMarker') {
+          annotationType = 'marker';
+          content = prompt('Enter label text (optional):');
+          if (content) {
+            layer.bindTooltip(content, { permanent: true, direction: 'top' });
+          }
+          
+          if (geoJSON.geometry.type === 'Point') {
+            coordinates = [geoJSON.geometry.coordinates[1], geoJSON.geometry.coordinates[0]];
+          }
         }
         
-        // TODO: Save annotation to backend
+        // Extract style information
+        const style: any = {};
+        if (layer.options.color) style.color = layer.options.color;
+        if (layer.options.fillColor) style.fillColor = layer.options.fillColor;
+        if (layer.options.fillOpacity !== undefined) style.fillOpacity = layer.options.fillOpacity;
+        if (layer.options.weight) style.weight = layer.options.weight;
+        
+        // Save annotation to backend
+        if (onAnnotationCreated && coordinates) {
+          const annotationData: Omit<Annotation, 'id' | 'created_at' | 'updated_at'> = {
+            layer_id: activeLayerId,
+            annotation_type: annotationType,
+            coordinates: coordinates,
+            style: style,
+            content: content || undefined,
+          };
+          
+          onAnnotationCreated(annotationData as Annotation);
+        }
+        
         if (showToast) {
-          showToast('Annotation created! (Note: Annotations are not yet persisted)', 'info');
+          showToast('Annotation created and saved!', 'success');
         }
       }
     };
@@ -274,6 +341,107 @@ const DrawControls: React.FC<DrawControlsProps> = ({
   useEffect(() => {
     boundaryLoadedRef.current = false;
   }, [existingBoundary]);
+
+  return null;
+};
+
+// Component to render annotations on the map
+interface AnnotationRendererProps {
+  annotations: Annotation[];
+  layers: Layer[];
+  onAnnotationClick?: (annotation: Annotation) => void;
+}
+
+const AnnotationRenderer: React.FC<AnnotationRendererProps> = ({
+  annotations,
+  layers,
+  onAnnotationClick,
+}) => {
+  const map = useMap();
+  const layerRefsRef = useRef<Map<number, L.Layer>>(new Map());
+
+  useEffect(() => {
+    // Clear existing annotation layers
+    layerRefsRef.current.forEach(layer => {
+      if (map.hasLayer(layer)) {
+        map.removeLayer(layer);
+      }
+    });
+    layerRefsRef.current.clear();
+
+    // Create a map of layer IDs to visibility
+    const layerVisibility = new Map<number, boolean>();
+    layers.forEach(layer => {
+      layerVisibility.set(layer.id!, layer.visible);
+    });
+
+    // Render each annotation
+    annotations.forEach(annotation => {
+      // Check if the layer is visible
+      if (!layerVisibility.get(annotation.layer_id)) {
+        return; // Skip hidden layers
+      }
+
+      let layer: L.Layer | null = null;
+
+      if (annotation.annotation_type === 'marker') {
+        const [lat, lng] = annotation.coordinates as [number, number];
+        layer = L.marker([lat, lng]);
+        
+        if (annotation.content) {
+          (layer as L.Marker).bindTooltip(annotation.content, {
+            permanent: true,
+            direction: 'top',
+          });
+        }
+      } else if (annotation.annotation_type === 'line') {
+        const coords = annotation.coordinates as [number, number][];
+        layer = L.polyline(coords, annotation.style || {});
+      } else if (annotation.annotation_type === 'polygon') {
+        const coords = annotation.coordinates as [number, number][];
+        layer = L.polygon(coords, annotation.style || {});
+        
+        if (annotation.content) {
+          (layer as L.Polygon).bindTooltip(annotation.content, {
+            permanent: true,
+            direction: 'center',
+            className: 'polygon-label',
+          });
+        }
+      } else if (annotation.annotation_type === 'text') {
+        const [lat, lng] = annotation.coordinates as [number, number];
+        layer = L.marker([lat, lng], {
+          icon: L.divIcon({
+            className: 'text-annotation',
+            html: `<div style="white-space: nowrap;">${annotation.content || ''}</div>`,
+          }),
+        });
+      }
+
+      if (layer) {
+        // Mark layer as read-only for Geoman
+        (layer as any).options.pmIgnore = true;
+        
+        // Add click handler
+        layer.on('click', () => {
+          onAnnotationClick?.(annotation);
+        });
+
+        layer.addTo(map);
+        layerRefsRef.current.set(annotation.id!, layer);
+      }
+    });
+
+    // Cleanup on unmount
+    return () => {
+      layerRefsRef.current.forEach(layer => {
+        if (map.hasLayer(layer)) {
+          map.removeLayer(layer);
+        }
+      });
+      layerRefsRef.current.clear();
+    };
+  }, [map, annotations, layers]);
 
   return null;
 };
@@ -461,6 +629,10 @@ const MapEditor: React.FC = () => {
   const [editingName, setEditingName] = useState('');
   const [pendingBoundaryEdit, setPendingBoundaryEdit] = useState<[number, number][] | null>(null);
   const [mapInstance, setMapInstance] = useState<L.Map | null>(null);
+  const [layers, setLayers] = useState<Layer[]>([]);
+  const [activeLayerId, setActiveLayerId] = useState<number | null>(null);
+  const [annotations, setAnnotations] = useState<Annotation[]>([]);
+  const [annotationLayers, setAnnotationLayers] = useState<Map<number, L.Layer>>(new Map());
   const navigate = useNavigate();
 
   // Toast notification helper
@@ -480,7 +652,47 @@ const MapEditor: React.FC = () => {
 
   useEffect(() => {
     loadMapData();
+    loadLayers();
   }, [projectId, mapAreaId]);
+
+  const loadLayers = async (): Promise<void> => {
+    if (!mapAreaId) return;
+
+    try {
+      const loadedLayers = await apiClient.listLayers(parseInt(mapAreaId));
+      setLayers(loadedLayers);
+      
+      // Set first editable layer as active by default
+      const editableLayer = loadedLayers.find(l => l.is_editable);
+      if (editableLayer && !activeLayerId) {
+        setActiveLayerId(editableLayer.id!);
+      }
+
+      // Load annotations for all layers
+      await loadAllAnnotations(loadedLayers);
+    } catch (error) {
+      console.error('Failed to load layers:', error);
+    }
+  };
+
+  const loadAllAnnotations = async (layerList: Layer[]): Promise<void> => {
+    try {
+      const allAnnotations: Annotation[] = [];
+      await Promise.all(
+        layerList.map(async (layer) => {
+          try {
+            const layerAnnotations = await apiClient.listAnnotations(layer.id!);
+            allAnnotations.push(...layerAnnotations);
+          } catch (error) {
+            console.error(`Failed to load annotations for layer ${layer.id}:`, error);
+          }
+        })
+      );
+      setAnnotations(allAnnotations);
+    } catch (error) {
+      console.error('Failed to load annotations:', error);
+    }
+  };
 
   const loadMapData = async (): Promise<void> => {
     if (!projectId || !mapAreaId) return;
@@ -686,6 +898,29 @@ const MapEditor: React.FC = () => {
     setSuburbName('');
     setPendingSuburbCoordinates(null);
     setMode('annotation');
+  };
+
+  const handleAnnotationCreated = async (
+    annotation: Annotation
+  ): Promise<void> => {
+    try {
+      const created = await apiClient.createAnnotation(annotation);
+      setAnnotations(prev => [...prev, created]);
+      showToast('Annotation saved successfully!', 'success');
+    } catch (error) {
+      console.error('Failed to create annotation:', error);
+      showToast('Failed to save annotation. Please try again.', 'error');
+    }
+  };
+
+  const handleAnnotationClick = (annotation: Annotation): void => {
+    const layer = layers.find(l => l.id === annotation.layer_id);
+    if (layer && !layer.is_editable) {
+      showToast(`This annotation is in layer "${layer.name}" which is inherited and cannot be edited`, 'info');
+    } else {
+      // Future: Allow editing
+      console.log('Annotation clicked:', annotation);
+    }
   };
 
   const saveBoundaryEdit = async (): Promise<void> => {
@@ -988,6 +1223,9 @@ const MapEditor: React.FC = () => {
             <LayerManager 
               mapAreaId={parseInt(mapAreaId)}
               showToast={showToast}
+              activeLayerId={activeLayerId}
+              onActiveLayerChange={setActiveLayerId}
+              onLayersChange={loadLayers}
             />
           )}
         </div>
@@ -1083,6 +1321,11 @@ const MapEditor: React.FC = () => {
               />
             );
           })}
+          <AnnotationRenderer
+            annotations={annotations}
+            layers={layers}
+            onAnnotationClick={handleAnnotationClick}
+          />
           <DrawControls
             mode={mode}
             existingBoundary={
@@ -1095,6 +1338,8 @@ const MapEditor: React.FC = () => {
             }
             onBoundaryCreated={handleBoundaryCreated}
             showToast={showToast}
+            activeLayerId={activeLayerId}
+            onAnnotationCreated={handleAnnotationCreated}
           />
         </MapContainer>
       </div>
