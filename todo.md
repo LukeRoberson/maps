@@ -7,11 +7,12 @@
 - [x] UI: When adding a layer, the create and cancel buttons overhang the box on the right
 - [x] If a layer is not selected and I try to create a polygon, the UI lets me do it (this should be prevented if a layer is not selected)
 - [x] When I click the 'eye' icon on a layer, polygons do not hide; The coloured area within the polygon fades, but the polygon and its label are still clearly visible
-- [ ] When I add a marker (annotation) and label it, two labels appear in the UI. The second label disappears when the next annotation is added, when something is deleted or added, or when the page is refreshed
-- [ ] When I add a text annotation, I get a pop up box to add the label. After entering the label, the UI still has a text box for me add the label
-- [ ] On a map with no layers, I create a new layer, and it appears to be selected by default. I try to create a new annotation, but I'm told to select a layer first. A refresh fixes the issue.
-- [ ] The 'edit annotations' button has two icons at once, the default one and a pencil
+- [x] The 'edit annotations' button has two icons at once, the default one and a pencil
 - [x] Deleting an annotation seems to work. However, after subsequent annotation edits or a refresh, the deleted annotations come back; It seems like they're initially removed from the UI, but not the database
+- [x] When I add a text annotation, I get a pop up box to add the label. After entering the label, the UI still has a text box for me add the label
+- [ ] On a map with no layers, I create a new layer, and it appears to be selected by default. I try to create a new annotation, but I'm told to select a layer first. A refresh fixes the issue.
+- [ ] If I delete all layers, I'm still allowed to create new annotations
+- [ ] When I add a marker (annotation) and label it, two labels appear in the UI. The second label disappears when the next annotation is added, when something is deleted or added, or when the page is refreshed
 
 
 ## UI Improvements
@@ -53,6 +54,7 @@
   - [x] Currently allows deleting a text annotation
   - [x] Enable deleting any annotation
   - [x] This should only be able to delete annotations in the currently selected layer
+- [ ] Set colours for each layer (eg, for polygons, which are all green otherwise)
 
 
 ## Export

@@ -120,8 +120,6 @@ const DrawControls: React.FC<DrawControlsProps> = ({
     const editButton = document.querySelector('.leaflet-pm-icon-edit');
     if (editButton) {
       editButton.setAttribute('title', 'Edit annotations');
-      // Replace the icon with a pencil-like edit icon
-      editButton.innerHTML = '✏️';
     }
 
     // Handle Escape key to cancel drawing
@@ -263,17 +261,53 @@ const DrawControls: React.FC<DrawControlsProps> = ({
         // Determine annotation type and extract coordinates
         if (e.shape === 'Text') {
           annotationType = 'text';
-          content = prompt('Enter text:');
-          if (!content) {
-            map.removeLayer(layer);
-            return;
-          }
-          layer.setText(content);
+          // For text annotations, Geoman provides a UI input field
+          // The text will be entered through Geoman's UI after the layer is placed
           
           // Extract coordinates [lat, lng]
           if (geoJSON.geometry.type === 'Point') {
             coordinates = [geoJSON.geometry.coordinates[1], geoJSON.geometry.coordinates[0]];
           }
+          
+          // Track if we've already saved this text annotation
+          let textAnnotationSaved = false;
+          
+          // Listen for when text editing is complete (blur event or edit disabled)
+          layer.on('pm:textblur pm:disable', () => {
+            if (textAnnotationSaved) return; // Already saved
+            
+            content = (layer as any).pm?.getText?.() || (layer as any)._text || '';
+            
+            // Only save if text was actually entered
+            if (onAnnotationCreated && coordinates && activeLayerId && content && content.trim()) {
+              const style: any = {};
+              if (layer.options.color) style.color = layer.options.color;
+              if (layer.options.fillColor) style.fillColor = layer.options.fillColor;
+              if (layer.options.fillOpacity !== undefined) style.fillOpacity = layer.options.fillOpacity;
+              if (layer.options.weight) style.weight = layer.options.weight;
+              
+              const annotationData: Omit<Annotation, 'id' | 'created_at' | 'updated_at'> = {
+                layer_id: activeLayerId,
+                annotation_type: 'text',
+                coordinates: coordinates,
+                style: style,
+                content: content,
+              };
+              
+              onAnnotationCreated(annotationData as Annotation);
+              textAnnotationSaved = true;
+              
+              if (showToast) {
+                showToast('Text annotation created and saved!', 'success');
+              }
+            } else if (!content || !content.trim()) {
+              // Remove the layer if no text was entered
+              map.removeLayer(layer);
+            }
+          });
+          
+          // Get initial text if it exists (might be available immediately)
+          content = (layer as any).pm?.getText?.() || (layer as any)._text || '';
         } else if (e.shape === 'Marker') {
           annotationType = 'marker';
           content = prompt('Enter label:');
@@ -323,7 +357,8 @@ const DrawControls: React.FC<DrawControlsProps> = ({
         if (layer.options.weight) style.weight = layer.options.weight;
         
         // Save annotation to backend
-        if (onAnnotationCreated && coordinates && activeLayerId) {
+        // For text annotations, we skip initial save and wait for pm:textchange event
+        if (onAnnotationCreated && coordinates && activeLayerId && annotationType !== 'text') {
           const annotationData: Omit<Annotation, 'id' | 'created_at' | 'updated_at'> = {
             layer_id: activeLayerId,
             annotation_type: annotationType,
@@ -333,10 +368,13 @@ const DrawControls: React.FC<DrawControlsProps> = ({
           };
           
           onAnnotationCreated(annotationData as Annotation);
-        }
-        
-        if (showToast) {
-          showToast('Annotation created and saved!', 'success');
+          
+          if (showToast) {
+            showToast('Annotation created and saved!', 'success');
+          }
+        } else if (annotationType === 'text' && !content) {
+          // Text annotation created, waiting for user to enter text via Geoman UI
+          // The pm:textchange event handler will save it when text is entered
         }
       }
     };
@@ -775,11 +813,18 @@ const MapEditor: React.FC = () => {
       const loadedLayers = await apiClient.listLayers(parseInt(mapAreaId));
       setLayers(loadedLayers);
       
-      // Set first editable layer as active by default
-      const editableLayer = loadedLayers.find(l => l.is_editable);
-      if (editableLayer && !activeLayerId) {
-        setActiveLayerId(editableLayer.id!);
-      }
+      // Set first editable layer as active by default if no layer is currently active
+      const editableLayers = loadedLayers.filter(l => l.is_editable);
+      
+      // Use functional update to check current state value
+      setActiveLayerId(currentActiveId => {
+        // If there's no active layer, or the active layer no longer exists, set the first editable layer as active
+        const currentActiveLayerExists = editableLayers.some(l => l.id === currentActiveId);
+        if (editableLayers.length > 0 && (!currentActiveId || !currentActiveLayerExists)) {
+          return editableLayers[0].id!;
+        }
+        return currentActiveId;
+      });
 
       // Load annotations for all layers
       await loadAllAnnotations(loadedLayers);
