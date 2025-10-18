@@ -8,13 +8,13 @@
 
 ## UI Improvements
 
-- [ ] Streamline the map view, to make it simpler
-  - [ ] Hide or collapse the 'boundary defined' message
-  - [ ] Hide or collapse the 'boundary shown (dashed lines)' message
-  - [ ] Hide or collapse the 'Default view set (zoom)' message
-- [ ] Popup messages (currently browser message with ok button); Shown when something is created or updated
-  - [ ] Change to a modern look
-  - [ ] Fade out after a few seconds
+- [x] Streamline the map view, to make it simpler
+  - [x] Hide or collapse the 'boundary defined' message
+  - [x] Hide or collapse the 'boundary shown (dashed lines)' message
+  - [x] Hide or collapse the 'Default view set (zoom)' message
+- [x] Popup messages (currently browser message with ok button); Shown when something is created or updated
+  - [x] Change to a modern look
+  - [x] Fade out after a few seconds
 
 
 ## Layers
@@ -39,6 +39,11 @@
 - [ ] Option to export current view (zoom, location) or use values defined on the map (default)
 - [ ] Option to include boundaries (yes by default)
 - [ ] Option to include annotations (yes by default)
+
+
+# Project Layout
+- [ ] Rename 'Master' map to 'Region'
+- [ ] Allow multiple regions in a project
 
 
 ## To Investigate

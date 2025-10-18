@@ -9,6 +9,15 @@ import type { MapArea, Project, Boundary } from '@/types';
 import './map-editor.css';
 import 'leaflet/dist/leaflet.css';
 
+// Toast notification types
+type ToastType = 'success' | 'error' | 'info' | 'warning';
+
+interface Toast {
+  id: number;
+  message: string;
+  type: ToastType;
+}
+
 // Fix Leaflet default marker icon issue
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -65,6 +74,7 @@ interface DrawControlsProps {
   mode: 'boundary' | 'annotation' | 'suburb' | 'individual';
   existingBoundary?: Boundary | null;
   onBoundaryCreated?: (coordinates: [number, number][]) => void;
+  showToast?: (message: string, type: ToastType) => void;
 }
 
 // Component to add drawing controls to the map using Leaflet Geoman
@@ -72,6 +82,7 @@ const DrawControls: React.FC<DrawControlsProps> = ({
   mode,
   existingBoundary,
   onBoundaryCreated,
+  showToast,
 }) => {
   const map = useMap();
   const editableLayerRef = useRef<L.Polygon | null>(null);
@@ -123,7 +134,9 @@ const DrawControls: React.FC<DrawControlsProps> = ({
         if (!map.hasLayer(layer)) {
           layer.addTo(map);
         }
-        alert('This boundary cannot be deleted. It belongs to a parent map.');
+        if (showToast) {
+          showToast('This boundary cannot be deleted. It belongs to a parent map.', 'warning');
+        }
         return false;
       }
     };
@@ -318,13 +331,15 @@ interface ReadOnlyPolygonProps {
   pathOptions: L.PathOptions;
   tooltipContent?: string;
   onClick?: () => void;
+  showToast?: (message: string, type: ToastType) => void;
 }
 
 const ReadOnlyPolygon: React.FC<ReadOnlyPolygonProps> = ({ 
   positions, 
   pathOptions, 
   tooltipContent,
-  onClick 
+  onClick,
+  showToast
 }) => {
   const map = useMap();
   const polygonRef = useRef<L.Polygon | null>(null);
@@ -348,7 +363,9 @@ const ReadOnlyPolygon: React.FC<ReadOnlyPolygonProps> = ({
       if (e.layer === polygon) {
         e.preventDefault();
         map.pm.disableGlobalRemovalMode();
-        alert('This boundary cannot be deleted. It belongs to a parent map.');
+        if (showToast) {
+          showToast('This boundary cannot be deleted. It belongs to a parent map.', 'warning');
+        }
         return false;
       }
     };
@@ -392,6 +409,9 @@ const MapEditor: React.FC = () => {
   const [parentBoundary, setParentBoundary] = useState<Boundary | null>(null);
   const [suburbs, setSuburbs] = useState<MapArea[]>([]);
   const [suburbBoundaries, setSuburbBoundaries] = useState<Record<number, Boundary>>({});
+  const [toasts, setToasts] = useState<Toast[]>([]);
+  const [statusExpanded, setStatusExpanded] = useState<boolean>(false);
+  const toastIdRef = useRef<number>(0);
   const [individuals, setIndividuals] = useState<MapArea[]>([]);
   const [individualBoundaries, setIndividualBoundaries] = useState<Record<number, Boundary>>({});
   const [mode, setMode] = useState<'boundary' | 'annotation' | 'suburb' | 'individual'>('annotation');
@@ -407,6 +427,21 @@ const MapEditor: React.FC = () => {
   const [pendingBoundaryEdit, setPendingBoundaryEdit] = useState<[number, number][] | null>(null);
   const [mapInstance, setMapInstance] = useState<L.Map | null>(null);
   const navigate = useNavigate();
+
+  // Toast notification helper
+  const showToast = useCallback((message: string, type: ToastType = 'info'): void => {
+    const id = toastIdRef.current++;
+    setToasts(prev => [...prev, { id, message, type }]);
+    
+    // Auto-remove after 4 seconds
+    setTimeout(() => {
+      setToasts(prev => prev.filter(toast => toast.id !== id));
+    }, 4000);
+  }, []);
+
+  const removeToast = useCallback((id: number): void => {
+    setToasts(prev => prev.filter(toast => toast.id !== id));
+  }, []);
 
   useEffect(() => {
     loadMapData();
@@ -533,7 +568,7 @@ const MapEditor: React.FC = () => {
     if (mode === 'suburb') {
       // Validate that suburb is within master boundary
       if (boundary && !isWithinBoundary(coordinates, boundary.coordinates)) {
-        alert('Error: Suburb boundary must be completely within the master map boundary. Please draw within the red boundary.');
+        showToast('Suburb boundary must be completely within the master map boundary. Please draw within the red boundary.', 'error');
         return;
       }
       // Store coordinates and show dialog to name the suburb
@@ -545,7 +580,7 @@ const MapEditor: React.FC = () => {
     if (mode === 'individual') {
       // Validate that individual map is within suburb boundary
       if (boundary && !isWithinBoundary(coordinates, boundary.coordinates)) {
-        alert('Error: Individual map boundary must be completely within the suburb boundary. Please draw within the blue boundary.');
+        showToast('Individual map boundary must be completely within the suburb boundary. Please draw within the blue boundary.', 'error');
         return;
       }
       // Store coordinates and show dialog to name the individual map
@@ -567,11 +602,11 @@ const MapEditor: React.FC = () => {
             coordinates,
           });
           setBoundary(created);
-          alert('Boundary created successfully!');
+          showToast('Boundary created successfully!', 'success');
           setMode('annotation');
         } catch (error) {
           console.error('Failed to create boundary:', error);
-          alert('Failed to create boundary. Please try again.');
+          showToast('Failed to create boundary. Please try again.', 'error');
         }
       }
     }
@@ -595,7 +630,7 @@ const MapEditor: React.FC = () => {
         coordinates: pendingSuburbCoordinates,
       });
 
-      alert(`Suburb "${suburbName}" created successfully!`);
+      showToast(`Suburb "${suburbName}" created successfully!`, 'success');
       
       // Reset state
       setShowSuburbDialog(false);
@@ -607,7 +642,7 @@ const MapEditor: React.FC = () => {
       loadMapData();
     } catch (error) {
       console.error('Failed to create suburb:', error);
-      alert('Failed to create suburb. Please try again.');
+      showToast('Failed to create suburb. Please try again.', 'error');
     }
   };
 
@@ -629,10 +664,10 @@ const MapEditor: React.FC = () => {
       setBoundary(updated);
       setPendingBoundaryEdit(null);
       setMode('annotation');
-      alert('Boundary updated successfully!');
+      showToast('Boundary updated successfully!', 'success');
     } catch (error) {
       console.error('Failed to save boundary:', error);
-      alert('Failed to save boundary. Please try again.');
+      showToast('Failed to save boundary. Please try again.', 'error');
     }
   };
 
@@ -661,7 +696,7 @@ const MapEditor: React.FC = () => {
         coordinates: pendingIndividualCoordinates,
       });
 
-      alert(`Individual map "${individualName}" created successfully!`);
+      showToast(`Individual map "${individualName}" created successfully!`, 'success');
       
       // Reset state
       setShowIndividualDialog(false);
@@ -673,7 +708,7 @@ const MapEditor: React.FC = () => {
       loadMapData();
     } catch (error) {
       console.error('Failed to create individual map:', error);
-      alert('Failed to create individual map. Please try again.');
+      showToast('Failed to create individual map. Please try again.', 'error');
     }
   };
 
@@ -708,12 +743,12 @@ const MapEditor: React.FC = () => {
       cancelRenaming();
     } catch (error) {
       console.error('Failed to rename map:', error);
-      alert('Failed to rename. Please try again.');
+      showToast('Failed to rename. Please try again.', 'error');
     }
   };
 
   const handleExport = async (): Promise<void> => {
-    alert('Export functionality will capture the map as PNG');
+    showToast('Export functionality will capture the map as PNG', 'info');
   };
 
   const handleSetDefaultView = async (): Promise<void> => {
@@ -729,10 +764,10 @@ const MapEditor: React.FC = () => {
         default_zoom: zoom,
       });
       setMapArea(updated);
-      alert(`Default view saved!\nCenter: ${center.lat.toFixed(6)}, ${center.lng.toFixed(6)}\nZoom: ${zoom}`);
+      showToast(`Default view saved! (Zoom: ${zoom})`, 'success');
     } catch (error) {
       console.error('Failed to set default view:', error);
-      alert('Failed to save default view. Please try again.');
+      showToast('Failed to save default view. Please try again.', 'error');
     }
   };
 
@@ -779,21 +814,35 @@ const MapEditor: React.FC = () => {
           <p className="breadcrumb">
             {project.name} / {mapArea.area_type}
           </p>
-          {boundary && (
-            <p className="boundary-status">
-              ✓ Boundary defined ({boundary.coordinates.length} points)
-            </p>
-          )}
-          {parentBoundary && (mapArea.area_type === 'suburb' || mapArea.area_type === 'individual') && (
-            <p className="boundary-status" style={{ color: '#e74c3c' }}>
-              ⓘ {parentMapArea?.area_type === 'master' ? 'Master' : 'Suburb'} boundary shown (dashed lines)
-            </p>
-          )}
-          {mapArea.default_center_lat && mapArea.default_center_lon && (
-            <p className="boundary-status">
-              ✓ Default view set (zoom {mapArea.default_zoom})
-            </p>
-          )}
+          <div className="status-section">
+            <button 
+              className="status-toggle"
+              onClick={() => setStatusExpanded(!statusExpanded)}
+              aria-expanded={statusExpanded}
+            >
+              <span>{statusExpanded ? '▼' : '▶'}</span>
+              Status
+            </button>
+            {statusExpanded && (
+              <div className="status-content">
+                {boundary && (
+                  <p className="boundary-status">
+                    ✓ Boundary defined ({boundary.coordinates.length} points)
+                  </p>
+                )}
+                {parentBoundary && (mapArea.area_type === 'suburb' || mapArea.area_type === 'individual') && (
+                  <p className="boundary-status" style={{ color: '#e74c3c' }}>
+                    ⓘ {parentMapArea?.area_type === 'master' ? 'Master' : 'Suburb'} boundary shown (dashed lines)
+                  </p>
+                )}
+                {mapArea.default_center_lat && mapArea.default_center_lon && (
+                  <p className="boundary-status">
+                    ✓ Default view set ({mapArea.default_center_lat.toFixed(6)}, {mapArea.default_center_lon.toFixed(6)}, zoom {mapArea.default_zoom})
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
         </div>
         <div className="editor-actions">
           {mode === 'boundary' && pendingBoundaryEdit ? (
@@ -927,6 +976,7 @@ const MapEditor: React.FC = () => {
                   fillOpacity: 0,
                   dashArray: '10, 10',
                 }}
+                showToast={showToast}
               />
             </>
           )}
@@ -939,6 +989,7 @@ const MapEditor: React.FC = () => {
                 fillColor: '#e74c3c',
                 fillOpacity: 0.1,
               }}
+              showToast={showToast}
             />
           )}
           {Object.entries(suburbBoundaries).map(([suburbId, suburbBoundary]) => {
@@ -959,6 +1010,7 @@ const MapEditor: React.FC = () => {
                     navigate(`/projects/${projectId}/maps/${suburbId}`);
                   }
                 }}
+                showToast={showToast}
               />
             );
           })}
@@ -980,6 +1032,7 @@ const MapEditor: React.FC = () => {
                     navigate(`/projects/${projectId}/maps/${individualId}`);
                   }
                 }}
+                showToast={showToast}
               />
             );
           })}
@@ -994,6 +1047,7 @@ const MapEditor: React.FC = () => {
                 : null
             }
             onBoundaryCreated={handleBoundaryCreated}
+            showToast={showToast}
           />
         </MapContainer>
       </div>
@@ -1071,6 +1125,28 @@ const MapEditor: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Toast Notifications */}
+      <div className="toast-container">
+        {toasts.map((toast) => (
+          <div
+            key={toast.id}
+            className={`toast toast-${toast.type}`}
+            onClick={() => removeToast(toast.id)}
+          >
+            <div className="toast-content">
+              <span className="toast-icon">
+                {toast.type === 'success' && '✓'}
+                {toast.type === 'error' && '✕'}
+                {toast.type === 'warning' && '⚠'}
+                {toast.type === 'info' && 'ℹ'}
+              </span>
+              <span className="toast-message">{toast.message}</span>
+            </div>
+            <button className="toast-close" onClick={() => removeToast(toast.id)}>×</button>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
