@@ -5,6 +5,7 @@ import L from 'leaflet';
 import '@geoman-io/leaflet-geoman-free';
 import '@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css';
 import { apiClient } from '@/services/api-client';
+import { LayerManager } from '@/components/layer-manager';
 import type { MapArea, Project, Boundary } from '@/types';
 import './map-editor.css';
 import 'leaflet/dist/leaflet.css';
@@ -980,7 +981,19 @@ const MapEditor: React.FC = () => {
         </div>
       </div>
 
-      <div className="map-container">
+      <div className="editor-content">
+        {/* Sidebar for layer management */}
+        <div className="editor-sidebar">
+          {mapAreaId && (
+            <LayerManager 
+              mapAreaId={parseInt(mapAreaId)}
+              showToast={showToast}
+            />
+          )}
+        </div>
+
+        {/* Map container */}
+        <div className="map-container">
         <MapContainer
           key={`map-${mapAreaId}`}
           center={[
@@ -1159,6 +1172,8 @@ const MapEditor: React.FC = () => {
           </div>
         </div>
       )}
+
+      </div> {/* Close editor-content */}
 
       {/* Toast Notifications */}
       <div className="toast-container">

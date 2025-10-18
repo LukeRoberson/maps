@@ -3,7 +3,8 @@ Layer routes.
 """
 
 from flask import Blueprint, request, jsonify
-from typing import Dict, Any
+from typing import Tuple, Union
+from werkzeug.wrappers import Response
 
 from models import Layer
 from services import LayerService
@@ -13,23 +14,23 @@ layer_service = LayerService()
 
 
 @layers_bp.route('', methods=['GET'])
-def list_layers() -> Dict[str, Any]:
+def list_layers() -> Union[Response, Tuple[Response, int]]:
     """
-    List layers for a project.
+    List layers for a map area.
     
     Returns:
         Dict[str, Any]: JSON response with layer list
     """
     
     try:
-        project_id = request.args.get('project_id', type=int)
+        map_area_id = request.args.get('map_area_id', type=int)
         
-        if not project_id:
+        if not map_area_id:
             return jsonify(
-                {'error': 'project_id parameter required'}
+                {'error': 'map_area_id parameter required'}
             ), 400
         
-        layers = layer_service.list_layers(project_id)
+        layers = layer_service.list_layers_for_map_area(map_area_id)
         return jsonify({
             'layers': [layer.to_dict() for layer in layers]
         })
@@ -39,7 +40,7 @@ def list_layers() -> Dict[str, Any]:
 
 
 @layers_bp.route('', methods=['POST'])
-def create_layer() -> Dict[str, Any]:
+def create_layer() -> Union[Response, Tuple[Response, int]]:
     """
     Create a new layer.
     
@@ -53,7 +54,7 @@ def create_layer() -> Dict[str, Any]:
         if not data:
             return jsonify({'error': 'No data provided'}), 400
         
-        required_fields = ['project_id', 'name', 'layer_type']
+        required_fields = ['map_area_id', 'name', 'layer_type']
         for field in required_fields:
             if field not in data:
                 return jsonify(
@@ -61,7 +62,7 @@ def create_layer() -> Dict[str, Any]:
                 ), 400
         
         layer = Layer(
-            project_id=data['project_id'],
+            map_area_id=data['map_area_id'],
             name=data['name'],
             layer_type=data['layer_type'],
             visible=data.get('visible', True),
@@ -82,7 +83,7 @@ def create_layer() -> Dict[str, Any]:
 @layers_bp.route('/<int:layer_id>', methods=['GET'])
 def get_layer(
     layer_id: int
-) -> Dict[str, Any]:
+) -> Union[Response, Tuple[Response, int]]:
     """
     Get a layer by ID.
     
@@ -108,7 +109,7 @@ def get_layer(
 @layers_bp.route('/<int:layer_id>', methods=['PUT'])
 def update_layer(
     layer_id: int
-) -> Dict[str, Any]:
+) -> Union[Response, Tuple[Response, int]]:
     """
     Update a layer.
     
@@ -139,7 +140,7 @@ def update_layer(
 @layers_bp.route('/<int:layer_id>', methods=['DELETE'])
 def delete_layer(
     layer_id: int
-) -> Dict[str, Any]:
+) -> Union[Response, Tuple[Response, int]]:
     """
     Delete a layer.
     

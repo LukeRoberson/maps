@@ -22,12 +22,12 @@
 
 - [x] Add support for text annotations
 - [x] Add support to create a label for polygons
-- [ ] Create a basic layer system for annotations (more functionality to be added later)
-  - [ ] Create a UI tool for layer management
-    - [ ] Add a layer, and give it a name
-    - [ ] Edit the layer name
-    - [ ] Delete a layer
-  - [ ] Allow creation of multiple layers
+- [x] Create a basic layer system for annotations (more functionality to be added later)
+  - [x] Create a UI tool for layer management
+    - [x] Add a layer, and give it a name
+    - [x] Edit the layer name
+    - [x] Delete a layer
+  - [x] Allow creation of multiple layers
 - [ ] Expand annotation layer features
   - [ ] Select the active layer that new annotations will be added to
   - [ ] Require annotations to be created in a layer

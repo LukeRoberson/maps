@@ -166,10 +166,10 @@ class ApiClient {
   }
 
   async listLayers(
-    projectId: number
+    mapAreaId: number
   ): Promise<Layer[]> {
     const response: AxiosResponse<{ layers: Layer[] }> =
-      await this.client.get(`/layers?project_id=${projectId}`);
+      await this.client.get(`/layers?map_area_id=${mapAreaId}`);
     return response.data.layers;
   }
 

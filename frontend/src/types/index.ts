@@ -33,11 +33,13 @@ export interface Boundary {
 
 export interface Layer {
   id?: number;
-  project_id: number;
+  map_area_id: number;
+  parent_layer_id?: number;
   name: string;
-  layer_type: 'osm' | 'annotation' | 'custom';
+  layer_type: 'annotation' | 'custom';
   visible: boolean;
   z_index: number;
+  is_editable: boolean;
   config: Record<string, unknown>;
   created_at?: string;
   updated_at?: string;

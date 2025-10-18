@@ -4,6 +4,22 @@
   height: calc(100vh - 100px);
 }
 
+.editor-content {
+  display: flex;
+  gap: 1rem;
+  flex: 1;
+  overflow: hidden;
+}
+
+.editor-sidebar {
+  width: 320px;
+  flex-shrink: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
 .editor-header {
   display: flex;
   justify-content: space-between;
