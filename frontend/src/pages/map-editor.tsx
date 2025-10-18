@@ -101,8 +101,8 @@ const DrawControls: React.FC<DrawControlsProps> = ({
       drawRectangle: mode === 'boundary' && !existingBoundary ? true : mode !== 'boundary',
       drawPolygon: mode === 'boundary' && !existingBoundary ? true : mode !== 'boundary',
       drawCircle: false,
-      drawCircleMarker: false,
-      drawText: false,
+      drawCircleMarker: mode === 'annotation',
+      drawText: mode === 'annotation',  // Enable text annotations
       editMode: true,
       dragMode: false,
       cutPolygon: false,
@@ -206,8 +206,42 @@ const DrawControls: React.FC<DrawControlsProps> = ({
         }
 
         onBoundaryCreated(coordinates);
-      } else {
-        console.log('Shape created:', e.shape, layer.toGeoJSON());
+      } else if (mode === 'annotation') {
+        // Handle annotation creation
+        console.log('Annotation created:', e.shape, layer.toGeoJSON());
+        
+        // For text markers, prompt for label
+        if (e.shape === 'Text' || e.shape === 'Marker') {
+          const label = prompt('Enter label text:');
+          if (label) {
+            if (e.shape === 'Text') {
+              layer.setText(label);
+            } else {
+              layer.bindTooltip(label, { permanent: true, direction: 'top' });
+            }
+          }
+        }
+        
+        // For polygons, offer to add a label
+        if (e.shape === 'Polygon' || e.shape === 'Rectangle') {
+          const addLabel = confirm('Would you like to add a label to this polygon?');
+          if (addLabel) {
+            const label = prompt('Enter label text:');
+            if (label) {
+              const center = layer.getBounds().getCenter();
+              layer.bindTooltip(label, {
+                permanent: true,
+                direction: 'center',
+                className: 'polygon-label'
+              });
+            }
+          }
+        }
+        
+        // TODO: Save annotation to backend
+        if (showToast) {
+          showToast('Annotation created! (Note: Annotations are not yet persisted)', 'info');
+        }
       }
     };
 

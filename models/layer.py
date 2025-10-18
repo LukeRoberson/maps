@@ -12,11 +12,14 @@ class Layer:
     
     Attributes:
         id (Optional[int]): Unique identifier
-        project_id (int): Associated project ID
+        map_area_id (int): Associated map area ID
+        parent_layer_id (Optional[int]): Parent layer ID (for inherited layers)
         name (str): Layer name
-        layer_type (str): Type of layer (osm, annotation, custom)
+        layer_type (str): Type of layer (annotation, custom)
         visible (bool): Whether layer is visible by default
         z_index (int): Layer stacking order
+        is_editable (bool): Whether this layer can be edited
+            (False for inherited layers)
         config (Dict[str, Any]): Layer-specific configuration
         created_at (datetime): Creation timestamp
         updated_at (datetime): Last update timestamp
@@ -30,15 +33,17 @@ class Layer:
             Create layer from dictionary
     """
 
-    LAYER_TYPES = ['osm', 'annotation', 'custom']
+    LAYER_TYPES = ['annotation', 'custom']
 
     def __init__(
         self,
-        project_id: int,
+        map_area_id: int,
         name: str,
         layer_type: str,
         visible: bool = True,
         z_index: int = 0,
+        is_editable: bool = True,
+        parent_layer_id: Optional[int] = None,
         config: Optional[Dict[str, Any]] = None,
         id: Optional[int] = None,
         created_at: Optional[datetime] = None,
@@ -48,11 +53,13 @@ class Layer:
         Initialize a new Layer.
         
         Args:
-            project_id (int): Associated project ID
+            map_area_id (int): Associated map area ID
             name (str): Layer name
             layer_type (str): Type of layer
             visible (bool): Whether layer is visible
             z_index (int): Layer stacking order
+            is_editable (bool): Whether layer can be edited
+            parent_layer_id (Optional[int]): Parent layer ID for inheritance
             config (Optional[Dict[str, Any]]): Layer configuration
             id (Optional[int]): Layer ID
             created_at (Optional[datetime]): Creation timestamp
@@ -72,11 +79,13 @@ class Layer:
             )
         
         self.id = id
-        self.project_id = project_id
+        self.map_area_id = map_area_id
+        self.parent_layer_id = parent_layer_id
         self.name = name
         self.layer_type = layer_type
         self.visible = visible
         self.z_index = z_index
+        self.is_editable = is_editable
         self.config = config or {}
         self.created_at = created_at or datetime.utcnow()
         self.updated_at = updated_at or datetime.utcnow()
@@ -91,14 +100,20 @@ class Layer:
         
         return {
             'id': self.id,
-            'project_id': self.project_id,
+            'map_area_id': self.map_area_id,
+            'parent_layer_id': self.parent_layer_id,
             'name': self.name,
             'layer_type': self.layer_type,
             'visible': self.visible,
             'z_index': self.z_index,
+            'is_editable': self.is_editable,
             'config': self.config,
-            'created_at': self.created_at.isoformat() if self.created_at else None,
-            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+            'created_at': (
+                self.created_at.isoformat() if self.created_at else None
+            ),
+            'updated_at': (
+                self.updated_at.isoformat() if self.updated_at else None
+            )
         }
 
     @classmethod
@@ -126,11 +141,13 @@ class Layer:
         
         return cls(
             id=data.get('id'),
-            project_id=data['project_id'],
+            map_area_id=data['map_area_id'],
+            parent_layer_id=data.get('parent_layer_id'),
             name=data['name'],
             layer_type=data['layer_type'],
             visible=data.get('visible', True),
             z_index=data.get('z_index', 0),
+            is_editable=data.get('is_editable', True),
             config=data.get('config', {}),
             created_at=created_at,
             updated_at=updated_at

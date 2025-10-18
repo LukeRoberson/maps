@@ -15,20 +15,25 @@
 - [x] Popup messages (currently browser message with ok button); Shown when something is created or updated
   - [x] Change to a modern look
   - [x] Fade out after a few seconds
+- [ ] When editing a boundary, right click a node to delete it
 
 
 ## Layers
 
-- [ ] Add support for text annotations
-- [ ] Add support to create a label for polygons
-- [ ] Allow multiple annotation layers
-  - [ ] For example, one might have lines, another might have block numbers, another may have POI
-  - [ ] Should be able to name the layers
-  - [ ] Layers are unique per map
-  - [ ] Layers are hierarchical in the order they are applied
-  - [ ] Layers are inherited from parent map
-  - [ ] Inherited layers are not editable
-  - [ ] UI support to select a layer for editing or deleting
+- [x] Add support for text annotations
+- [x] Add support to create a label for polygons
+- [ ] Create a basic layer system for annotations (more functionality to be added later)
+  - [ ] Create a UI tool for layer management
+    - [ ] Add a layer, and give it a name
+    - [ ] Edit the layer name
+    - [ ] Delete a layer
+  - [ ] Allow creation of multiple layers
+- [ ] Expand annotation layer features
+  - [ ] Select the active layer that new annotations will be added to
+  - [ ] Require annotations to be created in a layer
+  - [ ] Enable editing annotations in a layer
+  - [ ] Option to hide or show a layer completely
+- [ ] Add persistence, so annotations are saved to the database
 
 
 ## Export

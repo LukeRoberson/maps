@@ -4,7 +4,6 @@ Layer service for business logic operations.
 
 from typing import List, Optional, Dict, Any
 import json
-from datetime import datetime
 
 from models import Layer
 from database import get_db
@@ -12,7 +11,7 @@ from database import get_db
 
 class LayerService:
     """
-    Service class for layer operations.
+    Service class for layer operations with hierarchical support.
     
     Methods:
         __init__:
@@ -21,12 +20,18 @@ class LayerService:
             Create a new layer
         get_layer:
             Get a layer by ID
-        list_layers:
-            List layers for a project
+        list_layers_for_map_area:
+            List all layers for a map area (own + inherited)
+        list_own_layers:
+            List only layers created on this map area
+        get_inherited_layers:
+            Get layers inherited from parent map areas
         update_layer:
             Update a layer
         delete_layer:
             Delete a layer
+        reorder_layers:
+            Reorder layers by updating z_index
     """
 
     def __init__(self) -> None:
@@ -55,21 +60,23 @@ class LayerService:
         
         query = """
             INSERT INTO layers (
-                project_id, name, layer_type,
-                visible, z_index, config
+                map_area_id, parent_layer_id, name, layer_type,
+                visible, z_index, is_editable, config
             )
-            VALUES (?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """
         
         config_json = json.dumps(layer.config)
         cursor = self.db.execute(
             query,
             (
-                layer.project_id,
+                layer.map_area_id,
+                layer.parent_layer_id,
                 layer.name,
                 layer.layer_type,
                 layer.visible,
                 layer.z_index,
+                layer.is_editable,
                 config_json
             )
         )
@@ -95,26 +102,124 @@ class LayerService:
         row = self.db.fetchone(query, (layer_id,))
         
         if row:
-            return Layer(
-                id=row['id'],
-                project_id=row['project_id'],
-                name=row['name'],
-                layer_type=row['layer_type'],
-                visible=bool(row['visible']),
-                z_index=row['z_index'],
-                config=json.loads(row['config']) if row['config'] else {},
-                created_at=datetime.fromisoformat(row['created_at']),
-                updated_at=datetime.fromisoformat(row['updated_at'])
-            )
+            return self._row_to_layer(row)
         
         return None
+
+        return None
+
+    def list_layers_for_map_area(
+        self,
+        map_area_id: int
+    ) -> List[Layer]:
+        """
+        List all layers for a map area (own + inherited).
+        
+        Args:
+            map_area_id (int): Map area ID
+        
+        Returns:
+            List[Layer]: List of layers ordered by z_index
+        """
+        
+        own_layers = self.list_own_layers(map_area_id)
+        inherited_layers = self.get_inherited_layers(map_area_id)
+        
+        # Combine and sort by z_index
+        all_layers = own_layers + inherited_layers
+        all_layers.sort(key=lambda layer: layer.z_index)
+        
+        return all_layers
+
+    def list_own_layers(
+        self,
+        map_area_id: int
+    ) -> List[Layer]:
+        """
+        List only layers created on this map area.
+        
+        Args:
+            map_area_id (int): Map area ID
+        
+        Returns:
+            List[Layer]: List of layers
+        """
+        
+        query = """
+            SELECT * FROM layers
+            WHERE map_area_id = ? AND parent_layer_id IS NULL
+            ORDER BY z_index, created_at
+        """
+        rows = self.db.fetchall(query, (map_area_id,))
+        
+        return [self._row_to_layer(row) for row in rows]
+
+    def get_inherited_layers(
+        self,
+        map_area_id: int
+    ) -> List[Layer]:
+        """
+        Get layers inherited from parent map areas.
+        
+        Args:
+            map_area_id (int): Map area ID
+        
+        Returns:
+            List[Layer]: List of inherited layers
+        """
+        
+        # Get the parent map area
+        parent_query = """
+            SELECT parent_id FROM map_areas WHERE id = ?
+        """
+        parent_row = self.db.fetchone(parent_query, (map_area_id,))
+        
+        if not parent_row or not parent_row['parent_id']:
+            return []
+        
+        parent_id = parent_row['parent_id']
+        
+        # Get layers from parent recursively
+        parent_layers = self.list_layers_for_map_area(parent_id)
+        
+        # Create inherited copies for this map area if they don't exist
+        inherited_layers = []
+        for parent_layer in parent_layers:
+            # Check if inherited version already exists
+            existing_query = """
+                SELECT * FROM layers
+                WHERE map_area_id = ? AND parent_layer_id = ?
+            """
+            existing_row = self.db.fetchone(
+                existing_query,
+                (map_area_id, parent_layer.id)
+            )
+            
+            if existing_row:
+                inherited_layers.append(self._row_to_layer(existing_row))
+            else:
+                # Create inherited layer
+                inherited_layer = Layer(
+                    map_area_id=map_area_id,
+                    parent_layer_id=parent_layer.id,
+                    name=parent_layer.name,
+                    layer_type=parent_layer.layer_type,
+                    visible=parent_layer.visible,
+                    z_index=parent_layer.z_index,
+                    is_editable=False,
+                    config=parent_layer.config
+                )
+                created = self.create_layer(inherited_layer)
+                inherited_layers.append(created)
+        
+        return inherited_layers
 
     def list_layers(
         self,
         project_id: int
     ) -> List[Layer]:
         """
-        List layers for a project.
+        List layers for a project (deprecated - use list_layers_for_map_area).
         
         Args:
             project_id (int): Project ID
@@ -123,32 +228,19 @@ class LayerService:
             List[Layer]: List of layers
         """
         
+        # This is kept for backwards compatibility
+        # Get master map area for this project
         query = """
-            SELECT * FROM layers
-            WHERE project_id = ?
-            ORDER BY z_index, created_at
+            SELECT id FROM map_areas
+            WHERE project_id = ? AND area_type = 'master'
+            LIMIT 1
         """
-        rows = self.db.fetchall(query, (project_id,))
+        row = self.db.fetchone(query, (project_id,))
         
-        layers = []
-        for row in rows:
-            layers.append(
-                Layer(
-                    id=row['id'],
-                    project_id=row['project_id'],
-                    name=row['name'],
-                    layer_type=row['layer_type'],
-                    visible=bool(row['visible']),
-                    z_index=row['z_index'],
-                    config=json.loads(
-                        row['config']
-                    ) if row['config'] else {},
-                    created_at=datetime.fromisoformat(row['created_at']),
-                    updated_at=datetime.fromisoformat(row['updated_at'])
-                )
-            )
+        if row:
+            return self.list_layers_for_map_area(row['id'])
         
-        return layers
+        return []
 
     def update_layer(
         self,
@@ -164,7 +256,21 @@ class LayerService:
         
         Returns:
             Optional[Layer]: Updated layer if found, None otherwise
+        
+        Raises:
+            ValueError: If trying to update a non-editable layer
         """
+        
+        # Check if layer is editable
+        layer = self.get_layer(layer_id)
+        if not layer:
+            return None
+        
+        if not layer.is_editable:
+            raise ValueError(
+                "Cannot update inherited layer. "
+                "Inherited layers are read-only."
+            )
         
         allowed_fields = ['name', 'visible', 'z_index', 'config']
         
@@ -207,9 +313,84 @@ class LayerService:
         
         Returns:
             bool: True if deleted, False if not found
+        
+        Raises:
+            ValueError: If trying to delete a non-editable layer
         """
         
-        query = "DELETE FROM layers WHERE id = ?"
-        cursor = self.db.execute(query, (layer_id,))
+        # Check if layer exists and is editable
+        layer = self.get_layer(layer_id)
+        if not layer:
+            return False
         
-        return cursor.rowcount > 0
+        if not layer.is_editable:
+            raise ValueError(
+                "Cannot delete inherited layer. "
+                "Inherited layers are read-only."
+            )
+        
+        query = "DELETE FROM layers WHERE id = ?"
+        self.db.execute(query, (layer_id,))
+        return True
+
+    def reorder_layers(
+        self,
+        layer_updates: List[Dict[str, Any]]
+    ) -> List[Layer]:
+        """
+        Reorder layers by updating z_index.
+        
+        Args:
+            layer_updates (List[Dict[str, Any]]): List of {id, z_index}
+        
+        Returns:
+            List[Layer]: Updated layers
+        """
+        
+        updated_layers = []
+        for update in layer_updates:
+            layer_id = update['id']
+            z_index = update['z_index']
+            
+            query = """
+                UPDATE layers
+                SET z_index = ?, updated_at = CURRENT_TIMESTAMP
+                WHERE id = ?
+            """
+            self.db.execute(query, (z_index, layer_id))
+            
+            updated_layer = self.get_layer(layer_id)
+            if updated_layer:
+                updated_layers.append(updated_layer)
+        
+        return updated_layers
+
+    def _row_to_layer(
+        self,
+        row: Any
+    ) -> Layer:
+        """
+        Convert database row to Layer object.
+        
+        Args:
+            row: Database row
+        
+        Returns:
+            Layer: Layer object
+        """
+        
+        from datetime import datetime as dt
+        
+        return Layer(
+            id=row['id'],
+            map_area_id=row['map_area_id'],
+            parent_layer_id=row['parent_layer_id'],
+            name=row['name'],
+            layer_type=row['layer_type'],
+            visible=bool(row['visible']),
+            z_index=row['z_index'],
+            is_editable=bool(row['is_editable']),
+            config=json.loads(row['config']) if row['config'] else {},
+            created_at=dt.fromisoformat(row['created_at']),
+            updated_at=dt.fromisoformat(row['updated_at'])
+        )

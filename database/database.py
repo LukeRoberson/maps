@@ -106,15 +106,20 @@ class Database:
 
         CREATE TABLE IF NOT EXISTS layers (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            project_id INTEGER NOT NULL,
+            map_area_id INTEGER NOT NULL,
+            parent_layer_id INTEGER,
             name TEXT NOT NULL,
             layer_type TEXT NOT NULL,
             visible BOOLEAN DEFAULT 1,
             z_index INTEGER DEFAULT 0,
+            is_editable BOOLEAN DEFAULT 1,
             config TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+            FOREIGN KEY (map_area_id)
+                REFERENCES map_areas(id) ON DELETE CASCADE,
+            FOREIGN KEY (parent_layer_id)
+                REFERENCES layers(id) ON DELETE CASCADE
         );
 
         CREATE TABLE IF NOT EXISTS annotations (
@@ -132,7 +137,8 @@ class Database:
         CREATE INDEX IF NOT EXISTS idx_map_areas_project ON map_areas(project_id);
         CREATE INDEX IF NOT EXISTS idx_map_areas_parent ON map_areas(parent_id);
         CREATE INDEX IF NOT EXISTS idx_boundaries_map_area ON boundaries(map_area_id);
-        CREATE INDEX IF NOT EXISTS idx_layers_project ON layers(project_id);
+        CREATE INDEX IF NOT EXISTS idx_layers_map_area ON layers(map_area_id);
+        CREATE INDEX IF NOT EXISTS idx_layers_parent ON layers(parent_layer_id);
         CREATE INDEX IF NOT EXISTS idx_annotations_layer ON annotations(layer_id);
         """
         
