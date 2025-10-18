@@ -11,7 +11,7 @@
 - [ ] When I add a text annotation, I get a pop up box to add the label. After entering the label, the UI still has a text box for me add the label
 - [ ] On a map with no layers, I create a new layer, and it appears to be selected by default. I try to create a new annotation, but I'm told to select a layer first. A refresh fixes the issue.
 - [ ] The 'edit annotations' button has two icons at once, the default one and a pencil
-- [ ] Deleting an annotation seems to work. However, after subsequent annotation edits or a refresh, the deleted annotations come back; It seems like they're initially removed from the UI, but not the database
+- [x] Deleting an annotation seems to work. However, after subsequent annotation edits or a refresh, the deleted annotations come back; It seems like they're initially removed from the UI, but not the database
 
 
 ## UI Improvements

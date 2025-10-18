@@ -382,6 +382,7 @@ interface AnnotationRendererProps {
   activeLayerId: number | null;
   onAnnotationClick?: (annotation: Annotation) => void;
   onAnnotationUpdated?: (annotation: Annotation) => void;
+  onAnnotationDeleted?: (annotationId: number) => void;
 }
 
 const AnnotationRenderer: React.FC<AnnotationRendererProps> = ({
@@ -390,6 +391,7 @@ const AnnotationRenderer: React.FC<AnnotationRendererProps> = ({
   activeLayerId,
   onAnnotationClick,
   onAnnotationUpdated,
+  onAnnotationDeleted,
 }) => {
   const map = useMap();
   const layerRefsRef = useRef<Map<number, L.Layer>>(new Map());
@@ -496,6 +498,13 @@ const AnnotationRenderer: React.FC<AnnotationRendererProps> = ({
             }
           });
 
+          // Handle remove events
+          layer.on('pm:remove', (e: any) => {
+            if (onAnnotationDeleted && annotation.id) {
+              onAnnotationDeleted(annotation.id);
+            }
+          });
+
           // Add double-click handler to edit labels
           layer.on('dblclick', (e: any) => {
             L.DomEvent.stopPropagation(e);
@@ -545,7 +554,7 @@ const AnnotationRenderer: React.FC<AnnotationRendererProps> = ({
       layerRefsRef.current.clear();
       annotationMapRef.current.clear();
     };
-  }, [map, annotations, layers, activeLayerId, onAnnotationClick, onAnnotationUpdated]);
+  }, [map, annotations, layers, activeLayerId, onAnnotationClick, onAnnotationUpdated, onAnnotationDeleted]);
 
   return null;
 };
@@ -1052,6 +1061,20 @@ const MapEditor: React.FC = () => {
     }
   };
 
+  const handleAnnotationDeleted = async (annotationId: number): Promise<void> => {
+    try {
+      await apiClient.deleteAnnotation(annotationId);
+      
+      // Remove the annotation from state
+      setAnnotations(prev => prev.filter(a => a.id !== annotationId));
+      
+      showToast('Annotation deleted successfully!', 'success');
+    } catch (error) {
+      console.error('Failed to delete annotation:', error);
+      showToast('Failed to delete annotation. Please try again.', 'error');
+    }
+  };
+
   const saveBoundaryEdit = async (): Promise<void> => {
     if (!boundary || !pendingBoundaryEdit) return;
 
@@ -1456,6 +1479,7 @@ const MapEditor: React.FC = () => {
             activeLayerId={activeLayerId}
             onAnnotationClick={handleAnnotationClick}
             onAnnotationUpdated={handleAnnotationUpdated}
+            onAnnotationDeleted={handleAnnotationDeleted}
           />
           <DrawControls
             mode={mode}
