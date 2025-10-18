@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { MapContainer, TileLayer, useMap, Polygon, Tooltip, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import '@geoman-io/leaflet-geoman-free';
 import '@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css';
@@ -95,7 +95,8 @@ const DrawControls: React.FC<DrawControlsProps> = ({
       editMode: true,
       dragMode: false,
       cutPolygon: false,
-      removalMode: true,
+      // Only enable removal mode in annotation mode to prevent deleting parent boundaries
+      removalMode: mode === 'annotation',
     });
 
     // Configure drawing styles based on mode
@@ -111,6 +112,23 @@ const DrawControls: React.FC<DrawControlsProps> = ({
         weight: 3,
       },
     });
+
+    // Prevent removal of protected layers (those with pmIgnore option)
+    const handleRemove = (e: any) => {
+      const layer = e.layer;
+      if (layer && layer.options && layer.options.pmIgnore) {
+        // Prevent the removal
+        e.preventDefault();
+        // Re-add the layer if it was removed
+        if (!map.hasLayer(layer)) {
+          layer.addTo(map);
+        }
+        alert('This boundary cannot be deleted. It belongs to a parent map.');
+        return false;
+      }
+    };
+
+    map.on('pm:remove', handleRemove);
 
     // Load existing boundary into editable layer when in boundary mode
     // Only create the polygon once per boundary edit session
@@ -185,6 +203,7 @@ const DrawControls: React.FC<DrawControlsProps> = ({
     // Cleanup on unmount or mode change
     return () => {
       map.off('pm:create', handleCreate);
+      map.off('pm:remove', handleRemove);
       map.pm.removeControls();
       
       // Clear the refs when cleaning up
@@ -256,12 +275,19 @@ const BoundaryFadeOverlay: React.FC<BoundaryFadeOverlayProps> = ({ boundary }) =
         fillOpacity: 0.4,
         interactive: false,
         pane: 'overlayPane',
+        pmIgnore: true, // Tell Geoman to ignore this layer completely
       }
     );
 
     // Add to map
     polygonWithHole.addTo(map);
     overlayLayerRef.current = polygonWithHole;
+    
+    // Disable Geoman for this layer to prevent deletion
+    if (polygonWithHole.pm) {
+      polygonWithHole.pm.disable();
+      (polygonWithHole as any).pm._layerEditable = false;
+    }
 
     // Update map events to detect when we need to update the overlay
     const updateOverlay = (): void => {
@@ -282,6 +308,74 @@ const BoundaryFadeOverlay: React.FC<BoundaryFadeOverlayProps> = ({ boundary }) =
       }
     };
   }, [map, boundary]);
+
+  return null;
+};
+
+// Component to render a read-only polygon that cannot be deleted
+interface ReadOnlyPolygonProps {
+  positions: [number, number][];
+  pathOptions: L.PathOptions;
+  tooltipContent?: string;
+  onClick?: () => void;
+}
+
+const ReadOnlyPolygon: React.FC<ReadOnlyPolygonProps> = ({ 
+  positions, 
+  pathOptions, 
+  tooltipContent,
+  onClick 
+}) => {
+  const map = useMap();
+  const polygonRef = useRef<L.Polygon | null>(null);
+
+  useEffect(() => {
+    const polygon = L.polygon(positions, {
+      ...pathOptions,
+      pmIgnore: true, // Tell Geoman to ignore this layer completely
+    });
+    polygon.addTo(map);
+    polygonRef.current = polygon;
+
+    // Mark this layer as non-editable for Geoman
+    if (polygon.pm) {
+      polygon.pm.disable();
+      (polygon as any).pm._layerEditable = false;
+    }
+
+    // Prevent removal events on this layer
+    const preventRemoval = (e: any) => {
+      if (e.layer === polygon) {
+        e.preventDefault();
+        map.pm.disableGlobalRemovalMode();
+        alert('This boundary cannot be deleted. It belongs to a parent map.');
+        return false;
+      }
+    };
+
+    polygon.on('pm:remove', preventRemoval);
+    map.on('pm:remove', preventRemoval);
+
+    // Add tooltip if provided
+    if (tooltipContent) {
+      polygon.bindTooltip(tooltipContent);
+    }
+
+    // Add click handler if provided
+    if (onClick) {
+      polygon.on('click', onClick);
+    }
+
+    // Cleanup
+    return () => {
+      polygon.off('pm:remove', preventRemoval);
+      map.off('pm:remove', preventRemoval);
+      if (polygonRef.current) {
+        map.removeLayer(polygonRef.current);
+        polygonRef.current = null;
+      }
+    };
+  }, [map, positions, pathOptions, tooltipContent, onClick]);
 
   return null;
 };
@@ -824,7 +918,7 @@ const MapEditor: React.FC = () => {
           {parentBoundary && mode !== 'boundary' && (mapArea.area_type === 'suburb' || mapArea.area_type === 'individual') && (
             <>
               <BoundaryFadeOverlay boundary={parentBoundary} />
-              <Polygon
+              <ReadOnlyPolygon
                 positions={parentBoundary.coordinates}
                 pathOptions={{
                   color: '#e74c3c',
@@ -837,7 +931,7 @@ const MapEditor: React.FC = () => {
             </>
           )}
           {boundary && mode !== 'boundary' && (
-            <Polygon
+            <ReadOnlyPolygon
               positions={boundary.coordinates}
               pathOptions={{
                 color: '#e74c3c',
@@ -850,7 +944,7 @@ const MapEditor: React.FC = () => {
           {Object.entries(suburbBoundaries).map(([suburbId, suburbBoundary]) => {
             const suburb = suburbs.find(s => s.id === parseInt(suburbId));
             return (
-              <Polygon
+              <ReadOnlyPolygon
                 key={suburbId}
                 positions={suburbBoundary.coordinates}
                 pathOptions={{
@@ -859,22 +953,19 @@ const MapEditor: React.FC = () => {
                   fillColor: '#3498db',
                   fillOpacity: 0.15,
                 }}
-                eventHandlers={{
-                  click: () => {
-                    if (confirm(`Open ${suburb?.name || 'this suburb'}?`)) {
-                      navigate(`/projects/${projectId}/maps/${suburbId}`);
-                    }
-                  },
+                tooltipContent={suburb?.name || 'Unnamed Suburb'}
+                onClick={() => {
+                  if (confirm(`Open ${suburb?.name || 'this suburb'}?`)) {
+                    navigate(`/projects/${projectId}/maps/${suburbId}`);
+                  }
                 }}
-              >
-                <Tooltip>{suburb?.name || 'Unnamed Suburb'}</Tooltip>
-              </Polygon>
+              />
             );
           })}
           {Object.entries(individualBoundaries).map(([individualId, individualBoundary]) => {
             const individual = individuals.find(i => i.id === parseInt(individualId));
             return (
-              <Polygon
+              <ReadOnlyPolygon
                 key={individualId}
                 positions={individualBoundary.coordinates}
                 pathOptions={{
@@ -883,16 +974,13 @@ const MapEditor: React.FC = () => {
                   fillColor: '#2ecc71',
                   fillOpacity: 0.15,
                 }}
-                eventHandlers={{
-                  click: () => {
-                    if (confirm(`Open ${individual?.name || 'this map'}?`)) {
-                      navigate(`/projects/${projectId}/maps/${individualId}`);
-                    }
-                  },
+                tooltipContent={individual?.name || 'Unnamed Map'}
+                onClick={() => {
+                  if (confirm(`Open ${individual?.name || 'this map'}?`)) {
+                    navigate(`/projects/${projectId}/maps/${individualId}`);
+                  }
                 }}
-              >
-                <Tooltip>{individual?.name || 'Unnamed Map'}</Tooltip>
-              </Polygon>
+              />
             );
           })}
           <DrawControls
