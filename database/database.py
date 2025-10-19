@@ -11,6 +11,7 @@ Classes:
 import sqlite3
 import os
 from typing import Optional, List
+import logging
 from contextlib import contextmanager
 
 
@@ -143,17 +144,65 @@ class DatabaseManager:
         """
 
         # Ensure database directory exists
-        db_dir = os.path.dirname(self.db.db_path)
-        if db_dir and not os.path.exists(db_dir):
-            # Create directory if needed
-            os.makedirs(db_dir)
+        try:
+            db_dir = os.path.dirname(self.db.db_path)
+            if db_dir and not os.path.exists(db_dir):
+                # Create directory if needed
+                os.makedirs(db_dir)
+
+        except Exception as e:
+            logging.error(f"Error creating database directory: {e}")
+            raise
 
         # Read schema SQL from file
-        with open(schema_file, "r", encoding="utf-8") as f:
-            schema_sql = f.read()
+        try:
+            with open(schema_file, "r", encoding="utf-8") as f:
+                schema_sql = f.read()
 
-        self.db.cursor.executescript(schema_sql)
-        self.db.conn.commit()
+            self.db.cursor.executescript(schema_sql)
+            self.db.conn.commit()
+
+        except Exception as e:
+            logging.error(f"Error initializing database schema: {e}")
+            raise
+
+        logging.info("Database initialized successfully.")
+
+    def create(
+        self
+    ) -> None:
+        """
+        Create a new record in the database.
+        """
+
+        logging.warning("Database create method not implemented yet.")
+
+    def read(
+        self
+    ) -> None:
+        """
+        Read records from the database.
+        """
+
+        logging.warning("Database read method not implemented yet.")
+
+    def update(
+        self
+    ) -> None:
+        """
+        Update an existing record in the database.
+        """
+
+        logging.warning("Database update method not implemented yet.")
+
+    def delete(
+        self
+    ) -> None:
+        """
+        Delete a record from the database.
+        """
+
+        logging.warning("Database delete method not implemented yet.")
 
 
 class Database:

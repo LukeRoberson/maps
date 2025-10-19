@@ -5,6 +5,14 @@ Routes:
     /health:
         Health check endpoint.
 
+Classes:
+    ColouredFormatter:
+        Custom log formatter that adds color codes based on log level.
+
+Functions:
+    configure_logging:
+        Configure application logging.
+
 Blueprints:
     - projects_bp:
         Blueprint for project-related routes.
@@ -43,6 +51,7 @@ from flask import (
 )
 from flask_session import Session
 import os
+import logging
 
 # Custom Module Imports
 from backend.config import Config
@@ -70,6 +79,94 @@ ENDPOINT_BOUNDARIES = '/api/boundaries'
 ENDPOINT_LAYERS = '/api/layers'
 ENDPOINT_ANNOTATIONS = '/api/annotations'
 ENDPOINT_EXPORTS = '/api/exports'
+
+
+class ColouredFormatter(
+    logging.Formatter
+):
+    """
+    Custom formatter that adds color codes to log messages based on level.
+
+    Attributes:
+        COLORS (dict): Mapping of log levels to ANSI color codes
+        RESET (str): ANSI reset code
+
+    Methods:
+        format:
+            Format log record with appropriate color
+    """
+
+    # ANSI color codes
+    COLORS = {
+        'DEBUG': '\033[36m',    # Cyan
+        'INFO': '\033[32m',     # Green
+        'WARNING': '\033[33m',  # Yellow
+        'ERROR': '\033[31m',    # Red
+        'CRITICAL': '\033[35m'  # Magenta
+    }
+    RESET = '\033[0m'
+
+    def format(
+        self,
+        record: logging.LogRecord
+    ) -> str:
+        """
+        Format log record with appropriate color.
+
+        Args:
+            record (logging.LogRecord): The log record to format
+
+        Returns:
+            str: Formatted log message with color codes
+        """
+
+        log_color = self.COLORS.get(record.levelname, self.RESET)
+        record.levelname = f"{log_color}{record.levelname}{self.RESET}"
+        return super().format(record)
+
+
+def configure_logging(
+    debug: bool = False
+) -> None:
+    """
+    Configure application logging.
+
+    Args:
+        debug (bool): If True, set log level to DEBUG. Default is False.
+
+    Returns:
+        None
+    """
+
+    level = logging.DEBUG if debug else logging.INFO
+
+    # Create formatters
+    file_formatter = logging.Formatter(
+        '%(asctime)s - %(levelname)s - %(message)s'
+    )
+    console_formatter = ColouredFormatter(
+        '%(levelname)s - %(message)s'
+    )
+
+    # Create handlers
+    file_handler = logging.FileHandler('api.log')
+    file_handler.setFormatter(file_formatter)
+
+    stream_handler = logging.StreamHandler()
+    stream_handler.setFormatter(console_formatter)
+
+    # Configure root logger
+    logging.basicConfig(
+        level=level,
+        handlers=[
+            file_handler,
+            stream_handler
+        ]
+    )
+
+
+# Set up logging for the application
+configure_logging(debug=False)
 
 # Initialize Flask application
 app = Flask(__name__)
@@ -148,6 +245,8 @@ if __name__ == '__main__':
     Main entry point for running locally.
     Debug mode is enabled for development purposes.
     """
+
+    logging.info('Starting Printable Maps API...')
 
     app.run(
         host='0.0.0.0',
