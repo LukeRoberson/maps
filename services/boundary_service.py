@@ -8,7 +8,7 @@ from datetime import datetime
 from flask import current_app
 
 from models import Boundary
-from database import Database
+from database import Database, DatabaseContext, DatabaseManager
 
 
 class BoundaryService:
@@ -41,6 +41,7 @@ class BoundaryService:
         """
         
         self.db: Database = current_app.config['db']
+        self.db_path: str = current_app.config['DATABASE_PATH']
 
     def _point_in_polygon(
         self,
@@ -142,7 +143,12 @@ class BoundaryService:
         """
         
         query = "SELECT * FROM boundaries WHERE id = ?"
-        row = self.db.fetchone(query, (boundary_id,))
+        with DatabaseContext(self.db_path) as db_ctx:
+            db_manager = DatabaseManager(db_ctx)
+            row = db_manager.read(
+                query,
+                (boundary_id,)
+            )
         
         if row:
             return Boundary(
@@ -170,7 +176,12 @@ class BoundaryService:
         """
         
         query = "SELECT * FROM boundaries WHERE map_area_id = ?"
-        row = self.db.fetchone(query, (map_area_id,))
+        with DatabaseContext(self.db_path) as db_ctx:
+            db_manager = DatabaseManager(db_ctx)
+            row = db_manager.read(
+                query,
+                (map_area_id,)
+            )
         
         if row:
             return Boundary(

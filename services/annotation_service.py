@@ -8,7 +8,7 @@ from datetime import datetime
 from flask import current_app
 
 from models import Annotation
-from database import Database
+from database import Database, DatabaseContext, DatabaseManager
 
 
 class AnnotationService:
@@ -39,6 +39,7 @@ class AnnotationService:
         """
         
         self.db: Database = current_app.config['db']
+        self.db_path: str = current_app.config['DATABASE_PATH']
 
     def create_annotation(
         self,
@@ -59,10 +60,12 @@ class AnnotationService:
         
         # Validate that the layer exists
         layer_query = "SELECT id, is_editable FROM layers WHERE id = ?"
-        layer_row = self.db.fetchone(
-            layer_query,
-            (annotation.layer_id,)
-        )
+        with DatabaseContext(self.db_path) as db_ctx:
+            db_manager = DatabaseManager(db_ctx)
+            layer_row = db_manager.read(
+                layer_query,
+                (annotation.layer_id,)
+            )
         
         if not layer_row:
             raise ValueError(
@@ -114,7 +117,12 @@ class AnnotationService:
         """
         
         query = "SELECT * FROM annotations WHERE id = ?"
-        row = self.db.fetchone(query, (annotation_id,))
+        with DatabaseContext(self.db_path) as db_ctx:
+            db_manager = DatabaseManager(db_ctx)
+            row = db_manager.read(
+                query,
+                (annotation_id,)
+            )
         
         if row:
             return Annotation(
@@ -149,7 +157,13 @@ class AnnotationService:
             WHERE layer_id = ?
             ORDER BY created_at
         """
-        rows = self.db.fetchall(query, (layer_id,))
+        with DatabaseContext(self.db_path) as db_ctx:
+            db_manager = DatabaseManager(db_ctx)
+            rows = db_manager.read(
+                query,
+                (layer_id,),
+                get_all=True
+            )
         
         annotations = []
         for row in rows:

@@ -7,7 +7,7 @@ import json
 from flask import current_app
 
 from models import Layer
-from database import Database
+from database import Database, DatabaseContext, DatabaseManager
 
 
 class LayerService:
@@ -44,6 +44,7 @@ class LayerService:
         """
         
         self.db: Database = current_app.config['db']
+        self.db_path: str = current_app.config['DATABASE_PATH']
 
     def create_layer(
         self,
@@ -100,7 +101,12 @@ class LayerService:
         """
         
         query = "SELECT * FROM layers WHERE id = ?"
-        row = self.db.fetchone(query, (layer_id,))
+        with DatabaseContext(self.db_path) as db_ctx:
+            db_manager = DatabaseManager(db_ctx)
+            row = db_manager.read(
+                query,
+                (layer_id,)
+            )
         
         if row:
             return self._row_to_layer(row)
@@ -151,7 +157,13 @@ class LayerService:
             WHERE map_area_id = ? AND parent_layer_id IS NULL
             ORDER BY z_index, created_at
         """
-        rows = self.db.fetchall(query, (map_area_id,))
+        with DatabaseContext(self.db_path) as db_ctx:
+            db_manager = DatabaseManager(db_ctx)
+            rows = db_manager.read(
+                query,
+                (map_area_id,),
+                get_all=True
+            )
         
         return [self._row_to_layer(row) for row in rows]
 
@@ -173,7 +185,13 @@ class LayerService:
         parent_query = """
             SELECT parent_id FROM map_areas WHERE id = ?
         """
-        parent_row = self.db.fetchone(parent_query, (map_area_id,))
+        # parent_row = self.db.fetchone(parent_query, (map_area_id,))
+        with DatabaseContext(self.db_path) as db_ctx:
+            db_manager = DatabaseManager(db_ctx)
+            parent_row = db_manager.read(
+                parent_query,
+                (map_area_id,)
+            )
         
         if not parent_row or not parent_row['parent_id']:
             return []
@@ -191,10 +209,12 @@ class LayerService:
                 SELECT * FROM layers
                 WHERE map_area_id = ? AND parent_layer_id = ?
             """
-            existing_row = self.db.fetchone(
-                existing_query,
-                (map_area_id, parent_layer.id)
-            )
+            with DatabaseContext(self.db_path) as db_ctx:
+                db_manager = DatabaseManager(db_ctx)
+                existing_row = db_manager.read(
+                    existing_query,
+                    (map_area_id, parent_layer.id)
+                )
             
             if existing_row:
                 inherited_layers.append(self._row_to_layer(existing_row))
@@ -236,7 +256,12 @@ class LayerService:
             WHERE project_id = ? AND area_type = 'master'
             LIMIT 1
         """
-        row = self.db.fetchone(query, (project_id,))
+        with DatabaseContext(self.db_path) as db_ctx:
+            db_manager = DatabaseManager(db_ctx)
+            row = db_manager.read(
+                query,
+                (project_id,)
+            )
         
         if row:
             return self.list_layers_for_map_area(row['id'])

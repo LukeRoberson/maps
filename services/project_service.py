@@ -8,7 +8,7 @@ from datetime import datetime
 
 from flask import current_app
 from models import Project
-from database import Database
+from database import Database, DatabaseContext, DatabaseManager
 
 
 class ProjectService:
@@ -29,6 +29,17 @@ class ProjectService:
         delete_project:
             Delete a project
     """
+
+    def __init__(self) -> None:
+        """
+        Initialize the ProjectService.
+        
+        Returns:
+            None
+        """
+        
+        self.db: Database = current_app.config['db']
+        self.db_path: str = current_app.config['DATABASE_PATH']
 
     def create_project(
         self,
@@ -83,7 +94,12 @@ class ProjectService:
         
         db: Database = current_app.config['db']
         query = "SELECT * FROM projects WHERE id = ?"
-        row = db.fetchone(query, (project_id,))
+        with DatabaseContext(self.db_path) as db_ctx:
+            db_manager = DatabaseManager(db_ctx)
+            row = db_manager.read(
+                query,
+                (project_id,)
+            )
         
         if row:
             return Project(
@@ -113,7 +129,12 @@ class ProjectService:
             SELECT * FROM projects
             ORDER BY updated_at DESC
         """
-        rows = db.fetchall(query)
+        with DatabaseContext(self.db_path) as db_ctx:
+            db_manager = DatabaseManager(db_ctx)
+            rows = db_manager.read(
+                query,
+                get_all=True
+            )
         
         projects = []
         for row in rows:

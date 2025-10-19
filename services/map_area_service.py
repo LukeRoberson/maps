@@ -7,7 +7,7 @@ from datetime import datetime
 from flask import current_app
 
 from models import MapArea
-from database import Database
+from database import Database, DatabaseContext, DatabaseManager
 
 
 class MapAreaService:
@@ -40,6 +40,7 @@ class MapAreaService:
         """
         
         self.db: Database = current_app.config['db']
+        self.db_path: str = current_app.config['DATABASE_PATH']
 
     def create_map_area(
         self,
@@ -96,7 +97,12 @@ class MapAreaService:
         """
         
         query = "SELECT * FROM map_areas WHERE id = ?"
-        row = self.db.fetchone(query, (map_area_id,))
+        with DatabaseContext(self.db_path) as db_ctx:
+            db_manager = DatabaseManager(db_ctx)
+            row = db_manager.read(
+                query,
+                (map_area_id,)
+            )
         
         if row:
             return MapArea(
@@ -137,14 +143,26 @@ class MapAreaService:
                 WHERE project_id = ?
                 ORDER BY created_at
             """
-            rows = self.db.fetchall(query, (project_id,))
+            with DatabaseContext(self.db_path) as db_ctx:
+                db_manager = DatabaseManager(db_ctx)
+                rows = db_manager.read(
+                    query,
+                    (project_id,),
+                    get_all=True
+                )
         else:
             query = """
                 SELECT * FROM map_areas
                 WHERE project_id = ? AND parent_id = ?
                 ORDER BY created_at
             """
-            rows = self.db.fetchall(query, (project_id, parent_id))
+            with DatabaseContext(self.db_path) as db_ctx:
+                db_manager = DatabaseManager(db_ctx)
+                rows = db_manager.read(
+                    query,
+                    (project_id, parent_id),
+                    get_all=True
+                )
         
         map_areas = []
         for row in rows:

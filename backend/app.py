@@ -190,6 +190,7 @@ with DatabaseContext(config.DATABASE_PATH) as db_ctx:
 
 db = Database(config.DATABASE_PATH)
 app.config['db'] = db
+app.config['DATABASE_PATH'] = config.DATABASE_PATH
 Session(app)
 
 # Register blueprints

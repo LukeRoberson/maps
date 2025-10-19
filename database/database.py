@@ -10,7 +10,7 @@ Classes:
 
 import sqlite3
 import os
-from typing import Optional, List
+from typing import Optional, List, Union
 import logging
 from contextlib import contextmanager
 
@@ -178,13 +178,36 @@ class DatabaseManager:
         logging.warning("Database create method not implemented yet.")
 
     def read(
-        self
-    ) -> None:
+        self,
+        query: str,
+        params: tuple = (),
+        get_all: bool = False
+    ) -> Union[sqlite3.Row, List[sqlite3.Row], None]:
         """
-        Read records from the database.
+        Read one or more records from the database.
+
+        Args:
+            query (str): The query to execute.
+            params (tuple): Parameters for the query.
+            get_all (bool): If True, fetch all records; otherwise, fetch one.
+
+        Returns:
+            Union[sqlite3.Row, List[sqlite3.Row], None]:
+                The fetched record or None.
         """
 
-        logging.warning("Database read method not implemented yet.")
+        # Execute the query
+        result = self.db.cursor.execute(
+            query,
+            params,
+        )
+
+        # Fetch all results or one
+        if get_all:
+            return result.fetchall()
+
+        else:
+            return result.fetchone()
 
     def update(
         self
@@ -219,10 +242,6 @@ class Database:
             Get a database connection
         execute:
             Execute a SQL query
-        fetchone:
-            Fetch one row from query results
-        fetchall:
-            Fetch all rows from query results
     """
 
     def __init__(
@@ -280,43 +299,3 @@ class Database:
             cursor = conn.execute(query, params)
             conn.commit()
             return cursor
-
-    def fetchone(
-        self,
-        query: str,
-        params: tuple = ()
-    ) -> Optional[sqlite3.Row]:
-        """
-        Fetch one row from query results.
-        
-        Args:
-            query (str): SQL query to execute
-            params (tuple): Query parameters
-        
-        Returns:
-            Optional[sqlite3.Row]: Query result row or None
-        """
-        
-        with self.get_connection() as conn:
-            cursor = conn.execute(query, params)
-            return cursor.fetchone()
-
-    def fetchall(
-        self,
-        query: str,
-        params: tuple = ()
-    ) -> List[sqlite3.Row]:
-        """
-        Fetch all rows from query results.
-        
-        Args:
-            query (str): SQL query to execute
-            params (tuple): Query parameters
-        
-        Returns:
-            List[sqlite3.Row]: List of query result rows
-        """
-        
-        with self.get_connection() as conn:
-            cursor = conn.execute(query, params)
-            return cursor.fetchall()
