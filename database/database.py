@@ -247,8 +247,8 @@ def get_db(
     
     if _db is None:
         if db_path is None:
-            from config import get_config
-            config = get_config()
+            from backend.config import Config
+            config = Config
             db_path = config.DATABASE_PATH
         
         _db = Database(db_path)

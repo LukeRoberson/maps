@@ -175,7 +175,6 @@ The application uses SQLite with the following tables:
 
 - **Code Style**: Follows PEP 8 for Python, TypeScript best practices for frontend
 - **Architecture**: Service-oriented backend, component-based frontend
-- **Testing**: Unit tests for services, integration tests for API endpoints
 - **Linting**: ESLint for TypeScript, Pylint for Python
 
 See `.github/copilot-instructions.md` for detailed coding conventions.

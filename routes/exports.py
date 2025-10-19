@@ -6,11 +6,11 @@ from flask import Blueprint, request, jsonify, send_file
 from typing import Dict, Any
 
 from services import ExportService
-from config import get_config
+from backend.config import Config
 
 exports_bp = Blueprint('exports', __name__, url_prefix='/api/exports')
 
-config = get_config()
+config = Config
 export_service = ExportService(config.EXPORT_FOLDER)
 
 
