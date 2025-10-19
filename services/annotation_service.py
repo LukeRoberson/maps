@@ -5,9 +5,10 @@ Annotation service for business logic operations.
 from typing import List, Optional, Dict, Any
 import json
 from datetime import datetime
+from flask import current_app
 
 from models import Annotation
-from database import get_db
+from database import Database
 
 
 class AnnotationService:
@@ -37,7 +38,7 @@ class AnnotationService:
             None
         """
         
-        self.db = get_db()
+        self.db: Database = current_app.config['db']
 
     def create_annotation(
         self,

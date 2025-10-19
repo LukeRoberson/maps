@@ -4,9 +4,10 @@ Layer service for business logic operations.
 
 from typing import List, Optional, Dict, Any
 import json
+from flask import current_app
 
 from models import Layer
-from database import get_db
+from database import Database
 
 
 class LayerService:
@@ -42,7 +43,7 @@ class LayerService:
             None
         """
         
-        self.db = get_db()
+        self.db: Database = current_app.config['db']
 
     def create_layer(
         self,

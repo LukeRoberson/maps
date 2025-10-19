@@ -2,14 +2,13 @@
 Project routes.
 """
 
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from typing import Dict, Any
 
 from models import Project
 from services import ProjectService
 
 projects_bp = Blueprint('projects', __name__, url_prefix='/api/projects')
-project_service = ProjectService()
 
 
 @projects_bp.route('', methods=['GET'])
@@ -20,7 +19,7 @@ def list_projects() -> Dict[str, Any]:
     Returns:
         Dict[str, Any]: JSON response with project list
     """
-    
+    project_service = ProjectService()
     try:
         projects = project_service.list_projects()
         return jsonify({
@@ -39,7 +38,7 @@ def create_project() -> Dict[str, Any]:
     Returns:
         Dict[str, Any]: JSON response with created project
     """
-    
+    project_service = ProjectService()
     try:
         data = request.get_json()
         
@@ -84,7 +83,7 @@ def get_project(
     Returns:
         Dict[str, Any]: JSON response with project details
     """
-    
+    project_service = ProjectService()
     try:
         project = project_service.get_project(project_id)
         
@@ -110,7 +109,7 @@ def update_project(
     Returns:
         Dict[str, Any]: JSON response with updated project
     """
-    
+    project_service = ProjectService()
     try:
         data = request.get_json()
         
@@ -144,7 +143,7 @@ def delete_project(
     Returns:
         Dict[str, Any]: JSON response confirming deletion
     """
-    
+    project_service = ProjectService()
     try:
         success = project_service.delete_project(project_id)
         

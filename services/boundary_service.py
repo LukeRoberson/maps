@@ -5,9 +5,10 @@ Boundary service for business logic operations.
 from typing import List, Optional, Tuple
 import json
 from datetime import datetime
+from flask import current_app
 
 from models import Boundary
-from database import get_db
+from database import Database
 
 
 class BoundaryService:
@@ -39,7 +40,7 @@ class BoundaryService:
             None
         """
         
-        self.db = get_db()
+        self.db: Database = current_app.config['db']
 
     def _point_in_polygon(
         self,

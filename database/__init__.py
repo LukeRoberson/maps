@@ -2,6 +2,6 @@
 Database initialization and management.
 """
 
-from .database import Database, get_db
+from .database import Database
 
-__all__ = ['Database', 'get_db']
+__all__ = ['Database']

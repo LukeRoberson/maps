@@ -33,6 +33,8 @@ class Config:
         'maps.db'
     )
 
+    SESSION_TYPE = 'filesystem'
+
     UPLOAD_FOLDER: str = os.path.join(
         os.path.dirname(__file__),
         '..',

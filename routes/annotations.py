@@ -2,7 +2,7 @@
 Annotation routes.
 """
 
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from typing import Dict, Any
 
 from models import Annotation
@@ -13,7 +13,6 @@ annotations_bp = Blueprint(
     __name__,
     url_prefix='/api/annotations'
 )
-annotation_service = AnnotationService()
 
 
 @annotations_bp.route('', methods=['GET'])
@@ -24,7 +23,7 @@ def list_annotations() -> Dict[str, Any]:
     Returns:
         Dict[str, Any]: JSON response with annotation list
     """
-    
+    annotation_service = AnnotationService()
     try:
         layer_id = request.args.get('layer_id', type=int)
         
@@ -50,7 +49,7 @@ def create_annotation() -> Dict[str, Any]:
     Returns:
         Dict[str, Any]: JSON response with created annotation
     """
-    
+    annotation_service = AnnotationService()
     try:
         data = request.get_json()
         
@@ -97,7 +96,7 @@ def get_annotation(
     Returns:
         Dict[str, Any]: JSON response with annotation details
     """
-    
+    annotation_service = AnnotationService()
     try:
         annotation = annotation_service.get_annotation(annotation_id)
         
@@ -123,7 +122,7 @@ def update_annotation(
     Returns:
         Dict[str, Any]: JSON response with updated annotation
     """
-    
+    annotation_service = AnnotationService()
     try:
         data = request.get_json()
         
@@ -157,7 +156,7 @@ def delete_annotation(
     Returns:
         Dict[str, Any]: JSON response confirming deletion
     """
-    
+    annotation_service = AnnotationService()
     try:
         success = annotation_service.delete_annotation(annotation_id)
         

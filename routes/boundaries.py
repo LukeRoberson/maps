@@ -2,7 +2,7 @@
 Boundary routes.
 """
 
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from typing import Dict, Any
 
 from models import Boundary
@@ -13,8 +13,6 @@ boundaries_bp = Blueprint(
     __name__,
     url_prefix='/api/boundaries'
 )
-boundary_service = BoundaryService()
-map_area_service = MapAreaService()
 
 
 @boundaries_bp.route('/map-area/<int:map_area_id>', methods=['GET'])
@@ -30,7 +28,7 @@ def get_boundary_by_map_area(
     Returns:
         Dict[str, Any]: JSON response with boundary details
     """
-    
+    boundary_service = BoundaryService()
     try:
         boundary = boundary_service.get_by_map_area(map_area_id)
         
@@ -51,7 +49,8 @@ def create_boundary() -> Dict[str, Any]:
     Returns:
         Dict[str, Any]: JSON response with created boundary
     """
-    
+    boundary_service = BoundaryService()
+    map_area_service = MapAreaService()    
     try:
         data = request.get_json()
         
@@ -120,7 +119,7 @@ def update_boundary(
     Returns:
         Dict[str, Any]: JSON response with updated boundary
     """
-    
+    boundary_service = BoundaryService()
     try:
         data = request.get_json()
         
@@ -156,7 +155,7 @@ def delete_boundary(
     Returns:
         Dict[str, Any]: JSON response confirming deletion
     """
-    
+    boundary_service = BoundaryService()
     try:
         success = boundary_service.delete_boundary(boundary_id)
         

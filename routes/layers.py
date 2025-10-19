@@ -2,7 +2,7 @@
 Layer routes.
 """
 
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from typing import Tuple, Union
 from werkzeug.wrappers import Response
 
@@ -10,7 +10,6 @@ from models import Layer
 from services import LayerService
 
 layers_bp = Blueprint('layers', __name__, url_prefix='/api/layers')
-layer_service = LayerService()
 
 
 @layers_bp.route('', methods=['GET'])
@@ -21,7 +20,7 @@ def list_layers() -> Union[Response, Tuple[Response, int]]:
     Returns:
         Dict[str, Any]: JSON response with layer list
     """
-    
+    layer_service = LayerService()
     try:
         map_area_id = request.args.get('map_area_id', type=int)
         
@@ -47,7 +46,7 @@ def create_layer() -> Union[Response, Tuple[Response, int]]:
     Returns:
         Dict[str, Any]: JSON response with created layer
     """
-    
+    layer_service = LayerService()
     try:
         data = request.get_json()
         
@@ -93,7 +92,7 @@ def get_layer(
     Returns:
         Dict[str, Any]: JSON response with layer details
     """
-    
+    layer_service = LayerService()
     try:
         layer = layer_service.get_layer(layer_id)
         
@@ -119,7 +118,7 @@ def update_layer(
     Returns:
         Dict[str, Any]: JSON response with updated layer
     """
-    
+    layer_service = LayerService()
     try:
         data = request.get_json()
         
@@ -150,7 +149,7 @@ def delete_layer(
     Returns:
         Dict[str, Any]: JSON response confirming deletion
     """
-    
+    layer_service = LayerService()
     try:
         success = layer_service.delete_layer(layer_id)
         

@@ -6,8 +6,9 @@ from typing import List, Optional, Dict, Any
 import json
 from datetime import datetime
 
+from flask import current_app
 from models import Project
-from database import get_db
+from database import Database
 
 
 class ProjectService:
@@ -29,16 +30,6 @@ class ProjectService:
             Delete a project
     """
 
-    def __init__(self) -> None:
-        """
-        Initialize the ProjectService.
-        
-        Returns:
-            None
-        """
-        
-        self.db = get_db()
-
     def create_project(
         self,
         project: Project
@@ -53,6 +44,7 @@ class ProjectService:
             Project: Created project with assigned ID
         """
         
+        db: Database = current_app.config['db']
         query = """
             INSERT INTO projects (
                 name, description, center_lat,
@@ -61,7 +53,7 @@ class ProjectService:
             VALUES (?, ?, ?, ?, ?)
         """
         
-        cursor = self.db.execute(
+        cursor = db.execute(
             query,
             (
                 project.name,
@@ -89,8 +81,9 @@ class ProjectService:
             Optional[Project]: Project if found, None otherwise
         """
         
+        db: Database = current_app.config['db']
         query = "SELECT * FROM projects WHERE id = ?"
-        row = self.db.fetchone(query, (project_id,))
+        row = db.fetchone(query, (project_id,))
         
         if row:
             return Project(
@@ -114,11 +107,13 @@ class ProjectService:
             List[Project]: List of all projects
         """
         
+        db: Database = current_app.config['db']
+
         query = """
             SELECT * FROM projects
             ORDER BY updated_at DESC
         """
-        rows = self.db.fetchall(query)
+        rows = db.fetchall(query)
         
         projects = []
         for row in rows:
@@ -153,6 +148,8 @@ class ProjectService:
             Optional[Project]: Updated project if found, None otherwise
         """
         
+        db: Database = current_app.config['db']
+
         allowed_fields = [
             'name',
             'description',
@@ -181,7 +178,7 @@ class ProjectService:
             WHERE id = ?
         """
         
-        self.db.execute(query, tuple(values))
+        db.execute(query, tuple(values))
         return self.get_project(project_id)
 
     def delete_project(
@@ -197,8 +194,9 @@ class ProjectService:
         Returns:
             bool: True if deleted, False if not found
         """
+        db: Database = current_app.config['db']
         
         query = "DELETE FROM projects WHERE id = ?"
-        cursor = self.db.execute(query, (project_id,))
+        cursor = db.execute(query, (project_id,))
         
         return cursor.rowcount > 0

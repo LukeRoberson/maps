@@ -2,88 +2,51 @@
 
 A modern web application for creating, editing, and exporting printable maps with custom boundaries and annotations using OpenStreetMap data.
 
+</br></br>
+
+
 ## Features
 
-- **Hierarchical Project Structure**: Organize maps into Master Maps → Suburbs → Individual Maps
-- **Interactive Map Editing**: Draw and edit boundaries directly on the map using Leaflet Draw
-- **Multiple Map Layers**: Show/hide OpenStreetMap layers and add custom annotation layers
-- **Custom Annotations**: Add markers, lines, polygons, and text annotations to maps
-- **Export to PNG**: Export maps as high-quality PNG files with readable street names
 - **Modern UI**: Clean, responsive interface built with React and TypeScript
+- **Hierarchical Project Structure**: Define regions → Suburbs → Individual Maps
+- **Interactive Map Editing**: Draw and edit boundaries directly on the map in the UI
+- **Multiple Map Layers**: Add layers for annotations
+- **Annotations**: Add markers, lines, polygons, and text annotations to maps
+- **Export to PNG**: Export maps as high-quality PNG files with readable street names
 - **RESTful API**: Well-structured Flask backend with full CRUD operations
+
+</br></br>
+
 
 ## Technology Stack
 
-### Backend
-- **Python 3.x** with Flask web framework
-- **SQLite** for data persistence
-- **Flask-CORS** for cross-origin support
-- Service-oriented architecture with clean separation of concerns
+* A RESTful backend API built with Python and Flask
+* SQLite for storing persistent data
+* React and TypeScript powered frontend UI
+* OpenStreetMap for mapping information
 
-### Frontend
-- **React 18** with TypeScript
-- **React Router** for navigation
-- **Leaflet** and **React-Leaflet** for interactive maps
-- **Leaflet Draw** for boundary editing
-- **Axios** for API communication
-- **Vite** for fast development and optimized builds
+</br></br>
 
-### Mapping
-- **OpenStreetMap** tile layers
-- **Leaflet.js** for map rendering
-- GeoJSON support for boundaries
 
-## Installation & Setup
+---
+# Installation & Setup
 
-### Prerequisites
-- Python 3.8 or higher
-- Node.js 18 or higher
-- npm or yarn package manager
+See the `backend/docs/setup.md` and `backend/docs/setup.md` for specific details around setting up each environment.
 
-### Backend Setup
 
-1. Create and activate a Python virtual environment (recommended):
-   ```bash
-   python -m venv .venv
-   .venv\Scripts\activate  # Windows
-   source .venv/bin/activate  # Linux/Mac
-   ```
+**Step 1: Start the API:**
+```bash
+python -m backend.app
+```
 
-2. Install Python dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
 
-### Frontend Setup
+**Step 1: Start the Frontend:**
+```bash
+cd frontend
+npm run dev
+```
 
-1. Navigate to the frontend directory:
-   ```bash
-   cd frontend
-   ```
 
-2. Install Node.js dependencies:
-   ```bash
-   npm install
-   ```
-
-## Running the Application
-
-### Development Mode
-
-1. **Start the Flask backend** (from project root):
-   ```bash
-   python app.py
-   ```
-   The API will be available at http://localhost:5000
-
-2. **Start the React frontend** (in a new terminal):
-   ```bash
-   cd frontend
-   npm run dev
-   ```
-   The UI will be available at http://localhost:3000
-
-3. Open your browser to http://localhost:3000
 
 ### Production Build
 
@@ -182,3 +145,85 @@ See `.github/copilot-instructions.md` for detailed coding conventions.
 ## License
 
 This project is for educational and personal use.
+
+
+
+### Build for Production
+
+1. **Build the frontend:**
+   ```bash
+   cd frontend
+   npm run build
+   ```
+
+2. **Configure WSGI** for production deployment
+
+## Project Structure
+
+```
+.
+├── app.py                    # Flask application entry point
+├── config.py                 # Configuration settings
+├── requirements.txt          # Python dependencies
+├── models/                   # Data models
+│   ├── __init__.py
+│   ├── project.py
+│   ├── map_area.py
+│   ├── boundary.py
+│   ├── layer.py
+│   └── annotation.py
+├── services/                 # Business logic
+│   ├── __init__.py
+│   ├── project_service.py
+│   ├── map_area_service.py
+│   ├── boundary_service.py
+│   ├── layer_service.py
+│   ├── annotation_service.py
+│   └── export_service.py
+├── routes/                   # API endpoints
+│   ├── __init__.py
+│   ├── projects.py
+│   ├── map_areas.py
+│   ├── boundaries.py
+│   ├── layers.py
+│   ├── annotations.py
+│   └── exports.py
+├── database/                 # Database management
+│   ├── __init__.py
+│   ├── database.py
+│   └── maps.db (created automatically)
+├── exports/                  # Exported map files (created automatically)
+├── uploads/                  # Uploaded files (created automatically)
+└── frontend/                 # React application
+    ├── package.json
+    ├── tsconfig.json
+    ├── vite.config.ts
+    ├── index.html
+    └── src/
+        ├── main.tsx
+        ├── app.tsx
+        ├── types/
+        ├── services/
+        ├── components/
+        ├── pages/
+        └── styles/
+```
+
+## Database
+
+The application uses SQLite for data storage. The database file (`maps.db`) is created automatically in the `database/` directory when you first run the application.
+
+## Next Steps
+
+1. Configure Python virtual environment (recommended)
+2. Install Node.js dependencies
+3. Install Python dependencies
+4. Run the development servers
+5. Access the application at http://localhost:3000
+
+For production deployment:
+- Set `FLASK_ENV=production`
+- Set a secure `SECRET_KEY` environment variable
+- Build the frontend with `npm run build`
+- Use a WSGI server like Gunicorn
+- Consider using a reverse proxy like Nginx

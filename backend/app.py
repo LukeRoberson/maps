@@ -41,11 +41,12 @@ from flask import (
     Response,
     jsonify,
 )
+from flask_session import Session
 import os
 
 # Custom Module Imports
 from backend.config import Config
-from database import get_db
+from database import Database
 from routes import (
     projects_bp,
     map_areas_bp,
@@ -82,8 +83,9 @@ for folder in [config.UPLOAD_FOLDER, config.EXPORT_FOLDER]:
         os.makedirs(folder)
 
 # Initialize database
-db = get_db(config.DATABASE_PATH)
-db.initialize_schema()
+db = Database(config.DATABASE_PATH)
+app.config['db'] = db
+Session(app)
 
 # Register blueprints
 app.register_blueprint(projects_bp)

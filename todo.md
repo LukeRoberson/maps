@@ -5,6 +5,7 @@
 - [ ] On a map with no layers, I create a new layer, and it appears to be selected by default. I try to create a new annotation, but I'm told to select a layer first. A refresh fixes the issue.
 - [ ] If I delete all layers, I'm still allowed to create new annotations
 - [ ] When I add a marker (annotation) and label it, two labels appear in the UI. The second label disappears when the next annotation is added, when something is deleted or added, or when the page is refreshed
+- [ ] README.md needs updating
 
 
 ## UI

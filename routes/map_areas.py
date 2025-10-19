@@ -2,14 +2,13 @@
 Map area routes.
 """
 
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from typing import Dict, Any
 
 from models import MapArea
 from services import MapAreaService
 
 map_areas_bp = Blueprint('map_areas', __name__, url_prefix='/api/map-areas')
-map_area_service = MapAreaService()
 
 
 @map_areas_bp.route('', methods=['GET'])
@@ -20,7 +19,7 @@ def list_map_areas() -> Dict[str, Any]:
     Returns:
         Dict[str, Any]: JSON response with map area list
     """
-    
+    map_area_service = MapAreaService()
     try:
         project_id = request.args.get('project_id', type=int)
         
@@ -52,7 +51,7 @@ def get_hierarchy() -> Dict[str, Any]:
     Returns:
         Dict[str, Any]: JSON response with hierarchy
     """
-    
+    map_area_service = MapAreaService()
     try:
         project_id = request.args.get('project_id', type=int)
         
@@ -76,7 +75,7 @@ def create_map_area() -> Dict[str, Any]:
     Returns:
         Dict[str, Any]: JSON response with created map area
     """
-    
+    map_area_service = MapAreaService()
     try:
         data = request.get_json()
         
@@ -121,7 +120,7 @@ def get_map_area(
     Returns:
         Dict[str, Any]: JSON response with map area details
     """
-    
+    map_area_service = MapAreaService()
     try:
         map_area = map_area_service.get_map_area(map_area_id)
         
@@ -147,7 +146,7 @@ def update_map_area(
     Returns:
         Dict[str, Any]: JSON response with updated map area
     """
-    
+    map_area_service = MapAreaService()
     try:
         data = request.get_json()
         
@@ -181,7 +180,7 @@ def delete_map_area(
     Returns:
         Dict[str, Any]: JSON response confirming deletion
     """
-    
+    map_area_service = MapAreaService()
     try:
         success = map_area_service.delete_map_area(map_area_id)
         

@@ -4,9 +4,10 @@ Map area service for business logic operations.
 
 from typing import List, Optional, Dict, Any
 from datetime import datetime
+from flask import current_app
 
 from models import MapArea
-from database import get_db
+from database import Database
 
 
 class MapAreaService:
@@ -38,7 +39,7 @@ class MapAreaService:
             None
         """
         
-        self.db = get_db()
+        self.db: Database = current_app.config['db']
 
     def create_map_area(
         self,
