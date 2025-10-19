@@ -69,21 +69,23 @@ class LayerService:
         """
         
         config_json = json.dumps(layer.config)
-        cursor = self.db.execute(
-            query,
-            (
-                layer.map_area_id,
-                layer.parent_layer_id,
-                layer.name,
-                layer.layer_type,
-                layer.visible,
-                layer.z_index,
-                layer.is_editable,
-                config_json
+
+        with DatabaseContext(self.db_path) as db_ctx:
+            db_manager = DatabaseManager(db_ctx)
+            layer.id = db_manager.create(
+                query,
+                (
+                    layer.map_area_id,
+                    layer.parent_layer_id,
+                    layer.name,
+                    layer.layer_type,
+                    layer.visible,
+                    layer.z_index,
+                    layer.is_editable,
+                    config_json
+                )
             )
-        )
         
-        layer.id = cursor.lastrowid
         return layer
 
     def get_layer(

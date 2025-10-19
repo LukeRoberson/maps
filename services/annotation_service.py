@@ -88,18 +88,19 @@ class AnnotationService:
         coords_json = json.dumps(annotation.coordinates)
         style_json = json.dumps(annotation.style)
         
-        cursor = self.db.execute(
-            query,
-            (
-                annotation.layer_id,
-                annotation.annotation_type,
-                coords_json,
-                style_json,
-                annotation.content
+        with DatabaseContext(self.db_path) as db_ctx:
+            db_manager = DatabaseManager(db_ctx)
+            annotation.id = db_manager.create(
+                query,
+                (
+                    annotation.layer_id,
+                    annotation.annotation_type,
+                    coords_json,
+                    style_json,
+                    annotation.content
+                )
             )
-        )
         
-        annotation.id = cursor.lastrowid
         return annotation
 
     def get_annotation(

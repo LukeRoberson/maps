@@ -120,12 +120,17 @@ class BoundaryService:
         """
         
         coords_json = json.dumps(boundary.coordinates)
-        cursor = self.db.execute(
-            query,
-            (boundary.map_area_id, coords_json)
-        )
+
+        with DatabaseContext(self.db_path) as db_ctx:
+            db_manager = DatabaseManager(db_ctx)
+            boundary.id = db_manager.create(
+                query,
+                (
+                    boundary.map_area_id,
+                    coords_json
+                )
+            )
         
-        boundary.id = cursor.lastrowid
         return boundary
 
     def get_boundary(

@@ -65,21 +65,22 @@ class MapAreaService:
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """
         
-        cursor = self.db.execute(
-            query,
-            (
-                map_area.project_id,
-                map_area.parent_id,
-                map_area.name,
-                map_area.area_type,
-                map_area.boundary_id,
-                map_area.default_center_lat,
-                map_area.default_center_lon,
-                map_area.default_zoom
+        with DatabaseContext(self.db_path) as db_ctx:
+            db_manager = DatabaseManager(db_ctx)
+            map_area.id = db_manager.create(
+                query,
+                (
+                    map_area.project_id,
+                    map_area.parent_id,
+                    map_area.name,
+                    map_area.area_type,
+                    map_area.boundary_id,
+                    map_area.default_center_lat,
+                    map_area.default_center_lon,
+                    map_area.default_zoom
+                )
             )
-        )
         
-        map_area.id = cursor.lastrowid
         return map_area
 
     def get_map_area(

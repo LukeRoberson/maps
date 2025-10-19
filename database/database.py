@@ -169,13 +169,30 @@ class DatabaseManager:
         logging.info("Database initialized successfully.")
 
     def create(
-        self
-    ) -> None:
+        self,
+        query: str,
+        params: tuple = ()
+    ) -> Optional[int]:
         """
         Create a new record in the database.
+
+        Args:
+            query (str): The insert query to execute.
+            params (tuple): Parameters for the insert query.
+
+        Returns:
+            None
         """
 
-        logging.warning("Database create method not implemented yet.")
+        # Execute the query
+        logging.info(f"Executing create query: {query} with params: {params}")
+        result = self.db.cursor.execute(
+            query,
+            params,
+        )
+
+        # Return the last inserted ID
+        return result.lastrowid
 
     def read(
         self,
@@ -197,6 +214,7 @@ class DatabaseManager:
         """
 
         # Execute the query
+        logging.debug(f"Executing read query: {query} with params: {params}")
         result = self.db.cursor.execute(
             query,
             params,

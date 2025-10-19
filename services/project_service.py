@@ -55,7 +55,6 @@ class ProjectService:
             Project: Created project with assigned ID
         """
         
-        db: Database = current_app.config['db']
         query = """
             INSERT INTO projects (
                 name, description, center_lat,
@@ -64,18 +63,19 @@ class ProjectService:
             VALUES (?, ?, ?, ?, ?)
         """
         
-        cursor = db.execute(
-            query,
-            (
-                project.name,
-                project.description,
-                project.center_lat,
-                project.center_lon,
-                project.zoom_level
+        with DatabaseContext(self.db_path) as db_ctx:
+            db_manager = DatabaseManager(db_ctx)
+            db_manager.create(
+                query,
+                (
+                    project.name,
+                    project.description,
+                    project.center_lat,
+                    project.center_lon,
+                    project.zoom_level
+                )
             )
-        )
         
-        project.id = cursor.lastrowid
         return project
 
     def get_project(
