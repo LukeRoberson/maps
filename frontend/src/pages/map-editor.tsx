@@ -818,9 +818,13 @@ const MapEditor: React.FC = () => {
       
       // Use functional update to check current state value
       setActiveLayerId(currentActiveId => {
+        // If there are no editable layers, clear the active layer
+        if (editableLayers.length === 0) {
+          return null;
+        }
         // If there's no active layer, or the active layer no longer exists, set the first editable layer as active
         const currentActiveLayerExists = editableLayers.some(l => l.id === currentActiveId);
-        if (editableLayers.length > 0 && (!currentActiveId || !currentActiveLayerExists)) {
+        if (!currentActiveId || !currentActiveLayerExists) {
           return editableLayers[0].id!;
         }
         return currentActiveId;
@@ -1067,7 +1071,15 @@ const MapEditor: React.FC = () => {
       showToast('Annotation saved successfully!', 'success');
     } catch (error) {
       console.error('Failed to create annotation:', error);
-      showToast('Failed to save annotation. Please try again.', 'error');
+      // Extract error message from the response if available
+      let errorMessage = 'Failed to save annotation. Please try again.';
+      if (error instanceof Error && 'response' in error) {
+        const response = (error as any).response?.data;
+        if (response?.error) {
+          errorMessage = response.error;
+        }
+      }
+      showToast(errorMessage, 'error');
     }
   };
 

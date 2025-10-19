@@ -78,7 +78,7 @@ def create_annotation() -> Dict[str, Any]:
         return jsonify(created_annotation.to_dict()), 201
     
     except ValueError as e:
-        return jsonify({'error': f'Invalid data: {str(e)}'}), 400
+        return jsonify({'error': str(e)}), 400
     
     except Exception as e:
         return jsonify({'error': str(e)}), 500

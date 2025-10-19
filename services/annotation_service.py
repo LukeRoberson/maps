@@ -51,7 +51,27 @@ class AnnotationService:
         
         Returns:
             Annotation: Created annotation with assigned ID
+        
+        Raises:
+            ValueError: If layer does not exist or is not editable
         """
+        
+        # Validate that the layer exists
+        layer_query = "SELECT id, is_editable FROM layers WHERE id = ?"
+        layer_row = self.db.fetchone(
+            layer_query,
+            (annotation.layer_id,)
+        )
+        
+        if not layer_row:
+            raise ValueError(
+                f"Layer with ID {annotation.layer_id} does not exist"
+            )
+        
+        if not layer_row['is_editable']:
+            raise ValueError(
+                "Cannot create annotations on read-only layers"
+            )
         
         query = """
             INSERT INTO annotations (
