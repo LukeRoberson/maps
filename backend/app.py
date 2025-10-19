@@ -46,7 +46,11 @@ import os
 
 # Custom Module Imports
 from backend.config import Config
-from database import Database
+from database import (
+    Database,
+    DatabaseContext,
+    DatabaseManager,
+)
 from routes import (
     projects_bp,
     map_areas_bp,
@@ -83,6 +87,10 @@ for folder in [config.UPLOAD_FOLDER, config.EXPORT_FOLDER]:
         os.makedirs(folder)
 
 # Initialize database
+with DatabaseContext(config.DATABASE_PATH) as db_ctx:
+    db_manager = DatabaseManager(db_ctx)
+    db_manager.initialise()
+
 db = Database(config.DATABASE_PATH)
 app.config['db'] = db
 Session(app)

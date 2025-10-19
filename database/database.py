@@ -2,7 +2,10 @@
 Database connection and initialization.
 
 Classes:
-    Database: SQLite database manager for the maps application.
+    DatabaseContext:
+        Context manager for SQLite database connections.
+    Database:
+        SQLite database manager for the maps application.
 """
 
 import sqlite3
@@ -11,18 +14,158 @@ from typing import Optional, List
 from contextlib import contextmanager
 
 
+class DatabaseContext:
+    """
+    Database context manager for SQLite DB.
+
+    Attributes:
+        db_path (str):
+            Path to the SQLite database file
+
+    Methods:
+        __init__:
+            Initialize DatabaseContext
+        __enter__:
+            Start context manager
+        __exit__:
+            Exit context manager
+    """
+
+    def __init__(
+        self,
+        db_path: str
+    ) -> None:
+        """
+        Initialize the DatabaseContext instance.
+
+        Args:
+            db_path (str): Path to the SQLite database file
+
+        Returns:
+            None
+        """
+
+        self.db_path = db_path
+        self.conn = sqlite3.connect(db_path)
+        self.conn.row_factory = sqlite3.Row
+        self.cursor = self.conn.cursor()
+        self.conn.execute("PRAGMA foreign_keys = ON")
+
+    def __enter__(
+        self
+    ) -> 'DatabaseContext':
+        """
+        Start the context manager and return the instance.
+
+        Args:
+            None
+
+        Returns:
+            DatabaseContext: The instance of the DatabaseContext.
+        """
+
+        return self
+
+    def __exit__(
+        self,
+        exc_type,
+        exc_value,
+        traceback
+    ) -> None:
+        """
+        Exit the context manager, handling any exceptions.
+
+        Args:
+            exc_type (type): The type of the exception raised.
+            exc_val (Exception): The exception instance.
+            exc_tb (traceback.TracebackException): The traceback object.
+
+        Returns:
+            None
+        """
+
+        # Commit or rollback
+        if exc_type:
+            self.conn.rollback()
+        else:
+            self.conn.commit()
+
+        # Close the connection
+        self.conn.close()
+
+
+class DatabaseManager:
+    """
+    Database manager for the mapps application.
+
+    Attributes:
+        db (DatabaseContext):
+            An instance of DatabaseContext for database operations.
+
+    Methods:
+        __init__:
+            Initialize DatabaseManager
+        initialise:
+            Create database tables and indexes if they don't exist
+    """
+
+    def __init__(
+        self,
+        db: 'DatabaseContext'
+    ) -> None:
+        """
+        Initializes the DatabaseManager with a DatabaseContext instance.
+            This uses a 'composition' approach
+
+        Args:
+            db (DatabaseContext): An instance of DatabaseContext for
+                database operations.
+
+        Returns:
+            None
+        """
+
+        self.db = db
+
+    def initialise(
+        self,
+        schema_file: str = "database/schema.sql"
+    ) -> None:
+        """
+        Create database tables and indexes if they don't exist.
+        Reads the schema from an sql script file.
+
+        Args:
+            schema_file (str): Path to the SQL schema file
+
+        Returns:
+            None
+        """
+
+        # Ensure database directory exists
+        db_dir = os.path.dirname(self.db.db_path)
+        if db_dir and not os.path.exists(db_dir):
+            # Create directory if needed
+            os.makedirs(db_dir)
+
+        # Read schema SQL from file
+        with open(schema_file, "r", encoding="utf-8") as f:
+            schema_sql = f.read()
+
+        self.db.cursor.executescript(schema_sql)
+        self.db.conn.commit()
+
+
 class Database:
     """
-    SQLite database manager for the maps application.
+    Legacy SQLite database manager for the maps application.
 
     Attributes:
         db_path (str): Path to the SQLite database file
 
     Methods:
         __init__:
-            Initialize Database
-        _initialize_schema:
-            Create database tables and indexes if they don't exist
+            Initialize instance
         get_connection:
             Get a database connection
         execute:
@@ -39,7 +182,6 @@ class Database:
     ) -> None:
         """
         Initialize the Database manager instance.
-        Checks that the DB directory exists, creating it if necessary.
 
         Args:
             db_path (str): Path to the SQLite database file
@@ -50,39 +192,6 @@ class Database:
 
         # Set database path
         self.db_path = db_path
-
-        # Ensure database directory exists
-        db_dir = os.path.dirname(self.db_path)
-        if db_dir and not os.path.exists(db_dir):
-            # Create directory if needed
-            os.makedirs(db_dir)
-
-        # Create database schema if it doesn't exist
-        self._initialize_schema()
-
-    def _initialize_schema(
-        self,
-        schema_file: str = "database/schema.sql"
-    ) -> None:
-        """
-        Create database tables and indexed if they don't exist.
-        Reads the schema from an sql script file.
-
-        Args:
-            schema_file (str): Path to the SQL schema file
-
-        Returns:
-            None
-        """
-
-        # Read schema SQL from file
-        with open(schema_file, "r", encoding="utf-8") as f:
-            schema_sql = f.read()
-
-        # Execute schema SQL
-        with self.get_connection() as conn:
-            conn.executescript(schema_sql)
-            conn.commit()
 
     @contextmanager
     def get_connection(self):
