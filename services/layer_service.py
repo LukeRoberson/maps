@@ -105,8 +105,11 @@ class LayerService:
         with DatabaseContext(self.db_path) as db_ctx:
             db_manager = DatabaseManager(db_ctx)
             row = db_manager.read(
-                query,
-                (layer_id,)
+                table="layers",
+                fields=['*'],
+                params={
+                    'id': layer_id
+                }
             )
         
         if row:
@@ -161,8 +164,13 @@ class LayerService:
         with DatabaseContext(self.db_path) as db_ctx:
             db_manager = DatabaseManager(db_ctx)
             rows = db_manager.read(
-                query,
-                (map_area_id,),
+                table="layers",
+                fields=['*'],
+                params={
+                    'map_area_id': map_area_id,
+                    'parent_layer_id': 'NULL'
+                },
+                order_by=['z_index', 'created_at'],
                 get_all=True
             )
         
@@ -189,8 +197,11 @@ class LayerService:
         with DatabaseContext(self.db_path) as db_ctx:
             db_manager = DatabaseManager(db_ctx)
             parent_row = db_manager.read(
-                parent_query,
-                (map_area_id,)
+                table="map_areas",
+                fields=['parent_id'],
+                params={
+                    'id': map_area_id
+                }
             )
         
         if not parent_row or not parent_row['parent_id']:
@@ -212,8 +223,12 @@ class LayerService:
             with DatabaseContext(self.db_path) as db_ctx:
                 db_manager = DatabaseManager(db_ctx)
                 existing_row = db_manager.read(
-                    existing_query,
-                    (map_area_id, parent_layer.id)
+                    table="layers",
+                    fields=['*'],
+                    params={
+                        'map_area_id': map_area_id,
+                        'parent_layer_id': parent_layer.id
+                    }
                 )
             
             if existing_row:
@@ -259,8 +274,13 @@ class LayerService:
         with DatabaseContext(self.db_path) as db_ctx:
             db_manager = DatabaseManager(db_ctx)
             row = db_manager.read(
-                query,
-                (project_id,)
+                table="map_areas",
+                fields=['id'],
+                params={
+                    'project_id': project_id,
+                    'area_type': 'master'
+                },
+                limit=1
             )
         
         if row:

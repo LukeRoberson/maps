@@ -150,8 +150,11 @@ class BoundaryService:
         with DatabaseContext(self.db_path) as db_ctx:
             db_manager = DatabaseManager(db_ctx)
             row = db_manager.read(
-                query,
-                (boundary_id,)
+                table="boundaries",
+                fields=['*'],
+                params={
+                    'id': boundary_id
+                }
             )
         
         if row:
@@ -183,8 +186,11 @@ class BoundaryService:
         with DatabaseContext(self.db_path) as db_ctx:
             db_manager = DatabaseManager(db_ctx)
             row = db_manager.read(
-                query,
-                (map_area_id,)
+                table="boundaries",
+                fields=['*'],
+                params={
+                    'map_area_id': map_area_id
+                }
             )
         
         if row:

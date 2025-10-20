@@ -94,8 +94,11 @@ class ProjectService:
         with DatabaseContext(self.db_path) as db_ctx:
             db_manager = DatabaseManager(db_ctx)
             row = db_manager.read(
-                query,
-                (project_id,)
+                table="projects",
+                fields=['*'],
+                params={
+                    'id': project_id
+                }
             )
         
         if row:
@@ -127,7 +130,11 @@ class ProjectService:
         with DatabaseContext(self.db_path) as db_ctx:
             db_manager = DatabaseManager(db_ctx)
             rows = db_manager.read(
-                query,
+                table="projects",
+                fields=['*'],
+                params={},
+                order_by=['updated_at'],
+                order_desc=True,
                 get_all=True
             )
         

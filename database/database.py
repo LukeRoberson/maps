@@ -213,8 +213,12 @@ class DatabaseManager:
 
     def read(
         self,
-        query: str,
-        params: tuple = (),
+        table: str,
+        fields: List[str],
+        params: dict = {},
+        order_by: Optional[list[str]] = None,
+        order_desc: bool = False,
+        limit: Optional[int] = None,
         get_all: bool = False
     ) -> Union[sqlite3.Row, List[sqlite3.Row], None]:
         """
@@ -230,11 +234,37 @@ class DatabaseManager:
                 The fetched record or None.
         """
 
+        parameters = []
+
+        # Build query
+        query = f"SELECT {', '.join(fields)} FROM {table} "
+
+        if params:
+            query += "WHERE "
+
+        for key, value in params.items():
+            if value == 'NULL':
+                query += f"{key} IS NULL AND "
+            else:
+                query += f"{key} = ? AND "
+                parameters.append(value)
+        query = query.rstrip(" AND ")
+
+        if order_by:
+            query += " ORDER BY " + ", ".join(order_by)
+            if order_desc:
+                query += " DESC"
+
+        if limit is not None:
+            query += f" LIMIT {limit}"
+
         # Execute the query
-        logging.debug(f"Executing read query: {query} with params: {params}")
+        logging.debug(
+            f"Executing read query: {query} with params: {parameters}"
+        )
         result = self.db.cursor.execute(
             query,
-            params,
+            parameters,
         )
 
         # Fetch all results or one

@@ -62,8 +62,11 @@ class AnnotationService:
         with DatabaseContext(self.db_path) as db_ctx:
             db_manager = DatabaseManager(db_ctx)
             layer_row = db_manager.read(
-                layer_query,
-                (annotation.layer_id,)
+                table="layers",
+                fields=['id', 'is_editable'],
+                params={
+                    'id': annotation.layer_id
+                }
             )
         
         if not layer_row:
@@ -120,8 +123,11 @@ class AnnotationService:
         with DatabaseContext(self.db_path) as db_ctx:
             db_manager = DatabaseManager(db_ctx)
             row = db_manager.read(
-                query,
-                (annotation_id,)
+                table="annotations",
+                fields=['*'],
+                params={
+                    'id': annotation_id
+                }
             )
         
         if row:
@@ -160,8 +166,12 @@ class AnnotationService:
         with DatabaseContext(self.db_path) as db_ctx:
             db_manager = DatabaseManager(db_ctx)
             rows = db_manager.read(
-                query,
-                (layer_id,),
+                table="annotations",
+                fields=['*'],
+                params={
+                    'layer_id': layer_id
+                },
+                order_by=['created_at'],
                 get_all=True
             )
         

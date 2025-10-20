@@ -100,8 +100,11 @@ class MapAreaService:
         with DatabaseContext(self.db_path) as db_ctx:
             db_manager = DatabaseManager(db_ctx)
             row = db_manager.read(
-                query,
-                (map_area_id,)
+                table="map_areas",
+                fields=['*'],
+                params={
+                    'id': map_area_id
+                }
             )
         
         if row:
@@ -146,8 +149,12 @@ class MapAreaService:
             with DatabaseContext(self.db_path) as db_ctx:
                 db_manager = DatabaseManager(db_ctx)
                 rows = db_manager.read(
-                    query,
-                    (project_id,),
+                    table="map_areas",
+                    fields=['*'],
+                    params={
+                        'project_id': project_id
+                    },
+                    order_by=['created_at'],
                     get_all=True
                 )
         else:
@@ -159,8 +166,13 @@ class MapAreaService:
             with DatabaseContext(self.db_path) as db_ctx:
                 db_manager = DatabaseManager(db_ctx)
                 rows = db_manager.read(
-                    query,
-                    (project_id, parent_id),
+                    table="map_areas",
+                    fields=['*'],
+                    params={
+                        'project_id': project_id,
+                        'parent_id': parent_id
+                    },
+                    order_by=['created_at'],
                     get_all=True
                 )
         
