@@ -67,17 +67,17 @@ class MapAreaService:
         with DatabaseContext(self.db_path) as db_ctx:
             db_manager = DatabaseManager(db_ctx)
             map_area.id = db_manager.create(
-                query,
-                (
-                    map_area.project_id,
-                    map_area.parent_id,
-                    map_area.name,
-                    map_area.area_type,
-                    map_area.boundary_id,
-                    map_area.default_center_lat,
-                    map_area.default_center_lon,
-                    map_area.default_zoom
-                )
+                table="map_areas",
+                params={
+                    "project_id": map_area.project_id,
+                    "parent_id": map_area.parent_id,
+                    "name": map_area.name,
+                    "area_type": map_area.area_type,
+                    "boundary_id": map_area.boundary_id,
+                    "default_center_lat": map_area.default_center_lat,
+                    "default_center_lon": map_area.default_center_lon,
+                    "default_zoom": map_area.default_zoom
+                }
             )
         
         return map_area

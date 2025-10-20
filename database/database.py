@@ -169,25 +169,43 @@ class DatabaseManager:
 
     def create(
         self,
-        query: str,
-        params: tuple = ()
+        table: str,
+        params: dict = {}
     ) -> Optional[int]:
         """
         Create a new record in the database.
 
         Args:
-            query (str): The insert query to execute.
-            params (tuple): Parameters for the insert query.
+            table (str): The table to insert into
+            params (dict): A dictionary of column names and values to insert.
 
         Returns:
             Optional[int]: The ID of the created record.
         """
 
+        # The list of values to insert
+        parameters = []
+
+        # Build the full query
+        full_query = (
+            f"INSERT INTO {table} ("
+        )
+
+        for key, value in params.items():
+            full_query += f"{key}, "
+            parameters.append(value)
+
+        full_query = full_query.rstrip(", ") + ") VALUES ("
+
+        full_query += ", ".join(["?"] * len(params)) + ")"
+
         # Execute the query
-        logging.debug(f"Executing create query: {query} with params: {params}")
+        logging.debug(
+            f"Executing create query: {full_query} with params: {parameters}"
+        )
         result = self.db.cursor.execute(
-            query,
-            params,
+            full_query,
+            parameters,
         )
 
         # Return the last inserted ID

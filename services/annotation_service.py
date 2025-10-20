@@ -90,14 +90,14 @@ class AnnotationService:
         with DatabaseContext(self.db_path) as db_ctx:
             db_manager = DatabaseManager(db_ctx)
             annotation.id = db_manager.create(
-                query,
-                (
-                    annotation.layer_id,
-                    annotation.annotation_type,
-                    coords_json,
-                    style_json,
-                    annotation.content
-                )
+                table="annotations",
+                params={
+                    "layer_id": annotation.layer_id,
+                    "annotation_type": annotation.annotation_type,
+                    "coordinates": coords_json,
+                    "style": style_json,
+                    "content": annotation.content
+                }
             )
         
         return annotation

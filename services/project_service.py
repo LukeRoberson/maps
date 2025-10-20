@@ -64,14 +64,14 @@ class ProjectService:
         with DatabaseContext(self.db_path) as db_ctx:
             db_manager = DatabaseManager(db_ctx)
             db_manager.create(
-                query,
-                (
-                    project.name,
-                    project.description,
-                    project.center_lat,
-                    project.center_lon,
-                    project.zoom_level
-                )
+                table="projects",
+                params={
+                    "name": project.name,
+                    "description": project.description,
+                    "center_lat": project.center_lat,
+                    "center_lon": project.center_lon,
+                    "zoom_level": project.zoom_level
+                }
             )
         
         return project

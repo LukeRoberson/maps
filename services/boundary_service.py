@@ -123,11 +123,11 @@ class BoundaryService:
         with DatabaseContext(self.db_path) as db_ctx:
             db_manager = DatabaseManager(db_ctx)
             boundary.id = db_manager.create(
-                query,
-                (
-                    boundary.map_area_id,
-                    coords_json
-                )
+                table="boundaries",
+                params={
+                    "map_area_id": boundary.map_area_id,
+                    "coordinates": coords_json
+                }
             )
         
         return boundary

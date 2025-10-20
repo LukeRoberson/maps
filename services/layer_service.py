@@ -72,17 +72,17 @@ class LayerService:
         with DatabaseContext(self.db_path) as db_ctx:
             db_manager = DatabaseManager(db_ctx)
             layer.id = db_manager.create(
-                query,
-                (
-                    layer.map_area_id,
-                    layer.parent_layer_id,
-                    layer.name,
-                    layer.layer_type,
-                    layer.visible,
-                    layer.z_index,
-                    layer.is_editable,
-                    config_json
-                )
+                table="layers",
+                params={
+                    "map_area_id": layer.map_area_id,
+                    "parent_layer_id": layer.parent_layer_id,
+                    "name": layer.name,
+                    "layer_type": layer.layer_type,
+                    "visible": layer.visible,
+                    "z_index": layer.z_index,
+                    "is_editable": layer.is_editable,
+                    "config": config_json
+                }
             )
         
         return layer
