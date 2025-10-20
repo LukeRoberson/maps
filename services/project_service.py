@@ -3,12 +3,11 @@ Project service for business logic operations.
 """
 
 from typing import List, Optional, Dict, Any
-import json
 from datetime import datetime
 
 from flask import current_app
 from models import Project
-from database import Database, DatabaseContext, DatabaseManager
+from database import DatabaseContext, DatabaseManager
 
 
 class ProjectService:
@@ -38,7 +37,6 @@ class ProjectService:
             None
         """
         
-        self.db: Database = current_app.config['db']
         self.db_path: str = current_app.config['DATABASE_PATH']
 
     def create_project(
@@ -92,7 +90,6 @@ class ProjectService:
             Optional[Project]: Project if found, None otherwise
         """
         
-        db: Database = current_app.config['db']
         query = "SELECT * FROM projects WHERE id = ?"
         with DatabaseContext(self.db_path) as db_ctx:
             db_manager = DatabaseManager(db_ctx)
@@ -123,8 +120,6 @@ class ProjectService:
             List[Project]: List of all projects
         """
         
-        db: Database = current_app.config['db']
-
         query = """
             SELECT * FROM projects
             ORDER BY updated_at DESC
@@ -169,8 +164,6 @@ class ProjectService:
             Optional[Project]: Updated project if found, None otherwise
         """
         
-        db: Database = current_app.config['db']
-
         allowed_fields = [
             'name',
             'description',
@@ -199,7 +192,13 @@ class ProjectService:
             WHERE id = ?
         """
         
-        db.execute(query, tuple(values))
+        with DatabaseContext(self.db_path) as db_ctx:
+            db_manager = DatabaseManager(db_ctx)
+            db_manager.update(
+                query,
+                tuple(values)
+            )
+
         return self.get_project(project_id)
 
     def delete_project(
@@ -215,9 +214,13 @@ class ProjectService:
         Returns:
             bool: True if deleted, False if not found
         """
-        db: Database = current_app.config['db']
         
         query = "DELETE FROM projects WHERE id = ?"
-        cursor = db.execute(query, (project_id,))
-        
+        with DatabaseContext(self.db_path) as db_ctx:
+            db_manager = DatabaseManager(db_ctx)
+            cursor = db_manager.delete(
+                query,
+                (project_id,)
+            )
+
         return cursor.rowcount > 0

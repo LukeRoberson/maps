@@ -12,7 +12,6 @@ import sqlite3
 import os
 from typing import Optional, List, Union
 import logging
-from contextlib import contextmanager
 
 
 class DatabaseContext:
@@ -181,11 +180,11 @@ class DatabaseManager:
             params (tuple): Parameters for the insert query.
 
         Returns:
-            None
+            Optional[int]: The ID of the created record.
         """
 
         # Execute the query
-        logging.info(f"Executing create query: {query} with params: {params}")
+        logging.debug(f"Executing create query: {query} with params: {params}")
         result = self.db.cursor.execute(
             query,
             params,
@@ -228,92 +227,47 @@ class DatabaseManager:
             return result.fetchone()
 
     def update(
-        self
+        self,
+        query: str,
+        params: tuple = ()
     ) -> None:
         """
         Update an existing record in the database.
-        """
-
-        logging.warning("Database update method not implemented yet.")
-
-    def delete(
-        self
-    ) -> None:
-        """
-        Delete a record from the database.
-        """
-
-        logging.warning("Database delete method not implemented yet.")
-
-
-class Database:
-    """
-    Legacy SQLite database manager for the maps application.
-
-    Attributes:
-        db_path (str): Path to the SQLite database file
-
-    Methods:
-        __init__:
-            Initialize instance
-        get_connection:
-            Get a database connection
-        execute:
-            Execute a SQL query
-    """
-
-    def __init__(
-        self,
-        db_path: str
-    ) -> None:
-        """
-        Initialize the Database manager instance.
 
         Args:
-            db_path (str): Path to the SQLite database file
+            query (str): The update query to execute.
+            params (tuple): Parameters for the update query.
 
         Returns:
             None
         """
 
-        # Set database path
-        self.db_path = db_path
+        logging.debug(f"Executing update query: {query} with params: {params}")
+        self.db.cursor.execute(
+            query,
+            params,
+        )
 
-    @contextmanager
-    def get_connection(self):
-        """
-        Get a database connection context manager.
-        
-        Yields:
-            sqlite3.Connection: Database connection
-        """
-        
-        conn = sqlite3.connect(self.db_path)
-        conn.row_factory = sqlite3.Row
-        conn.execute("PRAGMA foreign_keys = ON")
-        
-        try:
-            yield conn
-        finally:
-            conn.close()
-
-    def execute(
+    def delete(
         self,
         query: str,
         params: tuple = ()
     ) -> sqlite3.Cursor:
         """
-        Execute a SQL query.
-        
+        Delete a record from the database.
+
         Args:
-            query (str): SQL query to execute
-            params (tuple): Query parameters
-        
+            query (str): The delete query to execute.
+            params (tuple): Parameters for the delete query.
+
         Returns:
-            sqlite3.Cursor: Query cursor
+            None
         """
-        
-        with self.get_connection() as conn:
-            cursor = conn.execute(query, params)
-            conn.commit()
-            return cursor
+
+        logging.info(f"Executing delete query: {query} with params: {params}")
+        result = self.db.cursor.execute(
+            query,
+            params,
+        )
+
+        return result

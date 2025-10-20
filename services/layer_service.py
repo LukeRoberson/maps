@@ -7,7 +7,7 @@ import json
 from flask import current_app
 
 from models import Layer
-from database import Database, DatabaseContext, DatabaseManager
+from database import DatabaseContext, DatabaseManager
 
 
 class LayerService:
@@ -43,7 +43,6 @@ class LayerService:
             None
         """
         
-        self.db: Database = current_app.config['db']
         self.db_path: str = current_app.config['DATABASE_PATH']
 
     def create_layer(
@@ -187,7 +186,6 @@ class LayerService:
         parent_query = """
             SELECT parent_id FROM map_areas WHERE id = ?
         """
-        # parent_row = self.db.fetchone(parent_query, (map_area_id,))
         with DatabaseContext(self.db_path) as db_ctx:
             db_manager = DatabaseManager(db_ctx)
             parent_row = db_manager.read(
@@ -326,7 +324,13 @@ class LayerService:
             WHERE id = ?
         """
         
-        self.db.execute(query, tuple(values))
+        with DatabaseContext(self.db_path) as db_ctx:
+            db_manager = DatabaseManager(db_ctx)
+            db_manager.update(
+                query,
+                tuple(values)
+            )
+
         return self.get_layer(layer_id)
 
     def delete_layer(
@@ -358,7 +362,13 @@ class LayerService:
             )
         
         query = "DELETE FROM layers WHERE id = ?"
-        self.db.execute(query, (layer_id,))
+        with DatabaseContext(self.db_path) as db_ctx:
+            db_manager = DatabaseManager(db_ctx)
+            db_manager.delete(
+                query,
+                (layer_id,)
+            )
+
         return True
 
     def reorder_layers(
@@ -385,7 +395,12 @@ class LayerService:
                 SET z_index = ?, updated_at = CURRENT_TIMESTAMP
                 WHERE id = ?
             """
-            self.db.execute(query, (z_index, layer_id))
+            with DatabaseContext(self.db_path) as db_ctx:
+                db_manager = DatabaseManager(db_ctx)
+                db_manager.update(
+                    query,
+                    (z_index, layer_id)
+                )
             
             updated_layer = self.get_layer(layer_id)
             if updated_layer:

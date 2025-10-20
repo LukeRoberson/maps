@@ -7,7 +7,7 @@ from datetime import datetime
 from flask import current_app
 
 from models import MapArea
-from database import Database, DatabaseContext, DatabaseManager
+from database import DatabaseContext, DatabaseManager
 
 
 class MapAreaService:
@@ -39,7 +39,6 @@ class MapAreaService:
             None
         """
         
-        self.db: Database = current_app.config['db']
         self.db_path: str = current_app.config['DATABASE_PATH']
 
     def create_map_area(
@@ -258,7 +257,13 @@ class MapAreaService:
             WHERE id = ?
         """
         
-        self.db.execute(query, tuple(values))
+        with DatabaseContext(self.db_path) as db_ctx:
+            db_manager = DatabaseManager(db_ctx)
+            db_manager.update(
+                query,
+                tuple(values)
+            )
+
         return self.get_map_area(map_area_id)
 
     def delete_map_area(
@@ -276,6 +281,11 @@ class MapAreaService:
         """
         
         query = "DELETE FROM map_areas WHERE id = ?"
-        cursor = self.db.execute(query, (map_area_id,))
+        with DatabaseContext(self.db_path) as db_ctx:
+            db_manager = DatabaseManager(db_ctx)
+            cursor = db_manager.delete(
+                query,
+                (map_area_id,)
+            )
         
         return cursor.rowcount > 0

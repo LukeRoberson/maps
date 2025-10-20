@@ -8,7 +8,7 @@ from datetime import datetime
 from flask import current_app
 
 from models import Annotation
-from database import Database, DatabaseContext, DatabaseManager
+from database import DatabaseContext, DatabaseManager
 
 
 class AnnotationService:
@@ -38,7 +38,6 @@ class AnnotationService:
             None
         """
         
-        self.db: Database = current_app.config['db']
         self.db_path: str = current_app.config['DATABASE_PATH']
 
     def create_annotation(
@@ -225,7 +224,13 @@ class AnnotationService:
             WHERE id = ?
         """
         
-        self.db.execute(query, tuple(values))
+        with DatabaseContext(self.db_path) as db_ctx:
+            db_manager = DatabaseManager(db_ctx)
+            db_manager.update(
+                query,
+                tuple(values)
+            )
+
         return self.get_annotation(annotation_id)
 
     def delete_annotation(
@@ -243,6 +248,11 @@ class AnnotationService:
         """
         
         query = "DELETE FROM annotations WHERE id = ?"
-        cursor = self.db.execute(query, (annotation_id,))
+        with DatabaseContext(self.db_path) as db_ctx:
+            db_manager = DatabaseManager(db_ctx)
+            cursor = db_manager.delete(
+                query,
+                (annotation_id,)
+            )
         
         return cursor.rowcount > 0
