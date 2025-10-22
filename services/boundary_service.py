@@ -220,13 +220,6 @@ class BoundaryService:
             Optional[Boundary]: Updated boundary if found, None otherwise
         """
         
-        query = """
-            UPDATE boundaries
-            SET coordinates = ?, updated_at = CURRENT_TIMESTAMP
-            WHERE id = ?
-        """
-        
-        coords_json = json.dumps(coordinates)
         with DatabaseContext(self.db_path) as db_ctx:
             db_manager = DatabaseManager(db_ctx)
             db_manager.update(
@@ -238,8 +231,6 @@ class BoundaryService:
                 parameters={
                     'id': boundary_id
                 },
-                query=query,
-                params=(coords_json, boundary_id)
             )
         
         return self.get_boundary(boundary_id)
@@ -258,12 +249,13 @@ class BoundaryService:
             bool: True if deleted, False if not found
         """
         
-        query = "DELETE FROM boundaries WHERE id = ?"
         with DatabaseContext(self.db_path) as db_ctx:
             db_manager = DatabaseManager(db_ctx)
             cursor = db_manager.delete(
-                query,
-                (boundary_id,)
+                table="boundaries",
+                parameters={
+                    'id': boundary_id
+                },
             )
         
         return cursor.rowcount > 0

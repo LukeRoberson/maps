@@ -266,12 +266,6 @@ class MapAreaService:
         all_fields["updated_at"] = "CURRENT_TIMESTAMP"
         values.append(map_area_id)
         
-        query = f"""
-            UPDATE map_areas
-            SET {', '.join(set_clauses)}
-            WHERE id = ?
-        """
-        
         with DatabaseContext(self.db_path) as db_ctx:
             db_manager = DatabaseManager(db_ctx)
             db_manager.update(
@@ -280,8 +274,6 @@ class MapAreaService:
                 parameters={
                     'id': map_area_id
                 },
-                query=query,
-                params=tuple(values)
             )
 
         return self.get_map_area(map_area_id)
@@ -300,12 +292,13 @@ class MapAreaService:
             bool: True if deleted, False if not found
         """
         
-        query = "DELETE FROM map_areas WHERE id = ?"
         with DatabaseContext(self.db_path) as db_ctx:
             db_manager = DatabaseManager(db_ctx)
             cursor = db_manager.delete(
-                query,
-                (map_area_id,)
+                table="map_areas",
+                parameters={
+                    'id': map_area_id
+                },
             )
         
         return cursor.rowcount > 0

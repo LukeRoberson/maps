@@ -196,12 +196,6 @@ class ProjectService:
         all_fields["updated_at"] = "CURRENT_TIMESTAMP"
         values.append(project_id)
         
-        query = f"""
-            UPDATE projects
-            SET {', '.join(set_clauses)}
-            WHERE id = ?
-        """
-        
         with DatabaseContext(self.db_path) as db_ctx:
             db_manager = DatabaseManager(db_ctx)
             db_manager.update(
@@ -210,8 +204,6 @@ class ProjectService:
                 parameters={
                     'id': project_id
                 },
-                query=query,
-                params=tuple(values)
             )
 
         return self.get_project(project_id)
@@ -230,12 +222,13 @@ class ProjectService:
             bool: True if deleted, False if not found
         """
         
-        query = "DELETE FROM projects WHERE id = ?"
         with DatabaseContext(self.db_path) as db_ctx:
             db_manager = DatabaseManager(db_ctx)
             cursor = db_manager.delete(
-                query,
-                (project_id,)
+                table="projects",
+                parameters={
+                    'id': project_id
+                },
             )
 
         return cursor.rowcount > 0

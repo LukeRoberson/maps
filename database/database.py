@@ -10,8 +10,14 @@ Classes:
 
 import sqlite3
 import os
-from typing import Optional, List, Union, Dict, Any
 import logging
+from typing import (
+    Optional,
+    List,
+    Union,
+    Dict,
+    Any
+)
 
 
 class DatabaseContext:
@@ -107,6 +113,14 @@ class DatabaseManager:
             Initialize DatabaseManager
         initialise:
             Create database tables and indexes if they don't exist
+        create:
+            Create a new record in the database
+        read:
+            Read one or more records from the database
+        update:
+            Update an existing record in the database
+        delete:
+            Delete a record from the database
     """
 
     def __init__(
@@ -279,8 +293,6 @@ class DatabaseManager:
         table: str,
         fields: dict,
         parameters: Dict[str, Any],
-        query: str,
-        params: tuple = ()
     ) -> None:
         """
         Update an existing record in the database.
@@ -290,8 +302,6 @@ class DatabaseManager:
             fields (List[str]): The fields to update.
             parameters (Dict[str, Any]):
                 A dictionary of column names and values to identify the record.
-            query (str): The update query to execute.
-            params (tuple): Parameters for the update query.
 
         Returns:
             None
@@ -327,24 +337,37 @@ class DatabaseManager:
 
     def delete(
         self,
-        query: str,
-        params: tuple = ()
+        table: str,
+        parameters: dict,
     ) -> sqlite3.Cursor:
         """
         Delete a record from the database.
 
         Args:
+            table (str): The table to delete from.
             query (str): The delete query to execute.
-            params (tuple): Parameters for the delete query.
+            parameters (dict):
+                A dictionary of column names and values to identify the record.
 
         Returns:
             None
         """
 
-        logging.info(f"Executing delete query: {query} with params: {params}")
+        param_list = []
+
+        delete_string = f"DELETE FROM {table} WHERE "
+
+        for key, value in parameters.items():
+            delete_string += f"{key} = ? AND "
+            param_list.append(value)
+        delete_string = delete_string.rstrip(" AND ")
+
+        logging.debug(
+            f"Delete query: {delete_string} with params: {param_list}"
+        )
         result = self.db.cursor.execute(
-            query,
-            params,
+            delete_string,
+            param_list,
         )
 
         return result

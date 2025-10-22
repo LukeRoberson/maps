@@ -342,12 +342,6 @@ class LayerService:
         all_fields["updated_at"] = "CURRENT_TIMESTAMP"
         values.append(layer_id)
         
-        query = f"""
-            UPDATE layers
-            SET {', '.join(set_clauses)}
-            WHERE id = ?
-        """
-        
         with DatabaseContext(self.db_path) as db_ctx:
             db_manager = DatabaseManager(db_ctx)
             db_manager.update(
@@ -356,8 +350,6 @@ class LayerService:
                 parameters={
                     'id': layer_id
                 },
-                query=query,
-                params=tuple(values)
             )
 
         return self.get_layer(layer_id)
@@ -390,12 +382,13 @@ class LayerService:
                 "Inherited layers are read-only."
             )
         
-        query = "DELETE FROM layers WHERE id = ?"
         with DatabaseContext(self.db_path) as db_ctx:
             db_manager = DatabaseManager(db_ctx)
             db_manager.delete(
-                query,
-                (layer_id,)
+                table="layers",
+                parameters={
+                    'id': layer_id
+                },
             )
 
         return True
@@ -419,11 +412,6 @@ class LayerService:
             layer_id = update['id']
             z_index = update['z_index']
             
-            query = """
-                UPDATE layers
-                SET z_index = ?, updated_at = CURRENT_TIMESTAMP
-                WHERE id = ?
-            """
             with DatabaseContext(self.db_path) as db_ctx:
                 db_manager = DatabaseManager(db_ctx)
                 db_manager.update(
@@ -435,8 +423,6 @@ class LayerService:
                     parameters={
                         'id': layer_id
                     },
-                    query=query,
-                    params=(z_index, layer_id)
                 )
             
             updated_layer = self.get_layer(layer_id)

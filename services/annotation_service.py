@@ -232,12 +232,6 @@ class AnnotationService:
         all_fields["updated_at"] = "CURRENT_TIMESTAMP"
         values.append(annotation_id)
         
-        query = f"""
-            UPDATE annotations
-            SET {', '.join(set_clauses)}
-            WHERE id = ?
-        """
-        
         with DatabaseContext(self.db_path) as db_ctx:
             db_manager = DatabaseManager(db_ctx)
             db_manager.update(
@@ -245,9 +239,7 @@ class AnnotationService:
                 fields=all_fields,
                 parameters={
                     'id': annotation_id
-                },
-                query=query,
-                params=tuple(values)
+                }
             )
 
         return self.get_annotation(annotation_id)
@@ -266,12 +258,13 @@ class AnnotationService:
             bool: True if deleted, False if not found
         """
         
-        query = "DELETE FROM annotations WHERE id = ?"
         with DatabaseContext(self.db_path) as db_ctx:
             db_manager = DatabaseManager(db_ctx)
             cursor = db_manager.delete(
-                query,
-                (annotation_id,)
+                table="annotations",
+                parameters={
+                    'id': annotation_id
+                },
             )
         
         return cursor.rowcount > 0
