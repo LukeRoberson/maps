@@ -297,27 +297,32 @@ class DatabaseManager:
             None
         """
 
-        # field_values = []
-        # param_values = []
-        # update_string = f"UPDATE {table} SET "
-        # for key, value in fields.items():
-        #     update_string += f"{key} = ?, "
-        #     field_values.append(value)
-        # update_string = update_string.rstrip(", ")
-        # update_string += " WHERE "
-        # for key, value in parameters.values():
-        #     update_string += f"{key} = ? AND "
-        #     param_values.append(value)
-        # update_string = update_string.rstrip(" AND ")
-        # field_values.extend(param_values)
+        field_values = []
+        param_values = []
 
-        # logging.info(update_string)
-        # logging.info(field_values)
+        update_string = f"UPDATE {table} SET "
+        for key, value in fields.items():
+            if isinstance(value, str) and value.upper() == "CURRENT_TIMESTAMP":
+                update_string += f"{key} = CURRENT_TIMESTAMP, "
+            else:
+                update_string += f"{key} = ?, "
+                field_values.append(value)
+        update_string = update_string.rstrip(", ")
 
-        logging.info(f"Executing update query: {query} with params: {params}")
+        update_string += " WHERE "
+        for key, value in parameters.items():
+            update_string += f"{key} = ?"
+            param_values.append(value)
+
+        values = field_values + param_values
+
+        # Use update_string and values for execution
+        logging.debug(
+            f"Executing update query: {update_string} with params: {values}"
+        )
         self.db.cursor.execute(
-            query,
-            params,
+            update_string,
+            values,
         )
 
     def delete(
