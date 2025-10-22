@@ -212,20 +212,24 @@ class AnnotationService:
         
         set_clauses = []
         values = []
+        all_fields = {}
         
         for field in allowed_fields:
             if field in updates:
                 if field in ['coordinates', 'style']:
                     set_clauses.append(f"{field} = ?")
                     values.append(json.dumps(updates[field]))
+                    all_fields[field] = json.dumps(updates[field])
                 else:
                     set_clauses.append(f"{field} = ?")
                     values.append(updates[field])
+                    all_fields[field] = updates[field]
         
         if not set_clauses:
             return self.get_annotation(annotation_id)
         
         set_clauses.append("updated_at = CURRENT_TIMESTAMP")
+        all_fields["updated_at"] = "CURRENT_TIMESTAMP"
         values.append(annotation_id)
         
         query = f"""
@@ -237,8 +241,13 @@ class AnnotationService:
         with DatabaseContext(self.db_path) as db_ctx:
             db_manager = DatabaseManager(db_ctx)
             db_manager.update(
-                query,
-                tuple(values)
+                table="annotations",
+                fields=all_fields,
+                parameters={
+                    'id': annotation_id
+                },
+                query=query,
+                params=tuple(values)
             )
 
         return self.get_annotation(annotation_id)

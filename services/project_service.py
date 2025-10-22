@@ -181,16 +181,19 @@ class ProjectService:
         
         set_clauses = []
         values = []
+        all_fields = {}
         
         for field in allowed_fields:
             if field in updates:
                 set_clauses.append(f"{field} = ?")
                 values.append(updates[field])
+                all_fields[field] = updates[field]
         
         if not set_clauses:
             return self.get_project(project_id)
         
         set_clauses.append("updated_at = CURRENT_TIMESTAMP")
+        all_fields["updated_at"] = "CURRENT_TIMESTAMP"
         values.append(project_id)
         
         query = f"""
@@ -202,8 +205,13 @@ class ProjectService:
         with DatabaseContext(self.db_path) as db_ctx:
             db_manager = DatabaseManager(db_ctx)
             db_manager.update(
-                query,
-                tuple(values)
+                table="projects",
+                fields=all_fields,
+                parameters={
+                    'id': project_id
+                },
+                query=query,
+                params=tuple(values)
             )
 
         return self.get_project(project_id)

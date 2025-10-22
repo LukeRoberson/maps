@@ -10,7 +10,7 @@ Classes:
 
 import sqlite3
 import os
-from typing import Optional, List, Union
+from typing import Optional, List, Union, Dict, Any
 import logging
 
 
@@ -276,6 +276,9 @@ class DatabaseManager:
 
     def update(
         self,
+        table: str,
+        fields: dict,
+        parameters: Dict[str, Any],
         query: str,
         params: tuple = ()
     ) -> None:
@@ -283,6 +286,10 @@ class DatabaseManager:
         Update an existing record in the database.
 
         Args:
+            table (str): The table to update.
+            fields (List[str]): The fields to update.
+            parameters (Dict[str, Any]):
+                A dictionary of column names and values to identify the record.
             query (str): The update query to execute.
             params (tuple): Parameters for the update query.
 
@@ -290,7 +297,24 @@ class DatabaseManager:
             None
         """
 
-        logging.debug(f"Executing update query: {query} with params: {params}")
+        # field_values = []
+        # param_values = []
+        # update_string = f"UPDATE {table} SET "
+        # for key, value in fields.items():
+        #     update_string += f"{key} = ?, "
+        #     field_values.append(value)
+        # update_string = update_string.rstrip(", ")
+        # update_string += " WHERE "
+        # for key, value in parameters.values():
+        #     update_string += f"{key} = ? AND "
+        #     param_values.append(value)
+        # update_string = update_string.rstrip(" AND ")
+        # field_values.extend(param_values)
+
+        # logging.info(update_string)
+        # logging.info(field_values)
+
+        logging.info(f"Executing update query: {query} with params: {params}")
         self.db.cursor.execute(
             query,
             params,

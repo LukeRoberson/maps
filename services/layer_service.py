@@ -322,20 +322,24 @@ class LayerService:
         
         set_clauses = []
         values = []
+        all_fields = {}
         
         for field in allowed_fields:
             if field in updates:
                 if field == 'config':
                     set_clauses.append(f"{field} = ?")
                     values.append(json.dumps(updates[field]))
+                    all_fields[field] = json.dumps(updates[field])
                 else:
                     set_clauses.append(f"{field} = ?")
                     values.append(updates[field])
+                    all_fields[field] = updates[field]
         
         if not set_clauses:
             return self.get_layer(layer_id)
         
         set_clauses.append("updated_at = CURRENT_TIMESTAMP")
+        all_fields["updated_at"] = "CURRENT_TIMESTAMP"
         values.append(layer_id)
         
         query = f"""
@@ -347,8 +351,13 @@ class LayerService:
         with DatabaseContext(self.db_path) as db_ctx:
             db_manager = DatabaseManager(db_ctx)
             db_manager.update(
-                query,
-                tuple(values)
+                table="layers",
+                fields=all_fields,
+                parameters={
+                    'id': layer_id
+                },
+                query=query,
+                params=tuple(values)
             )
 
         return self.get_layer(layer_id)
@@ -418,8 +427,16 @@ class LayerService:
             with DatabaseContext(self.db_path) as db_ctx:
                 db_manager = DatabaseManager(db_ctx)
                 db_manager.update(
-                    query,
-                    (z_index, layer_id)
+                    table="layers",
+                    fields={
+                        "z_index": z_index,
+                        "updated_at": "CURRENT_TIMESTAMP"
+                    },
+                    parameters={
+                        'id': layer_id
+                    },
+                    query=query,
+                    params=(z_index, layer_id)
                 )
             
             updated_layer = self.get_layer(layer_id)

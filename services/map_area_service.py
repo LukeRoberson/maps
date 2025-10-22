@@ -251,16 +251,19 @@ class MapAreaService:
         
         set_clauses = []
         values = []
+        all_fields = {}
         
         for field in allowed_fields:
             if field in updates:
                 set_clauses.append(f"{field} = ?")
                 values.append(updates[field])
+                all_fields[field] = updates[field]
         
         if not set_clauses:
             return self.get_map_area(map_area_id)
         
         set_clauses.append("updated_at = CURRENT_TIMESTAMP")
+        all_fields["updated_at"] = "CURRENT_TIMESTAMP"
         values.append(map_area_id)
         
         query = f"""
@@ -272,8 +275,13 @@ class MapAreaService:
         with DatabaseContext(self.db_path) as db_ctx:
             db_manager = DatabaseManager(db_ctx)
             db_manager.update(
-                query,
-                tuple(values)
+                table="map_areas",
+                fields=all_fields,
+                parameters={
+                    'id': map_area_id
+                },
+                query=query,
+                params=tuple(values)
             )
 
         return self.get_map_area(map_area_id)

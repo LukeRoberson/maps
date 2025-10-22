@@ -230,8 +230,16 @@ class BoundaryService:
         with DatabaseContext(self.db_path) as db_ctx:
             db_manager = DatabaseManager(db_ctx)
             db_manager.update(
-                query,
-                (coords_json, boundary_id)
+                table="boundaries",
+                fields={
+                    "coordinates": json.dumps(coordinates),
+                    "updated_at": "CURRENT_TIMESTAMP"
+                },
+                parameters={
+                    'id': boundary_id
+                },
+                query=query,
+                params=(coords_json, boundary_id)
             )
         
         return self.get_boundary(boundary_id)
