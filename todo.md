@@ -6,6 +6,13 @@
 - [ ] If I delete all layers, I'm still allowed to create new annotations
 - [ ] When I add a marker (annotation) and label it, two labels appear in the UI. The second label disappears when the next annotation is added, when something is deleted or added, or when the page is refreshed
 - [ ] README.md needs updating
+- [ ] When creating a new project, it redirects to a project ID of 'null'; However, the project created just fine
+- [ ] Is 'boundary_id' in map_areas table even used?
+  - [ ] If yes, document its purpose
+  - [ ] If no, clean up, and update docs
+- [ ] Is 'layer_type' in layers table always 'annotation?
+- [ ] Is 'config' in layers table used?
+- [ ] Is 'style' in annotations table used?
 
 
 ## UI

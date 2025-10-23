@@ -239,8 +239,12 @@ class DatabaseManager:
         Read one or more records from the database.
 
         Args:
-            query (str): The query to execute.
-            params (tuple): Parameters for the query.
+            table (str): The table to read from.
+            fields (List[str]): The fields to retrieve.
+            params (dict): A dictionary of column names and values to filter.
+            order_by (Optional[list[str]]): Fields to order the results by.
+            order_desc (bool): If True, order results in descending order.
+            limit (Optional[int]): Maximum number of records to fetch.
             get_all (bool): If True, fetch all records; otherwise, fetch one.
 
         Returns:
