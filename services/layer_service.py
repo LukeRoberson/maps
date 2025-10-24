@@ -6,7 +6,7 @@ from typing import List, Optional, Dict, Any
 import json
 from flask import current_app
 
-from models import Layer
+from backend import LayerModel
 from database import DatabaseContext, DatabaseManager
 
 
@@ -47,8 +47,8 @@ class LayerService:
 
     def create_layer(
         self,
-        layer: Layer
-    ) -> Layer:
+        layer: LayerModel
+    ) -> LayerModel:
         """
         Create a new layer.
         
@@ -90,7 +90,7 @@ class LayerService:
     def get_layer(
         self,
         layer_id: int
-    ) -> Optional[Layer]:
+    ) -> Optional[LayerModel]:
         """
         Get a layer by ID.
         
@@ -122,7 +122,7 @@ class LayerService:
     def list_layers_for_map_area(
         self,
         map_area_id: int
-    ) -> List[Layer]:
+    ) -> List[LayerModel]:
         """
         List all layers for a map area (own + inherited).
         
@@ -145,7 +145,7 @@ class LayerService:
     def list_own_layers(
         self,
         map_area_id: int
-    ) -> List[Layer]:
+    ) -> List[LayerModel]:
         """
         List only layers created on this map area.
         
@@ -179,7 +179,7 @@ class LayerService:
     def get_inherited_layers(
         self,
         map_area_id: int
-    ) -> List[Layer]:
+    ) -> List[LayerModel]:
         """
         Get layers inherited from parent map areas.
         
@@ -235,7 +235,7 @@ class LayerService:
                 inherited_layers.append(self._row_to_layer(existing_row))
             else:
                 # Create inherited layer
-                inherited_layer = Layer(
+                inherited_layer = LayerModel(
                     map_area_id=map_area_id,
                     parent_layer_id=parent_layer.id,
                     name=parent_layer.name,
@@ -253,7 +253,7 @@ class LayerService:
     def list_layers(
         self,
         project_id: int
-    ) -> List[Layer]:
+    ) -> List[LayerModel]:
         """
         List layers for a project (deprecated - use list_layers_for_map_area).
         
@@ -292,7 +292,7 @@ class LayerService:
         self,
         layer_id: int,
         updates: Dict[str, Any]
-    ) -> Optional[Layer]:
+    ) -> Optional[LayerModel]:
         """
         Update a layer.
         
@@ -396,7 +396,7 @@ class LayerService:
     def reorder_layers(
         self,
         layer_updates: List[Dict[str, Any]]
-    ) -> List[Layer]:
+    ) -> List[LayerModel]:
         """
         Reorder layers by updating z_index.
         
@@ -434,7 +434,7 @@ class LayerService:
     def _row_to_layer(
         self,
         row: Any
-    ) -> Layer:
+    ) -> LayerModel:
         """
         Convert database row to Layer object.
         
@@ -447,7 +447,7 @@ class LayerService:
         
         from datetime import datetime as dt
         
-        return Layer(
+        return LayerModel(
             id=row['id'],
             map_area_id=row['map_area_id'],
             parent_layer_id=row['parent_layer_id'],

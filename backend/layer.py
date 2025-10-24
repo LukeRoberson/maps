@@ -1,15 +1,29 @@
 """
-Layer model representing a map layer.
+Module: backend.layer
+
+Classes for managing map layers.
+
+Classes:
+    LayerModel:
+        A data structure that represents a map layer.
 """
 
-from typing import Optional, Dict, Any
-from datetime import datetime
+from typing import (
+    Optional,
+    Dict,
+    Any
+)
+from datetime import (
+    datetime,
+    timezone
+)
 
 
-class Layer:
+class LayerModel:
     """
-    Represents a map layer that can be shown or hidden.
-    
+    A data structure that represents a map layer.
+    This reflects the layer table in the database
+
     Attributes:
         id (Optional[int]): Unique identifier
         map_area_id (int): Associated map area ID
@@ -23,7 +37,7 @@ class Layer:
         config (Dict[str, Any]): Layer-specific configuration
         created_at (datetime): Creation timestamp
         updated_at (datetime): Last update timestamp
-    
+
     Methods:
         __init__:
             Initialize Layer
@@ -33,7 +47,11 @@ class Layer:
             Create layer from dictionary
     """
 
-    LAYER_TYPES = ['annotation', 'custom']
+    # Define valid layer types
+    LAYER_TYPES = [
+        'annotation',
+        'custom'
+    ]
 
     def __init__(
         self,
@@ -51,7 +69,7 @@ class Layer:
     ) -> None:
         """
         Initialize a new Layer.
-        
+
         Args:
             map_area_id (int): Associated map area ID
             name (str): Layer name
@@ -64,20 +82,21 @@ class Layer:
             id (Optional[int]): Layer ID
             created_at (Optional[datetime]): Creation timestamp
             updated_at (Optional[datetime]): Update timestamp
-        
+
         Returns:
             None
-        
+
         Raises:
             ValueError: If layer_type is not valid
         """
-        
+
+        # Validate layer_type
         if layer_type not in self.LAYER_TYPES:
             raise ValueError(
                 f"Invalid layer_type: {layer_type}. "
                 f"Must be one of {self.LAYER_TYPES}"
             )
-        
+
         self.id = id
         self.map_area_id = map_area_id
         self.parent_layer_id = parent_layer_id
@@ -87,17 +106,24 @@ class Layer:
         self.z_index = z_index
         self.is_editable = is_editable
         self.config = config or {}
-        self.created_at = created_at or datetime.utcnow()
-        self.updated_at = updated_at or datetime.utcnow()
 
-    def to_dict(self) -> Dict[str, Any]:
+        # Timestamps are in UTC
+        self.created_at = created_at or datetime.now(timezone.utc)
+        self.updated_at = updated_at or datetime.now(timezone.utc)
+
+    def to_dict(
+        self
+    ) -> Dict[str, Any]:
         """
         Convert layer to dictionary representation.
-        
+
+        Args:
+            None
+
         Returns:
             Dict[str, Any]: Dictionary representation of the layer
         """
-        
+
         return {
             'id': self.id,
             'map_area_id': self.map_area_id,
@@ -109,10 +135,14 @@ class Layer:
             'is_editable': self.is_editable,
             'config': self.config,
             'created_at': (
-                self.created_at.isoformat() if self.created_at else None
+                self.created_at.isoformat()
+                if self.created_at
+                else None
             ),
             'updated_at': (
-                self.updated_at.isoformat() if self.updated_at else None
+                self.updated_at.isoformat()
+                if self.updated_at
+                else None
             )
         }
 
@@ -120,25 +150,30 @@ class Layer:
     def from_dict(
         cls,
         data: Dict[str, Any]
-    ) -> 'Layer':
+    ) -> 'LayerModel':
         """
         Create a Layer from dictionary data.
-        
+            This is an alternative constructor, rather than __init__().
+            Rather than passing details in one at a time,
+            we can pass a dictionary.
+
         Args:
             data (Dict[str, Any]): Dictionary containing layer data
-        
+
         Returns:
             Layer: New Layer instance
         """
-        
+
+        # Get the datetime fields if they exist
         created_at = None
         if data.get('created_at'):
             created_at = datetime.fromisoformat(data['created_at'])
-        
+
         updated_at = None
         if data.get('updated_at'):
             updated_at = datetime.fromisoformat(data['updated_at'])
-        
+
+        # Create and return the Layer instance
         return cls(
             id=data.get('id'),
             map_area_id=data['map_area_id'],

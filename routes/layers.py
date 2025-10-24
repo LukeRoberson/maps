@@ -6,7 +6,7 @@ from flask import Blueprint, request, jsonify, current_app
 from typing import Tuple, Union
 from werkzeug.wrappers import Response
 
-from models import Layer
+from backend import LayerModel
 from services import LayerService
 
 layers_bp = Blueprint('layers', __name__, url_prefix='/api/layers')
@@ -60,7 +60,7 @@ def create_layer() -> Union[Response, Tuple[Response, int]]:
                     {'error': f'Missing required field: {field}'}
                 ), 400
         
-        layer = Layer(
+        layer = LayerModel(
             map_area_id=data['map_area_id'],
             name=data['name'],
             layer_type=data['layer_type'],

@@ -5,7 +5,7 @@ Map area routes.
 from flask import Blueprint, request, jsonify, current_app
 from typing import Dict, Any
 
-from models import MapArea
+from backend import MapModel
 from services import MapAreaService
 
 map_areas_bp = Blueprint('map_areas', __name__, url_prefix='/api/map-areas')
@@ -89,7 +89,7 @@ def create_map_area() -> Dict[str, Any]:
                     {'error': f'Missing required field: {field}'}
                 ), 400
         
-        map_area = MapArea(
+        map_area = MapModel(
             project_id=data['project_id'],
             name=data['name'],
             area_type=data['area_type'],

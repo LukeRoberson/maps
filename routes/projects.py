@@ -5,7 +5,7 @@ Project routes.
 from flask import Blueprint, request, jsonify, current_app
 from typing import Dict, Any
 
-from models import Project
+from backend import ProjectModel
 from services import ProjectService
 
 projects_bp = Blueprint('projects', __name__, url_prefix='/api/projects')
@@ -52,7 +52,7 @@ def create_project() -> Dict[str, Any]:
                     {'error': f'Missing required field: {field}'}
                 ), 400
         
-        project = Project(
+        project = ProjectModel(
             name=data['name'],
             description=data.get('description', ''),
             center_lat=float(data['center_lat']),

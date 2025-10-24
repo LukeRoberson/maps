@@ -7,7 +7,7 @@ import json
 from datetime import datetime
 from flask import current_app
 
-from models import Boundary
+from backend import BoundaryModel
 from database import DatabaseContext, DatabaseManager
 
 
@@ -101,8 +101,8 @@ class BoundaryService:
 
     def create_boundary(
         self,
-        boundary: Boundary
-    ) -> Boundary:
+        boundary: BoundaryModel
+    ) -> BoundaryModel:
         """
         Create a new boundary.
         
@@ -135,7 +135,7 @@ class BoundaryService:
     def get_boundary(
         self,
         boundary_id: int
-    ) -> Optional[Boundary]:
+    ) -> Optional[BoundaryModel]:
         """
         Get a boundary by ID.
         
@@ -158,7 +158,7 @@ class BoundaryService:
             )
         
         if row:
-            return Boundary(
+            return BoundaryModel(
                 id=row['id'],
                 map_area_id=row['map_area_id'],
                 coordinates=json.loads(row['coordinates']),
@@ -171,7 +171,7 @@ class BoundaryService:
     def get_by_map_area(
         self,
         map_area_id: int
-    ) -> Optional[Boundary]:
+    ) -> Optional[BoundaryModel]:
         """
         Get boundary for a map area.
         
@@ -194,7 +194,7 @@ class BoundaryService:
             )
         
         if row:
-            return Boundary(
+            return BoundaryModel(
                 id=row['id'],
                 map_area_id=row['map_area_id'],
                 coordinates=json.loads(row['coordinates']),
@@ -208,7 +208,7 @@ class BoundaryService:
         self,
         boundary_id: int,
         coordinates: List[List[float]]
-    ) -> Optional[Boundary]:
+    ) -> Optional[BoundaryModel]:
         """
         Update a boundary's coordinates.
         

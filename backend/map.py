@@ -1,15 +1,29 @@
 """
-MapArea model representing a map subdivision (master map, suburb, or individual map).
+Module: backend.map_area
+
+Classes for managing maps.
+
+Classes:
+    MapModel:
+        A data structure that represents a map
 """
 
-from typing import Optional, Dict, Any
-from datetime import datetime
+from typing import (
+    Optional,
+    Dict,
+    Any
+)
+from datetime import (
+    datetime,
+    timezone
+)
 
 
-class MapArea:
+class MapModel:
     """
     Represents a map area within a project hierarchy.
-    
+    This reflects the 'map_areas' table in the database.
+
     Attributes:
         id (Optional[int]): Unique identifier
         project_id (int): Parent project ID
@@ -22,7 +36,7 @@ class MapArea:
         default_zoom (Optional[int]): Default map zoom level
         created_at (datetime): Creation timestamp
         updated_at (datetime): Last update timestamp
-    
+
     Methods:
         __init__:
             Initialize MapArea
@@ -32,7 +46,12 @@ class MapArea:
             Create map area from dictionary
     """
 
-    AREA_TYPES = ['master', 'suburb', 'individual']
+    # Types of map areas
+    AREA_TYPES = [
+        'master',
+        'suburb',
+        'individual'
+    ]
 
     def __init__(
         self,
@@ -49,8 +68,8 @@ class MapArea:
         updated_at: Optional[datetime] = None
     ) -> None:
         """
-        Initialize a new MapArea.
-        
+        Initialize a new map.
+
         Args:
             project_id (int): Parent project ID
             name (str): Area name
@@ -63,20 +82,21 @@ class MapArea:
             id (Optional[int]): Map area ID
             created_at (Optional[datetime]): Creation timestamp
             updated_at (Optional[datetime]): Update timestamp
-        
+
         Returns:
             None
-        
+
         Raises:
             ValueError: If area_type is not valid
         """
-        
+
+        # Validate area_type
         if area_type not in self.AREA_TYPES:
             raise ValueError(
                 f"Invalid area_type: {area_type}. "
                 f"Must be one of {self.AREA_TYPES}"
             )
-        
+
         self.id = id
         self.project_id = project_id
         self.parent_id = parent_id
@@ -86,17 +106,24 @@ class MapArea:
         self.default_center_lat = default_center_lat
         self.default_center_lon = default_center_lon
         self.default_zoom = default_zoom
-        self.created_at = created_at or datetime.utcnow()
-        self.updated_at = updated_at or datetime.utcnow()
 
-    def to_dict(self) -> Dict[str, Any]:
+        # Timestamps are in UTC
+        self.created_at = created_at or datetime.now(timezone.utc)
+        self.updated_at = updated_at or datetime.now(timezone.utc)
+
+    def to_dict(
+        self
+    ) -> Dict[str, Any]:
         """
-        Convert map area to dictionary representation.
-        
+        Convert map to dictionary representation.
+
+        Args:
+            None
+
         Returns:
             Dict[str, Any]: Dictionary representation of the map area
         """
-        
+
         return {
             'id': self.id,
             'project_id': self.project_id,
@@ -107,33 +134,46 @@ class MapArea:
             'default_center_lat': self.default_center_lat,
             'default_center_lon': self.default_center_lon,
             'default_zoom': self.default_zoom,
-            'created_at': self.created_at.isoformat() if self.created_at else None,
-            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+            'created_at': (
+                self.created_at.isoformat()
+                if self.created_at
+                else None
+            ),
+            'updated_at': (
+                self.updated_at.isoformat()
+                if self.updated_at
+                else None
+            )
         }
 
     @classmethod
     def from_dict(
         cls,
         data: Dict[str, Any]
-    ) -> 'MapArea':
+    ) -> 'MapModel':
         """
-        Create a MapArea from dictionary data.
-        
+        Create a Map from dictionary data.
+            This is an alternative constructor, rather than __init__().
+            Rather than passing details in one at a time,
+            we can pass a dictionary.
+
         Args:
             data (Dict[str, Any]): Dictionary containing map area data
-        
+
         Returns:
             MapArea: New MapArea instance
         """
-        
+
+        # Get the datetime fields if they exist
         created_at = None
         if data.get('created_at'):
             created_at = datetime.fromisoformat(data['created_at'])
-        
+
         updated_at = None
         if data.get('updated_at'):
             updated_at = datetime.fromisoformat(data['updated_at'])
-        
+
+        # Create and return the MapArea instance
         return cls(
             id=data.get('id'),
             project_id=data['project_id'],

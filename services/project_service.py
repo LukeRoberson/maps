@@ -6,7 +6,7 @@ from typing import List, Optional, Dict, Any
 from datetime import datetime
 
 from flask import current_app
-from models import Project
+from backend import ProjectModel
 from database import DatabaseContext, DatabaseManager
 
 
@@ -41,8 +41,8 @@ class ProjectService:
 
     def create_project(
         self,
-        project: Project
-    ) -> Project:
+        project: ProjectModel
+    ) -> ProjectModel:
         """
         Create a new project.
         
@@ -79,7 +79,7 @@ class ProjectService:
     def get_project(
         self,
         project_id: int
-    ) -> Optional[Project]:
+    ) -> Optional[ProjectModel]:
         """
         Get a project by ID.
         
@@ -102,7 +102,7 @@ class ProjectService:
             )
         
         if row:
-            return Project(
+            return ProjectModel(
                 id=row['id'],
                 name=row['name'],
                 description=row['description'],
@@ -115,7 +115,7 @@ class ProjectService:
         
         return None
 
-    def list_projects(self) -> List[Project]:
+    def list_projects(self) -> List[ProjectModel]:
         """
         List all projects.
         
@@ -141,7 +141,7 @@ class ProjectService:
         projects = []
         for row in rows:
             projects.append(
-                Project(
+                ProjectModel(
                     id=row['id'],
                     name=row['name'],
                     description=row['description'],
@@ -159,7 +159,7 @@ class ProjectService:
         self,
         project_id: int,
         updates: Dict[str, Any]
-    ) -> Optional[Project]:
+    ) -> Optional[ProjectModel]:
         """
         Update a project.
         

@@ -5,7 +5,7 @@ Boundary routes.
 from flask import Blueprint, request, jsonify, current_app
 from typing import Dict, Any
 
-from models import Boundary
+from backend import BoundaryModel
 from services import BoundaryService, MapAreaService
 
 boundaries_bp = Blueprint(
@@ -94,7 +94,7 @@ def create_boundary() -> Dict[str, Any]:
                                  f'boundary'
                     }), 400
         
-        boundary = Boundary(
+        boundary = BoundaryModel(
             map_area_id=data['map_area_id'],
             coordinates=data['coordinates']
         )

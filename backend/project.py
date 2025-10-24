@@ -1,16 +1,30 @@
 """
-Project model representing a map project.
+Module: backend.project
+
+Classes for managing projects.
+
+Classes:
+    ProjectModel:
+        A data structure that represents a map project.
 """
 
-from typing import Optional, Dict, Any, List
-from datetime import datetime
-import json
+
+from datetime import (
+    datetime,
+    timezone
+)
+from typing import (
+    Optional,
+    Dict,
+    Any
+)
 
 
-class Project:
+class ProjectModel:
     """
-    Represents a map project with hierarchical structure.
-    
+    A data structure that represents a map project.
+    This reflects the 'projects' table in the database.
+
     Attributes:
         id (Optional[int]): Unique identifier
         name (str): Project name
@@ -20,7 +34,7 @@ class Project:
         zoom_level (int): Initial zoom level
         created_at (datetime): Creation timestamp
         updated_at (datetime): Last update timestamp
-    
+
     Methods:
         __init__:
             Initialize Project
@@ -42,8 +56,8 @@ class Project:
         updated_at: Optional[datetime] = None
     ) -> None:
         """
-        Initialize a new Project.
-        
+        Initialize a Project.
+
         Args:
             name (str): Project name
             description (str): Project description
@@ -53,28 +67,35 @@ class Project:
             id (Optional[int]): Project ID
             created_at (Optional[datetime]): Creation timestamp
             updated_at (Optional[datetime]): Update timestamp
-        
+
         Returns:
             None
         """
-        
+
         self.id = id
         self.name = name
         self.description = description
         self.center_lat = center_lat
         self.center_lon = center_lon
         self.zoom_level = zoom_level
-        self.created_at = created_at or datetime.utcnow()
-        self.updated_at = updated_at or datetime.utcnow()
 
-    def to_dict(self) -> Dict[str, Any]:
+        # Timestamps are in UTC
+        self.created_at = created_at or datetime.now(timezone.utc)
+        self.updated_at = updated_at or datetime.now(timezone.utc)
+
+    def to_dict(
+        self
+    ) -> Dict[str, Any]:
         """
         Convert project to dictionary representation.
-        
+
+        Args:
+            None
+
         Returns:
             Dict[str, Any]: Dictionary representation of the project
         """
-        
+
         return {
             'id': self.id,
             'name': self.name,
@@ -82,33 +103,46 @@ class Project:
             'center_lat': self.center_lat,
             'center_lon': self.center_lon,
             'zoom_level': self.zoom_level,
-            'created_at': self.created_at.isoformat() if self.created_at else None,
-            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+            'created_at': (
+                self.created_at.isoformat()
+                if self.created_at
+                else None
+            ),
+            'updated_at': (
+                self.updated_at.isoformat()
+                if self.updated_at
+                else None
+            )
         }
 
     @classmethod
     def from_dict(
         cls,
         data: Dict[str, Any]
-    ) -> 'Project':
+    ) -> 'ProjectModel':
         """
         Create a Project from dictionary data.
-        
+            This is an alternative constructor, rather than __init__().
+            Rather than passing details in one at a time,
+            we can pass a dictionary.
+
         Args:
             data (Dict[str, Any]): Dictionary containing project data
-        
+
         Returns:
             Project: New Project instance
         """
-        
+
+        # Get the datetime fields if they exist
         created_at = None
         if data.get('created_at'):
             created_at = datetime.fromisoformat(data['created_at'])
-        
+
         updated_at = None
         if data.get('updated_at'):
             updated_at = datetime.fromisoformat(data['updated_at'])
-        
+
+        # Create and return the Project instance
         return cls(
             id=data.get('id'),
             name=data['name'],

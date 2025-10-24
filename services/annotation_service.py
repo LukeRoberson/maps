@@ -7,7 +7,7 @@ import json
 from datetime import datetime
 from flask import current_app
 
-from models import Annotation
+from backend import AnnotationModel
 from database import DatabaseContext, DatabaseManager
 
 
@@ -42,8 +42,8 @@ class AnnotationService:
 
     def create_annotation(
         self,
-        annotation: Annotation
-    ) -> Annotation:
+        annotation: AnnotationModel
+    ) -> AnnotationModel:
         """
         Create a new annotation.
         
@@ -108,7 +108,7 @@ class AnnotationService:
     def get_annotation(
         self,
         annotation_id: int
-    ) -> Optional[Annotation]:
+    ) -> Optional[AnnotationModel]:
         """
         Get an annotation by ID.
         
@@ -131,7 +131,7 @@ class AnnotationService:
             )
         
         if row:
-            return Annotation(
+            return AnnotationModel(
                 id=row['id'],
                 layer_id=row['layer_id'],
                 annotation_type=row['annotation_type'],
@@ -147,7 +147,7 @@ class AnnotationService:
     def list_annotations(
         self,
         layer_id: int
-    ) -> List[Annotation]:
+    ) -> List[AnnotationModel]:
         """
         List annotations for a layer.
         
@@ -178,7 +178,7 @@ class AnnotationService:
         annotations = []
         for row in rows:
             annotations.append(
-                Annotation(
+                AnnotationModel(
                     id=row['id'],
                     layer_id=row['layer_id'],
                     annotation_type=row['annotation_type'],
@@ -196,7 +196,7 @@ class AnnotationService:
         self,
         annotation_id: int,
         updates: Dict[str, Any]
-    ) -> Optional[Annotation]:
+    ) -> Optional[AnnotationModel]:
         """
         Update an annotation.
         

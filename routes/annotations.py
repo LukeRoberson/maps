@@ -5,7 +5,7 @@ Annotation routes.
 from flask import Blueprint, request, jsonify, current_app
 from typing import Dict, Any
 
-from models import Annotation
+from backend import AnnotationModel
 from services import AnnotationService
 
 annotations_bp = Blueprint(
@@ -63,7 +63,7 @@ def create_annotation() -> Dict[str, Any]:
                     {'error': f'Missing required field: {field}'}
                 ), 400
         
-        annotation = Annotation(
+        annotation = AnnotationModel(
             layer_id=data['layer_id'],
             annotation_type=data['annotation_type'],
             coordinates=data['coordinates'],

@@ -6,7 +6,7 @@ from typing import List, Optional, Dict, Any
 from datetime import datetime
 from flask import current_app
 
-from models import MapArea
+from backend import MapModel
 from database import DatabaseContext, DatabaseManager
 
 
@@ -43,8 +43,8 @@ class MapAreaService:
 
     def create_map_area(
         self,
-        map_area: MapArea
-    ) -> MapArea:
+        map_area: MapModel
+    ) -> MapModel:
         """
         Create a new map area.
         
@@ -85,7 +85,7 @@ class MapAreaService:
     def get_map_area(
         self,
         map_area_id: int
-    ) -> Optional[MapArea]:
+    ) -> Optional[MapModel]:
         """
         Get a map area by ID.
         
@@ -108,7 +108,7 @@ class MapAreaService:
             )
         
         if row:
-            return MapArea(
+            return MapModel(
                 id=row['id'],
                 project_id=row['project_id'],
                 parent_id=row['parent_id'],
@@ -128,7 +128,7 @@ class MapAreaService:
         self,
         project_id: int,
         parent_id: Optional[int] = None
-    ) -> List[MapArea]:
+    ) -> List[MapModel]:
         """
         List map areas for a project.
         
@@ -179,7 +179,7 @@ class MapAreaService:
         map_areas = []
         for row in rows:
             map_areas.append(
-                MapArea(
+                MapModel(
                     id=row['id'],
                     project_id=row['project_id'],
                     parent_id=row['parent_id'],
@@ -228,7 +228,7 @@ class MapAreaService:
         self,
         map_area_id: int,
         updates: Dict[str, Any]
-    ) -> Optional[MapArea]:
+    ) -> Optional[MapModel]:
         """
         Update a map area.
         
