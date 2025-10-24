@@ -5,8 +5,8 @@ Boundary routes.
 from flask import Blueprint, request, jsonify, current_app
 from typing import Dict, Any
 
-from backend import BoundaryModel
-from services import BoundaryService, MapAreaService
+from backend import BoundaryModel, MapService
+from services import BoundaryService
 
 boundaries_bp = Blueprint(
     'boundaries',
@@ -50,7 +50,7 @@ def create_boundary() -> Dict[str, Any]:
         Dict[str, Any]: JSON response with created boundary
     """
     boundary_service = BoundaryService()
-    map_area_service = MapAreaService()    
+    map_area_service = MapService()    
     try:
         data = request.get_json()
         
@@ -65,7 +65,7 @@ def create_boundary() -> Dict[str, Any]:
                 ), 400
         
         # Get the map area to check if it has a parent
-        map_area = map_area_service.get_map_area(data['map_area_id'])
+        map_area = map_area_service.read(data['map_area_id'])
         if not map_area:
             return jsonify({'error': 'Map area not found'}), 404
         

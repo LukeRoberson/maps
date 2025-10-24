@@ -6,17 +6,46 @@ Classes for managing maps.
 Classes:
     MapModel:
         A data structure that represents a map
+    MapService:
+        Service class for map area operations
+
+Third party dependencies:
+    Flask: Web framework used for application context.
+
+Local dependencies:
+    DatabaseContext:
+        Context manager for database connections.
+    DatabaseManager:
+        Manager for executing database operations.
 """
 
+
+# Standard library imports
 from typing import (
     Optional,
     Dict,
-    Any
+    Any,
+    List,
+    Union,
+    overload
 )
 from datetime import (
     datetime,
     timezone
 )
+import logging
+
+# Third-party imports
+from flask import current_app
+
+# Local imports
+from database import (
+    DatabaseContext,
+    DatabaseManager
+)
+
+
+logger = logging.getLogger(__name__)
 
 
 class MapModel:
@@ -187,3 +216,336 @@ class MapModel:
             created_at=created_at,
             updated_at=updated_at
         )
+
+
+class MapService:
+    """
+    Service class for map area operations.
+
+    Methods:
+        __init__:
+            Initialize MapService
+        _row_to_model:
+            Convert database row to MapModel
+        create:
+            Create a new map area
+        read:
+            Get one or more maps
+        read_hierarchy:
+            Get hierarchical structure of map areas
+        update:
+            Update a map area
+        delete:
+            Delete a map area
+    """
+
+    def __init__(self) -> None:
+        """
+        Initialize the MapService.
+
+        Returns:
+            None
+        """
+
+        # Get the config from the Flask application context
+        self.db_path: str = current_app.config['DATABASE_PATH']
+
+    def _row_to_model(
+        self,
+        row: Dict[str, Any]
+    ) -> MapModel:
+        """
+        Convert a database row to a MapModel.
+
+        Args:
+            row (Dict[str, Any]): Database row
+
+        Returns:
+            MapModel: Map model instance
+        """
+
+        return MapModel(
+            id=row['id'],
+            project_id=row['project_id'],
+            parent_id=row['parent_id'],
+            name=row['name'],
+            area_type=row['area_type'],
+            boundary_id=row['boundary_id'],
+            default_center_lat=row['default_center_lat'],
+            default_center_lon=row['default_center_lon'],
+            default_zoom=row['default_zoom'],
+            created_at=datetime.fromisoformat(row['created_at']),
+            updated_at=datetime.fromisoformat(row['updated_at'])
+        )
+
+    def create(
+        self,
+        map_area: MapModel
+    ) -> MapModel:
+        """
+        Create a new map.
+
+        Args:
+            map_area (MapArea): Map area to create
+
+        Returns:
+            MapArea: Created map area with assigned ID
+        """
+
+        try:
+            with DatabaseContext(self.db_path) as db_ctx:
+                db_manager = DatabaseManager(db_ctx)
+                map_area.id = db_manager.create(
+                    table="map_areas",
+                    params={
+                        "project_id": map_area.project_id,
+                        "parent_id": map_area.parent_id,
+                        "name": map_area.name,
+                        "area_type": map_area.area_type,
+                        "boundary_id": map_area.boundary_id,
+                        "default_center_lat": map_area.default_center_lat,
+                        "default_center_lon": map_area.default_center_lon,
+                        "default_zoom": map_area.default_zoom
+                    }
+                )
+
+        except Exception as e:
+            logger.error(f"Error creating map area: {e}")
+            raise
+
+        return map_area
+
+    @overload
+    def read(
+        self,
+        *,
+        map_id: int,
+    ) -> Optional[MapModel]: ...
+
+    @overload
+    def read(
+        self,
+        *,
+        project_id: int,
+        parent_id: Optional[int] = None
+    ) -> List[MapModel]: ...
+
+    def read(
+        self,
+        map_id: Optional[int] = None,
+        project_id: Optional[int] = None,
+        parent_id: Optional[int] = None
+    ) -> Union[List[MapModel], Optional[MapModel]]:
+        """
+        Fetch maps from the database
+        Include a map_id to get a single map
+
+        Args:
+            map_id (int): Map area ID, when getting a single map
+            project_id (int): Project ID, when listing maps
+            parent_id (Optional[int]): Parent area ID filter
+
+        Returns:
+            Optional[MapArea]: Map area if found, None otherwise
+        """
+
+        # Check that at least one parameter is provided
+        if not any([map_id, project_id]):
+            raise ValueError(
+                "At least one of map_id or project_id must be provided"
+            )
+
+        # Read a single map area by ID
+        if map_id:
+            try:
+                with DatabaseContext(self.db_path) as db_ctx:
+                    db_manager = DatabaseManager(db_ctx)
+                    row = db_manager.read(
+                        table="map_areas",
+                        fields=['*'],
+                        params={
+                            'id': map_id
+                        }
+                    )
+
+                if row:
+                    row = row[0] if isinstance(row, list) else row
+                    return self._row_to_model(dict(row))
+
+                return None
+
+            except Exception as e:
+                logger.error(f"Error reading map area: {e}")
+                raise
+
+        # List all map areas for a project
+        elif parent_id is None:
+            try:
+                with DatabaseContext(self.db_path) as db_ctx:
+                    db_manager = DatabaseManager(db_ctx)
+                    rows = db_manager.read(
+                        table="map_areas",
+                        fields=['*'],
+                        params={
+                            'project_id': project_id
+                        },
+                        order_by=['created_at'],
+                        get_all=True
+                    )
+
+            except Exception as e:
+                logger.error(f"Error reading map areas: {e}")
+                raise
+
+        # All maps, filtered by parent_id
+        else:
+            try:
+                with DatabaseContext(self.db_path) as db_ctx:
+                    db_manager = DatabaseManager(db_ctx)
+                    rows = db_manager.read(
+                        table="map_areas",
+                        fields=['*'],
+                        params={
+                            'project_id': project_id,
+                            'parent_id': parent_id
+                        },
+                        order_by=['created_at'],
+                        get_all=True
+                    )
+
+            except Exception as e:
+                logger.error(f"Error reading map areas: {e}")
+                raise
+
+        map_areas = []
+        if rows:
+            for row in rows:
+                map_areas.append(
+                    self._row_to_model(dict(row))
+                )
+        else:
+            return []
+
+        return map_areas
+
+    def read_hierarchy(
+        self,
+        project_id: int
+    ) -> Dict[str, Any]:
+        """
+        Get hierarchical structure of map areas.
+
+        Args:
+            project_id (int): Project ID
+
+        Returns:
+            Dict[str, Any]: Hierarchical structure
+        """
+
+        # Get all map areas for the project
+        all_areas = self.read(
+            project_id=project_id
+        )
+
+        # Build the hierarchy structure
+        hierarchy = {
+            'master': None,
+            'suburbs': [],
+            'individuals': []
+        }
+
+        # Populate the hierarchy
+        for area in all_areas:
+            if area.area_type == 'master':
+                hierarchy['master'] = area.to_dict()
+            elif area.area_type == 'suburb':
+                hierarchy['suburbs'].append(area.to_dict())
+            elif area.area_type == 'individual':
+                hierarchy['individuals'].append(area.to_dict())
+
+        return hierarchy
+
+    def update(
+        self,
+        map_area_id: int,
+        updates: Dict[str, Any]
+    ) -> Optional[MapModel]:
+        """
+        Update a map.
+
+        Args:
+            map_area_id (int): Map area ID
+            updates (Dict[str, Any]): Fields to update
+
+        Returns:
+            Optional[MapArea]: Updated map area if found, None otherwise
+        """
+
+        # Fields that can be updated
+        allowed_fields = [
+            'name',
+            'parent_id',
+            'boundary_id',
+            'default_center_lat',
+            'default_center_lon',
+            'default_zoom'
+        ]
+
+        # Build a dictionary of fields/values to update
+        all_fields = {}
+        for field in allowed_fields:
+            if field in updates:
+                all_fields[field] = updates[field]
+
+        # Always update the updated_at timestamp
+        all_fields["updated_at"] = "CURRENT_TIMESTAMP"
+
+        try:
+            with DatabaseContext(self.db_path) as db_ctx:
+                db_manager = DatabaseManager(db_ctx)
+                db_manager.update(
+                    table="map_areas",
+                    fields=all_fields,
+                    parameters={
+                        'id': map_area_id
+                    },
+                )
+
+        except Exception as e:
+            logger.error(f"Error updating map area: {e}")
+            raise
+
+        return self.read(
+            map_id=map_area_id
+        )
+
+    def delete(
+        self,
+        map_area_id: int
+    ) -> bool:
+        """
+        Delete a map area.
+
+        Args:
+            map_area_id (int): Map area ID
+
+        Returns:
+            bool: True if deleted, False if not found
+        """
+
+        try:
+            with DatabaseContext(self.db_path) as db_ctx:
+                db_manager = DatabaseManager(db_ctx)
+                cursor = db_manager.delete(
+                    table="map_areas",
+                    parameters={
+                        'id': map_area_id
+                    },
+                )
+
+        except Exception as e:
+            logger.error(f"Error deleting map area: {e}")
+            raise
+
+        # True if a row was deleted
+        return cursor.rowcount > 0

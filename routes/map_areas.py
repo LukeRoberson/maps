@@ -5,8 +5,7 @@ Map area routes.
 from flask import Blueprint, request, jsonify, current_app
 from typing import Dict, Any
 
-from backend import MapModel
-from services import MapAreaService
+from backend import MapModel, MapService
 
 map_areas_bp = Blueprint('map_areas', __name__, url_prefix='/api/map-areas')
 
@@ -19,7 +18,7 @@ def list_map_areas() -> Dict[str, Any]:
     Returns:
         Dict[str, Any]: JSON response with map area list
     """
-    map_area_service = MapAreaService()
+    map_area_service = MapService()
     try:
         project_id = request.args.get('project_id', type=int)
         
@@ -30,9 +29,9 @@ def list_map_areas() -> Dict[str, Any]:
         
         parent_id = request.args.get('parent_id', type=int)
         
-        map_areas = map_area_service.list_map_areas(
-            project_id,
-            parent_id
+        map_areas = map_area_service.read(
+            project_id=project_id,
+            parent_id=parent_id
         )
         
         return jsonify({
@@ -51,7 +50,7 @@ def get_hierarchy() -> Dict[str, Any]:
     Returns:
         Dict[str, Any]: JSON response with hierarchy
     """
-    map_area_service = MapAreaService()
+    map_area_service = MapService()
     try:
         project_id = request.args.get('project_id', type=int)
         
@@ -60,7 +59,7 @@ def get_hierarchy() -> Dict[str, Any]:
                 {'error': 'project_id parameter required'}
             ), 400
         
-        hierarchy = map_area_service.get_hierarchy(project_id)
+        hierarchy = map_area_service.read_hierarchy(project_id)
         return jsonify(hierarchy)
     
     except Exception as e:
@@ -75,7 +74,7 @@ def create_map_area() -> Dict[str, Any]:
     Returns:
         Dict[str, Any]: JSON response with created map area
     """
-    map_area_service = MapAreaService()
+    map_area_service = MapService()
     try:
         data = request.get_json()
         
@@ -97,7 +96,7 @@ def create_map_area() -> Dict[str, Any]:
             boundary_id=data.get('boundary_id')
         )
         
-        created_map_area = map_area_service.create_map_area(map_area)
+        created_map_area = map_area_service.create(map_area)
         return jsonify(created_map_area.to_dict()), 201
     
     except ValueError as e:
@@ -120,9 +119,9 @@ def get_map_area(
     Returns:
         Dict[str, Any]: JSON response with map area details
     """
-    map_area_service = MapAreaService()
+    map_area_service = MapService()
     try:
-        map_area = map_area_service.get_map_area(map_area_id)
+        map_area = map_area_service.read(map_area_id)
         
         if not map_area:
             return jsonify({'error': 'Map area not found'}), 404
@@ -146,14 +145,14 @@ def update_map_area(
     Returns:
         Dict[str, Any]: JSON response with updated map area
     """
-    map_area_service = MapAreaService()
+    map_area_service = MapService()
     try:
         data = request.get_json()
         
         if not data:
             return jsonify({'error': 'No data provided'}), 400
         
-        updated_map_area = map_area_service.update_map_area(
+        updated_map_area = map_area_service.update(
             map_area_id,
             data
         )
@@ -180,7 +179,7 @@ def delete_map_area(
     Returns:
         Dict[str, Any]: JSON response confirming deletion
     """
-    map_area_service = MapAreaService()
+    map_area_service = MapService()
     try:
         success = map_area_service.delete_map_area(map_area_id)
         
