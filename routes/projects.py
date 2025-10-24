@@ -6,7 +6,7 @@ from flask import Blueprint, request, jsonify, current_app
 from typing import Dict, Any
 
 from backend import ProjectModel
-from services import ProjectService
+from backend import ProjectService
 
 projects_bp = Blueprint('projects', __name__, url_prefix='/api/projects')
 
@@ -21,7 +21,7 @@ def list_projects() -> Dict[str, Any]:
     """
     project_service = ProjectService()
     try:
-        projects = project_service.list_projects()
+        projects = project_service.read()
         return jsonify({
             'projects': [p.to_dict() for p in projects]
         })
@@ -60,7 +60,7 @@ def create_project() -> Dict[str, Any]:
             zoom_level=int(data.get('zoom_level', 13))
         )
         
-        created_project = project_service.create_project(project)
+        created_project = project_service.create(project)
         return jsonify(created_project.to_dict()), 201
     
     except ValueError as e:
@@ -85,7 +85,7 @@ def get_project(
     """
     project_service = ProjectService()
     try:
-        project = project_service.get_project(project_id)
+        project = project_service.read(project_id)
         
         if not project:
             return jsonify({'error': 'Project not found'}), 404
@@ -116,7 +116,7 @@ def update_project(
         if not data:
             return jsonify({'error': 'No data provided'}), 400
         
-        updated_project = project_service.update_project(
+        updated_project = project_service.update(
             project_id,
             data
         )
@@ -145,7 +145,7 @@ def delete_project(
     """
     project_service = ProjectService()
     try:
-        success = project_service.delete_project(project_id)
+        success = project_service.delete(project_id)
         
         if not success:
             return jsonify({'error': 'Project not found'}), 404

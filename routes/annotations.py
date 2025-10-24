@@ -2,7 +2,7 @@
 Annotation routes.
 """
 
-from flask import Blueprint, request, jsonify, current_app
+from flask import Blueprint, request, jsonify
 from typing import Dict, Any
 
 from backend import AnnotationModel
