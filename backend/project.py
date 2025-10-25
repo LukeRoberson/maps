@@ -9,14 +9,14 @@ Classes:
     ProjectService:
         Class for managing projects in the database.
 
-Third party dependencies:
-    Flask: Web framework used for application context.
+Third-party modules:
+    Flask:
+        current_app: Access the Flask application context.
 
-Local dependencies:
-    DatabaseContext:
-        Context manager for database connections.
-    DatabaseManager:
-        Manager for executing database operations.
+Local modules:
+    database:
+        DatabaseContext: Context manager for database connections.
+        DatabaseManager: Manager for database operations.
 """
 
 

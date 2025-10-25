@@ -7,7 +7,7 @@ from .project import ProjectModel, ProjectService
 from .map import MapModel, MapService
 from .boundary import BoundaryModel
 from .layer import LayerModel
-from .annotation import AnnotationModel
+from .annotation import AnnotationModel, AnnotationService
 
 __all__ = [
     'Config',
@@ -18,4 +18,5 @@ __all__ = [
     'BoundaryModel',
     'LayerModel',
     'AnnotationModel',
+    'AnnotationService'
 ]

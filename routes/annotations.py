@@ -5,8 +5,7 @@ Annotation routes.
 from flask import Blueprint, request, jsonify
 from typing import Dict, Any
 
-from backend import AnnotationModel
-from services import AnnotationService
+from backend import AnnotationModel, AnnotationService
 
 annotations_bp = Blueprint(
     'annotations',
@@ -32,7 +31,7 @@ def list_annotations() -> Dict[str, Any]:
                 {'error': 'layer_id parameter required'}
             ), 400
         
-        annotations = annotation_service.list_annotations(layer_id)
+        annotations = annotation_service.read(layer_id=layer_id)
         return jsonify({
             'annotations': [ann.to_dict() for ann in annotations]
         })
@@ -71,7 +70,7 @@ def create_annotation() -> Dict[str, Any]:
             content=data.get('content')
         )
         
-        created_annotation = annotation_service.create_annotation(
+        created_annotation = annotation_service.create(
             annotation
         )
         return jsonify(created_annotation.to_dict()), 201
@@ -98,7 +97,7 @@ def get_annotation(
     """
     annotation_service = AnnotationService()
     try:
-        annotation = annotation_service.get_annotation(annotation_id)
+        annotation = annotation_service.read(annotation_id)
         
         if not annotation:
             return jsonify({'error': 'Annotation not found'}), 404
@@ -129,7 +128,7 @@ def update_annotation(
         if not data:
             return jsonify({'error': 'No data provided'}), 400
         
-        updated_annotation = annotation_service.update_annotation(
+        updated_annotation = annotation_service.update(
             annotation_id,
             data
         )
@@ -158,7 +157,7 @@ def delete_annotation(
     """
     annotation_service = AnnotationService()
     try:
-        success = annotation_service.delete_annotation(annotation_id)
+        success = annotation_service.delete(annotation_id)
         
         if not success:
             return jsonify({'error': 'Annotation not found'}), 404
