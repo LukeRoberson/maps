@@ -40,6 +40,7 @@
 - [ ] Improve the `config.py` file
   - [ ] Load config from a YAML file
   - [ ] Set the secret key securely in prod
+  - [ ] There's a lot of serializing and deserializing of config; Is this needed?
 
 
 ## To Investigate

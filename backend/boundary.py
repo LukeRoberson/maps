@@ -96,6 +96,19 @@ class BoundaryModel:
             None
         """
 
+        # Validate coordinates exist, and have at least 3 points
+        if not coordinates or len(coordinates) < 3:
+            raise ValueError(
+                "Boundary must have at least 3 coordinate pairs"
+            )
+
+        # Validate each coordinate is a [lat, lon] pair
+        for coord in coordinates:
+            if len(coord) != 2:
+                raise ValueError(
+                    "Each coordinate must be [lat, lon]"
+                )
+
         self.id = id
         self.map_area_id = map_area_id
         self.coordinates = coordinates
@@ -216,6 +229,10 @@ class BoundaryService:
     Methods:
         __init__:
             Initialize BoundaryService
+        _serialize_config:
+            Serialize config dictionary to JSON string
+        _deserialize_config:
+            Deserialize config JSON string to dictionary
         _row_to_model:
             Convert database row to BoundaryModel
         _point_in_polygon:
@@ -244,6 +261,38 @@ class BoundaryService:
 
         # Get the config from the Flask application context
         self.db_path: str = current_app.config['DATABASE_PATH']
+
+    @staticmethod
+    def _serialize_config(
+        config: Dict[str, Any]
+    ) -> str:
+        """
+        Serialize the config dictionary to a JSON string.
+
+        Args:
+            config (Dict[str, Any]): Configuration dictionary
+
+        Returns:
+            str: JSON string representation of the config
+        """
+
+        return json.dumps(config)
+
+    @staticmethod
+    def _deserialize_config(
+        config_str: str
+    ) -> Dict[str, Any]:
+        """
+        Deserialize the config JSON string to a dictionary.
+
+        Args:
+            config_str (str): JSON string representation of the config
+
+        Returns:
+            Dict[str, Any]: Configuration dictionary
+        """
+
+        return json.loads(config_str)
 
     def _row_to_model(
         self,
@@ -369,7 +418,7 @@ class BoundaryService:
             current_app.logger.error(
                 f"Error retrieving boundary {boundary_id}: {e}"
             )
-            return None
+            raise
 
         if row:
             row_dict = {}
@@ -471,7 +520,7 @@ class BoundaryService:
             logger.error(
                 f"Error retrieving boundary for map area {map_id}: {e}"
             )
-            return None
+            raise
 
         # Convert to a BoundaryModel
         if row:
@@ -481,7 +530,7 @@ class BoundaryService:
                 row_dict[key] = this_row[key]
             return self._row_to_model(row_dict)
 
-        return None
+        raise
 
     def update(
         self,
@@ -518,7 +567,7 @@ class BoundaryService:
             logger.error(
                 f"Error updating boundary {boundary_id}: {e}"
             )
-            return None
+            raise
 
         # Get the updated boundary and return it
         return self._get_boundary(
@@ -554,7 +603,7 @@ class BoundaryService:
             logger.error(
                 f"Error deleting boundary {boundary_id}: {e}"
             )
-            return False
+            raise
 
         # True if a row was deleted
         return cursor.rowcount > 0

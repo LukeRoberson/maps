@@ -5,7 +5,7 @@ Export routes.
 from flask import Blueprint, request, jsonify, send_file
 from typing import Dict, Any
 
-from services import ExportService
+from backend import ExportService
 from backend.config import Config
 
 exports_bp = Blueprint('exports', __name__, url_prefix='/api/exports')
@@ -37,7 +37,7 @@ def export_map() -> Dict[str, Any]:
                 ), 400
         
         result = export_service.export_map(
-            map_area_id=data['map_area_id'],
+            map_id=data['map_area_id'],
             image_data=data['image_data'],
             filename=data.get('filename')
         )

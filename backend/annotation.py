@@ -209,6 +209,10 @@ class AnnotationService:
     Methods:
         __init__:
             Initialize AnnotationService
+        _serialize_config:
+            Serialize config dictionary to JSON string
+        _deserialize_config:
+            Deserialize config JSON string to dictionary
         _row_to_model:
             Convert database row to AnnotationModel
         create:
@@ -232,6 +236,38 @@ class AnnotationService:
         # Get the config from the Flask application context
         self.db_path: str = current_app.config['DATABASE_PATH']
 
+    @staticmethod
+    def _serialize_config(
+        config: Dict[str, Any]
+    ) -> str:
+        """
+        Serialize the config dictionary to a JSON string.
+
+        Args:
+            config (Dict[str, Any]): Configuration dictionary
+
+        Returns:
+            str: JSON string representation of the config
+        """
+
+        return json.dumps(config)
+
+    @staticmethod
+    def _deserialize_config(
+        config_str: str
+    ) -> Dict[str, Any]:
+        """
+        Deserialize the config JSON string to a dictionary.
+
+        Args:
+            config_str (str): JSON string representation of the config
+
+        Returns:
+            Dict[str, Any]: Configuration dictionary
+        """
+
+        return json.loads(config_str)
+
     def _row_to_model(
         self,
         row: Dict[str, Any]
@@ -246,12 +282,14 @@ class AnnotationService:
             AnnotationModel: Project model instance
         """
 
+        style = self._deserialize_config(row['style']) if row['style'] else {}
+
         return AnnotationModel(
             id=row['id'],
             layer_id=row['layer_id'],
             annotation_type=row['annotation_type'],
-            coordinates=json.loads(row['coordinates']),
-            style=json.loads(row['style']) if row['style'] else {},
+            coordinates=self._deserialize_config(row['coordinates']),
+            style=style,
             content=row['content'],
             created_at=datetime.fromisoformat(row['created_at']),
             updated_at=datetime.fromisoformat(row['updated_at'])
@@ -308,8 +346,8 @@ class AnnotationService:
             )
 
         # Serialize coordinates and style to JSON
-        coords_json = json.dumps(annotation.coordinates)
-        style_json = json.dumps(annotation.style)
+        coords_json = self._serialize_config(annotation.coordinates)
+        style_json = self._serialize_config(annotation.style)
 
         # Insert the annotation into the database
         try:
@@ -410,13 +448,16 @@ class AnnotationService:
             annotations = []
             if rows:
                 for row in rows:
-                    style = json.loads(row['style']) if row['style'] else {}
+                    style = self._deserialize_config(
+                        row['style']
+                    ) if row['style'] else {}
+                    coordinates = self._deserialize_config(row['coordinates'])
                     annotations.append(
                         AnnotationModel(
                             id=row['id'],
                             layer_id=row['layer_id'],
                             annotation_type=row['annotation_type'],
-                            coordinates=json.loads(row['coordinates']),
+                            coordinates=coordinates,
                             style=style,
                             content=row['content'],
                             created_at=datetime.fromisoformat(
@@ -459,7 +500,9 @@ class AnnotationService:
             if field in updates:
                 # Serialize to JSON if necessary
                 if field in ['coordinates', 'style']:
-                    all_fields[field] = json.dumps(updates[field])
+                    all_fields[field] = self._serialize_config(
+                        updates[field]
+                    )
                 else:
                     all_fields[field] = updates[field]
 

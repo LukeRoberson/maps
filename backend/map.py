@@ -349,12 +349,6 @@ class MapService:
             Optional[MapArea]: Map area if found, None otherwise
         """
 
-        # Check that at least one parameter is provided
-        if not any([map_id, project_id]):
-            raise ValueError(
-                "At least one of map_id or project_id must be provided"
-            )
-
         # Read a single map area by ID
         if map_id:
             try:

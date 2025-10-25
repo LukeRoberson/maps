@@ -8,6 +8,7 @@ from .map import MapModel, MapService
 from .boundary import BoundaryModel, BoundaryService
 from .layer import LayerModel, LayerService
 from .annotation import AnnotationModel, AnnotationService
+from .export import ExportService
 
 __all__ = [
     'Config',
@@ -20,5 +21,6 @@ __all__ = [
     'LayerModel',
     'LayerService',
     'AnnotationModel',
-    'AnnotationService'
+    'AnnotationService',
+    'ExportService',
 ]

@@ -178,7 +178,7 @@ app.config.from_object(config)
 CORS(app, origins=config.CORS_ORIGINS)
 
 # Ensure required directories exist
-for folder in [config.UPLOAD_FOLDER, config.EXPORT_FOLDER]:
+for folder in [config.EXPORT_FOLDER]:
     if not os.path.exists(folder):
         os.makedirs(folder)
 

@@ -1,4 +1,6 @@
 """
+Module: config.py
+
 Application configuration settings.
 
 Classes:
@@ -6,6 +8,8 @@ Classes:
         Base configuration class.
 """
 
+
+# Standard Library Imports
 import os
 
 
@@ -17,15 +21,15 @@ class Config:
     Attributes:
         SECRET_KEY (str): Secret key for session management
         DATABASE_PATH (str): Path to SQLite database file
-        UPLOAD_FOLDER (str): Path for uploaded files
         EXPORT_FOLDER (str): Path for exported map files
-        MAX_CONTENT_LENGTH (int): Maximum file upload size
     """
 
+    # Get the secret key from environment variables
     SECRET_KEY: str = os.environ.get(
         'SECRET_KEY'
     ) or 'dev-secret-key-change-in-production'
 
+    # Build the path to the database file
     DATABASE_PATH: str = os.path.join(
         os.path.dirname(__file__),
         '..',
@@ -33,21 +37,15 @@ class Config:
         'maps.db'
     )
 
+    # Flask session configuration
     SESSION_TYPE = 'filesystem'
 
-    UPLOAD_FOLDER: str = os.path.join(
-        os.path.dirname(__file__),
-        '..',
-        'uploads'
-    )
-
+    # Set the path of the export folder
     EXPORT_FOLDER: str = os.path.join(
         os.path.dirname(__file__),
         '..',
         'exports'
     )
-
-    MAX_CONTENT_LENGTH: int = 16 * 1024 * 1024  # 16MB max file size
 
     # CORS settings
     CORS_ORIGINS: list = [

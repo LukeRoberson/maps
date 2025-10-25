@@ -226,6 +226,10 @@ class LayerService:
     Methods:
         __init__:
             Initialize LayerService
+        _serialize_config:
+            Serialize config dictionary to JSON string
+        _deserialize_config:
+            Deserialize config JSON string to dictionary
         _row_to_model:
             Convert database row to Layer model
         _reorder_layers:
@@ -257,6 +261,38 @@ class LayerService:
         # Get the config from the Flask application context
         self.db_path: str = current_app.config['DATABASE_PATH']
 
+    @staticmethod
+    def _serialize_config(
+        config: Dict[str, Any]
+    ) -> str:
+        """
+        Serialize the config dictionary to a JSON string.
+
+        Args:
+            config (Dict[str, Any]): Configuration dictionary
+
+        Returns:
+            str: JSON string representation of the config
+        """
+
+        return json.dumps(config)
+
+    @staticmethod
+    def _deserialize_config(
+        config_str: str
+    ) -> Dict[str, Any]:
+        """
+        Deserialize the config JSON string to a dictionary.
+
+        Args:
+            config_str (str): JSON string representation of the config
+
+        Returns:
+            Dict[str, Any]: Configuration dictionary
+        """
+
+        return json.loads(config_str)
+
     def _row_to_model(
         self,
         row: Any
@@ -271,7 +307,10 @@ class LayerService:
             Layer: Layer object
         """
 
-        from datetime import datetime as dt
+        # Convert config from JSON string to dictionary
+        config = self._deserialize_config(
+            row['config']
+        ) if row['config'] else {}
 
         return LayerModel(
             id=row['id'],
@@ -282,9 +321,9 @@ class LayerService:
             visible=bool(row['visible']),
             z_index=row['z_index'],
             is_editable=bool(row['is_editable']),
-            config=json.loads(row['config']) if row['config'] else {},
-            created_at=dt.fromisoformat(row['created_at']),
-            updated_at=dt.fromisoformat(row['updated_at'])
+            config=config,
+            created_at=datetime.fromisoformat(row['created_at']),
+            updated_at=datetime.fromisoformat(row['updated_at'])
         )
 
     def _reorder_layers(
@@ -389,7 +428,7 @@ class LayerService:
             logger.error(
                 f"Error fetching parent map area for {map_id}: {str(e)}"
             )
-            return []
+            raise
 
         # Get layers from parent recursively
         parent_layers = self.read(map_id=parent_id)
@@ -472,7 +511,7 @@ class LayerService:
             logger.error(
                 f"Error listing own layers for map_area_id {map_id}: {str(e)}"
             )
-            return []
+            raise
 
         # Convert rows to Layer models
         if rows:
@@ -495,7 +534,7 @@ class LayerService:
         """
 
         # Serialize config to JSON
-        config_json = json.dumps(layer.config)
+        config_json: str = self._serialize_config(layer.config)
 
         # Insert into the database
         try:
@@ -578,7 +617,7 @@ class LayerService:
                 logger.error(
                     f"Error fetching layer {layer_id}: {str(e)}"
                 )
-                return None
+                raise
 
             # Convert to Layer model if found
             if row:
@@ -641,7 +680,9 @@ class LayerService:
             if field in updates:
                 # Serialize config if needed
                 if field == 'config':
-                    all_fields[field] = json.dumps(updates[field])
+                    all_fields[field] = self._serialize_config(
+                        updates[field]
+                    )
 
                 # Otherwise, use the value directly
                 else:
