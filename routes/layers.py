@@ -6,8 +6,7 @@ from flask import Blueprint, request, jsonify, current_app
 from typing import Tuple, Union
 from werkzeug.wrappers import Response
 
-from backend import LayerModel
-from services import LayerService
+from backend import LayerModel, LayerService
 
 layers_bp = Blueprint('layers', __name__, url_prefix='/api/layers')
 
@@ -29,7 +28,7 @@ def list_layers() -> Union[Response, Tuple[Response, int]]:
                 {'error': 'map_area_id parameter required'}
             ), 400
         
-        layers = layer_service.list_layers_for_map_area(map_area_id)
+        layers = layer_service.read(map_id=map_area_id)
         return jsonify({
             'layers': [layer.to_dict() for layer in layers]
         })
@@ -69,7 +68,7 @@ def create_layer() -> Union[Response, Tuple[Response, int]]:
             config=data.get('config', {})
         )
         
-        created_layer = layer_service.create_layer(layer)
+        created_layer = layer_service.create(layer)
         return jsonify(created_layer.to_dict()), 201
     
     except ValueError as e:
@@ -94,7 +93,7 @@ def get_layer(
     """
     layer_service = LayerService()
     try:
-        layer = layer_service.get_layer(layer_id)
+        layer = layer_service.read(layer_id=layer_id)
         
         if not layer:
             return jsonify({'error': 'Layer not found'}), 404
@@ -125,7 +124,7 @@ def update_layer(
         if not data:
             return jsonify({'error': 'No data provided'}), 400
         
-        updated_layer = layer_service.update_layer(layer_id, data)
+        updated_layer = layer_service.update(layer_id, data)
         
         if not updated_layer:
             return jsonify({'error': 'Layer not found'}), 404
@@ -151,7 +150,7 @@ def delete_layer(
     """
     layer_service = LayerService()
     try:
-        success = layer_service.delete_layer(layer_id)
+        success = layer_service.delete(layer_id)
         
         if not success:
             return jsonify({'error': 'Layer not found'}), 404
