@@ -5,8 +5,7 @@ Boundary routes.
 from flask import Blueprint, request, jsonify, current_app
 from typing import Dict, Any
 
-from backend import BoundaryModel, MapService
-from services import BoundaryService
+from backend import BoundaryModel, MapService, BoundaryService
 
 boundaries_bp = Blueprint(
     'boundaries',
@@ -30,7 +29,7 @@ def get_boundary_by_map_area(
     """
     boundary_service = BoundaryService()
     try:
-        boundary = boundary_service.get_by_map_area(map_area_id)
+        boundary = boundary_service.read(map_area_id)
         
         if not boundary:
             return jsonify({'error': 'Boundary not found'}), 404
@@ -71,7 +70,7 @@ def create_boundary() -> Dict[str, Any]:
         
         # If map area has a parent, validate boundary is within parent
         if map_area.parent_id:
-            parent_boundary = boundary_service.get_by_map_area(
+            parent_boundary = boundary_service.read(
                 map_area.parent_id
             )
             
@@ -99,7 +98,7 @@ def create_boundary() -> Dict[str, Any]:
             coordinates=data['coordinates']
         )
         
-        created_boundary = boundary_service.create_boundary(boundary)
+        created_boundary = boundary_service.create(boundary)
         return jsonify(created_boundary.to_dict()), 201
     
     except Exception as e:
@@ -128,7 +127,7 @@ def update_boundary(
                 {'error': 'coordinates field required'}
             ), 400
         
-        updated_boundary = boundary_service.update_boundary(
+        updated_boundary = boundary_service.update(
             boundary_id,
             data['coordinates']
         )
@@ -157,7 +156,7 @@ def delete_boundary(
     """
     boundary_service = BoundaryService()
     try:
-        success = boundary_service.delete_boundary(boundary_id)
+        success = boundary_service.delete(boundary_id)
         
         if not success:
             return jsonify({'error': 'Boundary not found'}), 404
