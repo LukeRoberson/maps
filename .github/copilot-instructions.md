@@ -10,9 +10,9 @@ An app for creating printable/exportable maps, with a browser based UI.
     * Each of these has a `docs` folder containing documentation
 * Map data comes from OpenStreetMap
 * Projects are created
-    * A region map is defined at the root of the project
-        * Boundaries for the region map are defined
-    * Under the region map, suburb maps are created within the region maps boundaries
+    * Region maps are defined at the root of the project (multiple regions can exist per project)
+        * Boundaries for each region map are defined
+    * Under each region map, suburb maps are created within the region maps boundaries
         * Once defined, these are separately editable
     * Under suburb maps, smaller maps are created with their own boundaries
 * Each map has editable layers for annotations

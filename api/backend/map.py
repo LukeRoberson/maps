@@ -443,7 +443,7 @@ class MapService:
 
         # Build the hierarchy structure
         hierarchy = {
-            'region': None,
+            'regions': [],
             'suburbs': [],
             'individuals': []
         }
@@ -451,7 +451,7 @@ class MapService:
         # Populate the hierarchy
         for area in all_areas:
             if area.area_type == 'region':
-                hierarchy['region'] = area.to_dict()
+                hierarchy['regions'].append(area.to_dict())
             elif area.area_type == 'suburb':
                 hierarchy['suburbs'].append(area.to_dict())
             elif area.area_type == 'individual':

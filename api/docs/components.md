@@ -7,8 +7,8 @@ The app consists of hierarchical components.
 First, there is a project. Multiple projects can exist, but they are independant of each other.
 
 Projects contain maps. These include:
-- A region map
-- Suburb maps, within the region map
+- Multiple region maps (one or more per project)
+- Suburb maps, within each region map
 - Individual maps, within suburbs
 
 Maps contain boundaries. The region map has a boundary defined, and the suburb maps must be within this boundary.
@@ -102,7 +102,7 @@ Maps can be:
 * A suburb, which is a child of a region map
 * An individual map, which is the child of a suburb
 
-A region map has no parent. Other map types will all have a parent ID.
+Region maps have no parent. Suburb maps are children of region maps. Individual maps are children of suburb maps.
 
 </br></br>
 

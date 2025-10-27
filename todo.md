@@ -14,7 +14,7 @@
 
 - [x] When creating a new project, it redirects to a project ID of 'null'; However, the project created just fine
 - [x] Rename 'Master' map to 'Region'
-- [ ] Allow multiple regions in a project
+- [x] Allow multiple regions in a project
 
 ## UI
 

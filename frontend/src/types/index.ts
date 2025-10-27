@@ -57,7 +57,7 @@ export interface Annotation {
 }
 
 export interface MapHierarchy {
-  region: MapArea | null;
+  regions: MapArea[];
   suburbs: MapArea[];
   individuals: MapArea[];
 }

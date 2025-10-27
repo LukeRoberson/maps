@@ -143,8 +143,8 @@ Five tables are in use:
 
 Notes:
 * The project is the main *container* that everything is stored in.
-* A project contains a *region map*. This is the root of the map hierarchy.
-* Maps belong to a project. Maps, other than the region map, all have a parent map.
+* A project can contain multiple *region maps*. Each region is at the root of a map hierarchy.
+* Maps belong to a project. Maps, other than region maps, all have a parent map.
 * Maps have boundaries defined. Child maps can be created within these boundaries.
 * Maps contain *layers*. These the containers for annotations such as labels, POI, and polygons.
 * Maps can have more than one layer, and individual layers can be hidden from view.
