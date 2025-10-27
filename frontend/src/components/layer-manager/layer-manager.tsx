@@ -27,9 +27,23 @@ export const LayerManager: React.FC<LayerManagerProps> = ({
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const [isCreating, setIsCreating] = useState<boolean>(false);
   const [newLayerName, setNewLayerName] = useState<string>('');
+  const [newLayerColor, setNewLayerColor] = useState<string>('#2ecc71');
   const [editingLayerId, setEditingLayerId] = useState<number | null>(null);
   const [editingName, setEditingName] = useState<string>('');
+  const [editingColor, setEditingColor] = useState<string>('#2ecc71');
   const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  // Available color options for layers
+  const colorOptions = [
+    { value: '#2ecc71', label: 'Green' },
+    { value: '#3498db', label: 'Blue' },
+    { value: '#e74c3c', label: 'Red' },
+    { value: '#f39c12', label: 'Orange' },
+    { value: '#9b59b6', label: 'Purple' },
+    { value: '#1abc9c', label: 'Turquoise' },
+    { value: '#e91e63', label: 'Pink' },
+    { value: '#ff5722', label: 'Deep Orange' },
+  ];
 
   useEffect(
     () => {
@@ -65,11 +79,12 @@ export const LayerManager: React.FC<LayerManagerProps> = ({
         visible: true,
         z_index: layers.length,
         is_editable: true,
-        config: {},
+        config: { color: newLayerColor },
       });
 
       showToast?.(`Layer "${newLayerName}" created`, 'success');
       setNewLayerName('');
+      setNewLayerColor('#2ecc71');
       setIsCreating(false);
       await loadLayers();
       onLayersChange?.();
@@ -88,6 +103,7 @@ export const LayerManager: React.FC<LayerManagerProps> = ({
     }
     setEditingLayerId(layer.id!);
     setEditingName(layer.name);
+    setEditingColor((layer.config as any)?.color || '#2ecc71');
   };
 
   const handleSaveEdit = async (
@@ -101,11 +117,13 @@ export const LayerManager: React.FC<LayerManagerProps> = ({
     try {
       await apiClient.updateLayer(layerId, {
         name: editingName.trim(),
+        config: { color: editingColor },
       });
 
-      showToast?.('Layer name updated', 'success');
+      showToast?.('Layer updated', 'success');
       setEditingLayerId(null);
       setEditingName('');
+      setEditingColor('#2ecc71');
       await loadLayers();
       onLayersChange?.();
     } catch (error) {
@@ -117,6 +135,7 @@ export const LayerManager: React.FC<LayerManagerProps> = ({
   const handleCancelEdit = (): void => {
     setEditingLayerId(null);
     setEditingName('');
+    setEditingColor('#2ecc71');
   };
 
   const handleDeleteLayer = async (
@@ -207,6 +226,18 @@ export const LayerManager: React.FC<LayerManagerProps> = ({
                               className="layer-name-input"
                               autoFocus
                             />
+                            <select
+                              value={editingColor}
+                              onChange={(e) => setEditingColor(e.target.value)}
+                              className="layer-color-select"
+                              title="Select color"
+                            >
+                              {colorOptions.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                  {option.label}
+                                </option>
+                              ))}
+                            </select>
                             <div className="layer-edit-actions">
                               <button
                                 onClick={() => handleSaveEdit(layer.id!)}
@@ -234,6 +265,11 @@ export const LayerManager: React.FC<LayerManagerProps> = ({
                               >
                                 {activeLayerId === layer.id ? '●' : '○'}
                               </button>
+                              <div 
+                                className="layer-color-indicator"
+                                style={{ backgroundColor: (layer.config as any)?.color || '#2ecc71' }}
+                                title="Layer color"
+                              />
                               <button
                                 onClick={() => handleToggleVisibility(layer)}
                                 className={`btn-visibility ${layer.visible ? 'visible' : 'hidden'}`}
@@ -280,6 +316,11 @@ export const LayerManager: React.FC<LayerManagerProps> = ({
                     {inheritedLayers.map((layer) => (
                       <li key={layer.id} className="layer-item inherited">
                         <div className="layer-info">
+                          <div 
+                            className="layer-color-indicator"
+                            style={{ backgroundColor: (layer.config as any)?.color || '#2ecc71' }}
+                            title="Layer color"
+                          />
                           <button
                             onClick={() => handleToggleVisibility(layer)}
                             className={`btn-visibility ${layer.visible ? 'visible' : 'hidden'}`}
@@ -308,12 +349,25 @@ export const LayerManager: React.FC<LayerManagerProps> = ({
                       } else if (e.key === 'Escape') {
                         setIsCreating(false);
                         setNewLayerName('');
+                        setNewLayerColor('#2ecc71');
                       }
                     }}
                     placeholder="Enter layer name..."
                     className="layer-name-input"
                     autoFocus
                   />
+                  <select
+                    value={newLayerColor}
+                    onChange={(e) => setNewLayerColor(e.target.value)}
+                    className="layer-color-select"
+                    title="Select color"
+                  >
+                    {colorOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
                   <div className="layer-create-actions">
                     <button
                       onClick={handleCreateLayer}
@@ -326,6 +380,7 @@ export const LayerManager: React.FC<LayerManagerProps> = ({
                       onClick={() => {
                         setIsCreating(false);
                         setNewLayerName('');
+                        setNewLayerColor('#2ecc71');
                       }}
                       className="btn-cancel"
                       title="Cancel"

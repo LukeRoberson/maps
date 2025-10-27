@@ -150,6 +150,21 @@ def create_layer() -> Union[Response, Tuple[Response, int]]:
                     400
                 )
 
+        # Validate and sanitize config field
+        config = {}
+        if 'config' in data and isinstance(data['config'], dict):
+            # Only allow specific whitelisted fields
+            allowed_config_fields = {'color'}
+            for key in data['config']:
+                if key in allowed_config_fields:
+                    # Validate color field format
+                    if key == 'color':
+                        color_value = data['config'][key]
+                        if isinstance(color_value, str) and \
+                           len(color_value) <= 20 and \
+                           color_value.startswith('#'):
+                            config[key] = color_value
+
         # Create LayerModel instance
         layer = LayerModel(
             map_area_id=data['map_area_id'],
@@ -157,7 +172,7 @@ def create_layer() -> Union[Response, Tuple[Response, int]]:
             layer_type=data['layer_type'],
             visible=data.get('visible', True),
             z_index=data.get('z_index', 0),
-            config=data.get('config', {})
+            config=config
         )
 
         # Create layer via service
@@ -263,6 +278,42 @@ def update_layer(
                 ),
                 400
             )
+
+        # Validate and sanitize config field if present
+        if 'config' in data:
+            if not isinstance(data['config'], dict):
+                return make_response(
+                    jsonify(
+                        {'error': 'config must be an object'}
+                    ),
+                    400
+                )
+            
+            # Only allow specific whitelisted fields
+            sanitized_config = {}
+            allowed_config_fields = {'color'}
+            for key in data['config']:
+                if key in allowed_config_fields:
+                    # Validate color field format
+                    if key == 'color':
+                        color_value = data['config'][key]
+                        if isinstance(color_value, str) and \
+                           len(color_value) <= 20 and \
+                           color_value.startswith('#'):
+                            sanitized_config[key] = color_value
+                        else:
+                            return make_response(
+                                jsonify(
+                                    {
+                                        'error': (
+                                            'color must be a hex '
+                                            'color string'
+                                        )
+                                    }
+                                ),
+                                400
+                            )
+            data['config'] = sanitized_config
 
         # Update layer via service
         updated_layer = layer_service.update(

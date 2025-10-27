@@ -80,6 +80,7 @@ interface DrawControlsProps {
   showToast?: (message: string, type: ToastType) => void;
   activeLayerId?: number | null;
   onAnnotationCreated?: (annotation: Annotation) => void;
+  layers?: Layer[];
 }
 
 // Component to add drawing controls to the map using Leaflet Geoman
@@ -90,6 +91,7 @@ const DrawControls: React.FC<DrawControlsProps> = ({
   showToast,
   activeLayerId,
   onAnnotationCreated,
+  layers = [],
 }) => {
   const map = useMap();
   const editableLayerRef = useRef<L.Polygon | null>(null);
@@ -155,10 +157,17 @@ const DrawControls: React.FC<DrawControlsProps> = ({
     // Listen for draw mode enable events
     map.on('pm:drawstart', handleDrawStart);
 
-    // Configure drawing styles based on mode
-    const color = mode === 'boundary' || mode === 'suburb' || mode === 'individual' 
-      ? '#3498db' 
-      : '#2ecc71';
+    // Configure drawing styles based on mode and layer color
+    let color: string;
+    if (mode === 'boundary' || mode === 'suburb' || mode === 'individual') {
+      color = '#3498db';
+    } else if (mode === 'annotation' && activeLayerId) {
+      // Get color from active layer
+      const activeLayer = layers?.find(l => l.id === activeLayerId);
+      color = (activeLayer?.config as any)?.color || '#2ecc71';
+    } else {
+      color = '#2ecc71';
+    }
 
     map.pm.setGlobalOptions({
       pathOptions: {
@@ -282,8 +291,16 @@ const DrawControls: React.FC<DrawControlsProps> = ({
             
             // Only save if text was actually entered
             if (onAnnotationCreated && coordinates && activeLayerId && content && content.trim()) {
+              // Get layer color from active layer config
+              const activeLayer = layers?.find(l => l.id === activeLayerId);
+              const layerColor = (activeLayer?.config as any)?.color || '#2ecc71';
+              
               const style: any = {};
-              if (layer.options.color) style.color = layer.options.color;
+              if (layer.options.color) {
+                style.color = layer.options.color;
+              } else {
+                style.color = layerColor;
+              }
               if (layer.options.fillColor) style.fillColor = layer.options.fillColor;
               if (layer.options.fillOpacity !== undefined) style.fillOpacity = layer.options.fillOpacity;
               if (layer.options.weight) style.weight = layer.options.weight;
@@ -351,10 +368,24 @@ const DrawControls: React.FC<DrawControlsProps> = ({
           }
         }
         
-        // Extract style information
+        // Get layer color from active layer config
+        const activeLayer = layers?.find(l => l.id === activeLayerId);
+        const layerColor = (activeLayer?.config as any)?.color || '#2ecc71';
+        
+        // Extract style information and apply layer color
         const style: any = {};
-        if (layer.options.color) style.color = layer.options.color;
-        if (layer.options.fillColor) style.fillColor = layer.options.fillColor;
+        if (layer.options.color) {
+          style.color = layer.options.color;
+        } else {
+          style.color = layerColor;
+        }
+        
+        if (layer.options.fillColor) {
+          style.fillColor = layer.options.fillColor;
+        } else if (annotationType === 'polygon') {
+          style.fillColor = layerColor;
+        }
+        
         if (layer.options.fillOpacity !== undefined) style.fillOpacity = layer.options.fillOpacity;
         if (layer.options.weight) style.weight = layer.options.weight;
         
@@ -405,7 +436,7 @@ const DrawControls: React.FC<DrawControlsProps> = ({
         }
       });
     };
-  }, [map, mode, onBoundaryCreated, existingBoundary, activeLayerId, showToast, onAnnotationCreated]);
+  }, [map, mode, onBoundaryCreated, existingBoundary, activeLayerId, showToast, onAnnotationCreated, layers]);
 
   // Reset the loaded flag when existingBoundary changes
   useEffect(() => {
@@ -1741,6 +1772,7 @@ const MapEditor: React.FC = () => {
             showToast={showToast}
             activeLayerId={activeLayerId}
             onAnnotationCreated={handleAnnotationCreated}
+            layers={layers}
           />
         </MapContainer>
       </div>
