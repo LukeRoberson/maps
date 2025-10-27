@@ -23,6 +23,8 @@ const ProjectView: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [editingMapId, setEditingMapId] = useState<number | null>(null);
   const [editingName, setEditingName] = useState('');
+  const [isImporting, setIsImporting] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -187,6 +189,51 @@ const ProjectView: React.FC = () => {
     }
   };
 
+  const handleExportProject = async (): Promise<void> => {
+    if (!projectId) return;
+
+    try {
+      await apiClient.exportProject(parseInt(projectId));
+    } catch (error) {
+      console.error('Failed to export project:', error);
+      alert('Failed to export project. Please try again.');
+    }
+  };
+
+  const handleImportClick = (): void => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ): Promise<void> => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsImporting(true);
+
+    try {
+      const fileContent = await file.text();
+      const importData = JSON.parse(fileContent);
+      
+      const importedProject = await apiClient.importProject(importData);
+      
+      alert(`Project "${importedProject.name}" imported successfully!`);
+      
+      // Navigate to the imported project
+      navigate(`/projects/${importedProject.id}`);
+    } catch (error) {
+      console.error('Failed to import project:', error);
+      alert('Failed to import project. Please check the file and try again.');
+    } finally {
+      setIsImporting(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
   if (loading) {
     return <div className="loading">Loading project...</div>;
   }
@@ -202,10 +249,27 @@ const ProjectView: React.FC = () => {
           <h2>{project.name}</h2>
           <p className="project-description">{project.description}</p>
         </div>
-        <button className="btn btn-outline" onClick={() => navigate('/')}>
-          Back to Projects
-        </button>
+        <div className="header-actions">
+          <button 
+            className="btn btn-secondary" 
+            onClick={handleExportProject}
+            title="Export project as backup file"
+          >
+            Export Project
+          </button>
+          <button className="btn btn-outline" onClick={() => navigate('/')}>
+            Back to Projects
+          </button>
+        </div>
       </div>
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".json"
+        style={{ display: 'none' }}
+        onChange={handleFileChange}
+      />
 
       <div className="project-content">
         <div className="tree-view">

@@ -4,8 +4,10 @@ import { MapContainer, TileLayer, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import '@geoman-io/leaflet-geoman-free';
 import '@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css';
+import { toPng } from 'html-to-image';
 import { apiClient } from '@/services/api-client';
 import { LayerManager } from '@/components/layer-manager';
+import { ExportDialog, ExportOptions } from '@/components/export-dialog';
 import type { MapArea, Project, Boundary, Layer, Annotation } from '@/types';
 import './map-editor.css';
 import 'leaflet/dist/leaflet.css';
@@ -784,6 +786,8 @@ const MapEditor: React.FC = () => {
   const [activeLayerId, setActiveLayerId] = useState<number | null>(null);
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
   const [annotationLayers, setAnnotationLayers] = useState<Map<number, L.Layer>>(new Map());
+  const [showExportDialog, setShowExportDialog] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const navigate = useNavigate();
 
   // Toast notification helper
@@ -1055,12 +1059,21 @@ const MapEditor: React.FC = () => {
     if (!projectId || !suburbName || !pendingSuburbCoordinates) return;
 
     try {
-      // Create the suburb map area
+      // Calculate center from boundary coordinates
+      const lats = pendingSuburbCoordinates.map(coord => coord[0]);
+      const lons = pendingSuburbCoordinates.map(coord => coord[1]);
+      const centerLat = (Math.min(...lats) + Math.max(...lats)) / 2;
+      const centerLon = (Math.min(...lons) + Math.max(...lons)) / 2;
+      
+      // Create the suburb map area with inherited default view from parent
       const suburb = await apiClient.createMapArea({
         project_id: parseInt(projectId),
         parent_id: parseInt(mapAreaId!),
         name: suburbName,
         area_type: 'suburb',
+        default_center_lat: centerLat,
+        default_center_lon: centerLon,
+        default_zoom: mapArea?.default_zoom ?? project?.zoom_level,
       });
 
       // Create the boundary for the suburb
@@ -1191,12 +1204,21 @@ const MapEditor: React.FC = () => {
     if (!projectId || !individualName || !pendingIndividualCoordinates) return;
 
     try {
-      // Create the individual map area
+      // Calculate center from boundary coordinates
+      const lats = pendingIndividualCoordinates.map(coord => coord[0]);
+      const lons = pendingIndividualCoordinates.map(coord => coord[1]);
+      const centerLat = (Math.min(...lats) + Math.max(...lats)) / 2;
+      const centerLon = (Math.min(...lons) + Math.max(...lons)) / 2;
+      
+      // Create the individual map area with inherited default view from parent
       const individual = await apiClient.createMapArea({
         project_id: parseInt(projectId),
         parent_id: parseInt(mapAreaId!),
         name: individualName,
         area_type: 'individual',
+        default_center_lat: centerLat,
+        default_center_lon: centerLon,
+        default_zoom: mapArea?.default_zoom ?? project?.zoom_level,
       });
 
       // Create the boundary for the individual map
@@ -1256,8 +1278,135 @@ const MapEditor: React.FC = () => {
     }
   };
 
-  const handleExport = async (): Promise<void> => {
-    showToast('Export functionality will capture the map as PNG', 'info');
+  const handleExport = async (options: ExportOptions): Promise<void> => {
+    if (!mapInstance || !mapAreaId || !mapArea) return;
+
+    setIsExporting(true);
+    setShowExportDialog(false);
+
+    try {
+      // Store current view
+      const currentCenter = mapInstance.getCenter();
+      const currentZoom = mapInstance.getZoom();
+
+      // If using default view, temporarily move to it
+      if (options.useDefaultView && mapArea.default_center_lat && mapArea.default_center_lon && mapArea.default_zoom) {
+        mapInstance.setView(
+          [mapArea.default_center_lat, mapArea.default_center_lon],
+          mapArea.default_zoom,
+          { animate: false }
+        );
+      }
+
+      // Wait for tiles to load
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Get the map container element
+      const mapContainer = mapInstance.getContainer();
+
+      // Temporarily hide UI controls for cleaner export
+      const controls = mapContainer.querySelectorAll('.leaflet-control-container');
+      controls.forEach(control => {
+        (control as HTMLElement).style.display = 'none';
+      });
+
+      // Optionally hide boundaries
+      if (!options.includeBoundaries) {
+        const boundaries = mapContainer.querySelectorAll('.leaflet-interactive');
+        boundaries.forEach(boundary => {
+          const element = boundary as HTMLElement;
+          // Check if it's a boundary (polygon/polyline) not an annotation marker
+          if (element.tagName === 'path') {
+            element.style.display = 'none';
+          }
+        });
+      }
+
+      // Optionally hide annotations
+      if (!options.includeAnnotations) {
+        const markers = mapContainer.querySelectorAll('.leaflet-marker-pane, .leaflet-tooltip-pane');
+        markers.forEach(marker => {
+          (marker as HTMLElement).style.display = 'none';
+        });
+      }
+
+      // Capture the map as PNG
+      const dataUrl = await toPng(mapContainer, {
+        quality: 1.0,
+        pixelRatio: 2, // Higher quality export
+        cacheBust: true,
+      });
+
+      // Restore UI controls
+      controls.forEach(control => {
+        (control as HTMLElement).style.display = '';
+      });
+
+      // Restore boundaries if hidden
+      if (!options.includeBoundaries) {
+        const boundaries = mapContainer.querySelectorAll('.leaflet-interactive');
+        boundaries.forEach(boundary => {
+          (boundary as HTMLElement).style.display = '';
+        });
+      }
+
+      // Restore annotations if hidden
+      if (!options.includeAnnotations) {
+        const markers = mapContainer.querySelectorAll('.leaflet-marker-pane, .leaflet-tooltip-pane');
+        markers.forEach(marker => {
+          (marker as HTMLElement).style.display = '';
+        });
+      }
+
+      // Restore original view if we changed it
+      if (options.useDefaultView && mapArea.default_center_lat && mapArea.default_center_lon && mapArea.default_zoom) {
+        mapInstance.setView(currentCenter, currentZoom, { animate: false });
+      }
+
+      // Handle export based on format
+      if (options.format === 'clipboard') {
+        // Copy to clipboard
+        try {
+          const blob = await (await fetch(dataUrl)).blob();
+          await navigator.clipboard.write([
+            new ClipboardItem({ 'image/png': blob })
+          ]);
+          showToast('Map copied to clipboard!', 'success');
+        } catch (clipboardError) {
+          console.error('Clipboard error:', clipboardError);
+          showToast('Failed to copy to clipboard. Your browser may not support this feature.', 'error');
+        }
+      } else {
+        // Download as file or save to server
+        const filename = `${mapArea.name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.png`;
+        
+        // Send to server
+        try {
+          await apiClient.exportMap(parseInt(mapAreaId), dataUrl, filename);
+          
+          // Also trigger browser download
+          const link = document.createElement('a');
+          link.download = filename;
+          link.href = dataUrl;
+          link.click();
+          
+          showToast('Map exported successfully!', 'success');
+        } catch (serverError) {
+          console.error('Server export error:', serverError);
+          // Still allow local download even if server fails
+          const link = document.createElement('a');
+          link.download = filename;
+          link.href = dataUrl;
+          link.click();
+          showToast('Map downloaded (server save failed)', 'warning');
+        }
+      }
+    } catch (error) {
+      console.error('Export error:', error);
+      showToast('Failed to export map. Please try again.', 'error');
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const handleSetDefaultView = async (): Promise<void> => {
@@ -1468,8 +1617,12 @@ const MapEditor: React.FC = () => {
               >
                 Recenter to Default
               </button>
-              <button className="btn btn-success" onClick={handleExport}>
-                Export PNG
+              <button 
+                className="btn btn-success" 
+                onClick={() => setShowExportDialog(true)}
+                disabled={isExporting}
+              >
+                {isExporting ? 'Exporting...' : 'Export PNG'}
               </button>
               <button
                 className="btn btn-outline"
@@ -1515,7 +1668,7 @@ const MapEditor: React.FC = () => {
           {boundary && mode !== 'boundary' && mapArea.area_type === 'region' && (
             <BoundaryFadeOverlay boundary={boundary} />
           )}
-          {parentBoundary && mode !== 'boundary' && (mapArea.area_type === 'suburb' || mapArea.area_type === 'individual') && (
+          {parentBoundary && mode !== 'boundary' && mode !== 'individual' && (mapArea.area_type === 'suburb' || mapArea.area_type === 'individual') && (
             <>
               <BoundaryFadeOverlay boundary={parentBoundary} />
               <ReadOnlyPolygon
@@ -1540,11 +1693,11 @@ const MapEditor: React.FC = () => {
                 positions={suburbBoundary.coordinates}
                 pathOptions={suburbBoundaryPathOptions}
                 tooltipContent={suburb?.name || 'Unnamed Suburb'}
-                onClick={() => {
+                onClick={mode === 'annotation' || mode === 'boundary' ? () => {
                   if (confirm(`Open ${suburb?.name || 'this suburb'}?`)) {
                     navigate(`/projects/${projectId}/maps/${suburbId}`);
                   }
-                }}
+                } : undefined}
                 showToast={showToast}
               />
             );
@@ -1557,11 +1710,11 @@ const MapEditor: React.FC = () => {
                 positions={individualBoundary.coordinates}
                 pathOptions={individualBoundaryPathOptions}
                 tooltipContent={individual?.name || 'Unnamed Map'}
-                onClick={() => {
+                onClick={mode === 'annotation' || mode === 'boundary' || mode === 'suburb' ? () => {
                   if (confirm(`Open ${individual?.name || 'this map'}?`)) {
                     navigate(`/projects/${projectId}/maps/${individualId}`);
                   }
-                }}
+                } : undefined}
                 showToast={showToast}
               />
             );
@@ -1664,6 +1817,14 @@ const MapEditor: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {showExportDialog && mapArea && (
+        <ExportDialog
+          mapAreaName={mapArea.name}
+          onExport={handleExport}
+          onCancel={() => setShowExportDialog(false)}
+        />
       )}
 
       </div> {/* Close editor-content */}

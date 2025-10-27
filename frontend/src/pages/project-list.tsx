@@ -17,6 +17,8 @@ const ProjectList: React.FC = () => {
     center_lon: 0,
     zoom_level: 13,
   });
+  const [isImporting, setIsImporting] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -95,6 +97,43 @@ const ProjectList: React.FC = () => {
     }
   };
 
+  const handleImportClick = (): void => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ): Promise<void> => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsImporting(true);
+
+    try {
+      const fileContent = await file.text();
+      const importData = JSON.parse(fileContent);
+      
+      const importedProject = await apiClient.importProject(importData);
+      
+      // Refresh the project list
+      await loadProjects();
+      
+      alert(`Project "${importedProject.name}" imported successfully!`);
+      
+      // Navigate to the imported project
+      navigate(`/projects/${importedProject.id}`);
+    } catch (error) {
+      console.error('Failed to import project:', error);
+      alert('Failed to import project. Please check the file and try again.');
+    } finally {
+      setIsImporting(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
   if (loading) {
     return <div className="loading">Loading projects...</div>;
   }
@@ -103,13 +142,30 @@ const ProjectList: React.FC = () => {
     <div className="project-list-page">
       <div className="page-header">
         <h2>My Projects</h2>
-        <button
-          className="btn btn-primary"
-          onClick={() => setShowCreateModal(true)}
-        >
-          + New Project
-        </button>
+        <div className="header-actions">
+          <button
+            className="btn btn-secondary"
+            onClick={handleImportClick}
+            disabled={isImporting}
+          >
+            {isImporting ? 'Importing...' : 'Import Project'}
+          </button>
+          <button
+            className="btn btn-primary"
+            onClick={() => setShowCreateModal(true)}
+          >
+            + New Project
+          </button>
+        </div>
       </div>
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".json"
+        style={{ display: 'none' }}
+        onChange={handleFileChange}
+      />
 
       {projects.length === 0 ? (
         <div className="empty-state card">

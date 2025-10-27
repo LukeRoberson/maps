@@ -254,6 +254,21 @@ class ApiClient {
   ): string {
     return `${API_BASE_URL}/exports/${filename}`;
   }
+
+  async exportProject(
+    projectId: number
+  ): Promise<void> {
+    // Trigger download by opening URL
+    window.location.href = `${API_BASE_URL}/projects/${projectId}/export`;
+  }
+
+  async importProject(
+    fileContent: unknown
+  ): Promise<Project> {
+    const response: AxiosResponse<{ message: string; project: Project }> =
+      await this.client.post('/projects/import', fileContent);
+    return response.data.project;
+  }
 }
 
 export const apiClient = new ApiClient();

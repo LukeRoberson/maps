@@ -2,42 +2,19 @@
 
 ## Layers
 
-- [x] On a map with no layers, I create a new layer, and it appears to be selected by default. I try to create a new annotation, but I'm told to select a layer first. A refresh fixes the issue.
-- [x] If I delete all layers, I'm still allowed to create new annotations
 - [ ] Set colours for each layer (eg, for polygons, which are all green otherwise)
-
-## Annotations
-
-- [x] When I add a marker (annotation) and label it, two labels appear in the UI. The second label disappears when the next annotation is added, when something is deleted or added, or when the page is refreshed
-
-# Projects
-
-- [x] When creating a new project, it redirects to a project ID of 'null'; However, the project created just fine
-- [x] Rename 'Master' map to 'Region'
-- [x] Allow multiple regions in a project
-
-## UI
-
-- [x] Button to recenter the view based on map settings (location and zoom)
-- [x] An 'about' page
-  - [x] Brief project description
-  - [x] Privacy statement
-  - [x] Changelog
-  - [x] Disclaimer (use at your own risk, do your own backups, etc)
-- [x] A 'help' page
-  - [x] Show information on how the different maps work, etc
 
 
 ## Export
 
-- [ ] Functionality to export the map as an image
-  - [ ] Option to save as a file
-  - [ ] Option to export to clipboard
-  - [ ] Option to export current view (zoom, location) or use values defined on the map (default)
-  - [ ] Option to include boundaries (yes by default)
-  - [ ] Option to include annotations (yes by default)
-- [ ] Export project to file
-- [ ] Import project from file
+- [x] Functionality to export the map as an image
+  - [x] Option to save as a file
+  - [x] Option to export to clipboard
+  - [x] Option to export current view (zoom, location) or use values defined on the map (default)
+  - [x] Option to include boundaries (yes by default)
+  - [x] Option to include annotations (yes by default)
+- [x] Export project to file
+- [x] Import project from file
 
 
 # Database
@@ -59,4 +36,5 @@
 - [ ] Can some of the OpenStreetMap information be hidden? Eg, bus stops, business names, other POIs
 - [ ] Does OpenStreetMap include information to show hilly areas?
 - [ ] Consider adding security to the API endpoints
+- [ ] Find your region somehow (IP address?) and set the default lat/lon based on that?
 

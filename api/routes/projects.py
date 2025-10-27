@@ -43,7 +43,11 @@ from flask import (
     request,
     jsonify,
     make_response,
+    send_file,
 )
+import json
+import io
+from datetime import datetime
 
 # Local Imports
 from backend import (
@@ -338,6 +342,123 @@ def delete_project(
             200
         )
 
+    except Exception as e:
+        return make_response(
+            jsonify(
+                {'error': str(e)}
+            ),
+            500
+        )
+
+
+@projects_bp.route(
+    '/<int:project_id>/export',
+    methods=['GET']
+)
+def export_project(
+    project_id: int
+) -> Response:
+    """
+    Export a project as JSON file.
+
+    Args:
+        project_id (int): Project ID
+
+    Returns:
+        Response: JSON file download
+    """
+
+    try:
+        # Export project via the service
+        project_service = ProjectService()
+        export_data = project_service.export_project(project_id)
+
+        # Get project name for filename
+        project_name = export_data['project']['name']
+        safe_name = project_name.replace(' ', '_').replace('/', '_')
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f"{safe_name}_{timestamp}.json"
+
+        # Create JSON string
+        json_str = json.dumps(export_data, indent=2)
+        json_bytes = json_str.encode('utf-8')
+
+        # Return as downloadable file
+        return send_file(
+            io.BytesIO(json_bytes),
+            mimetype='application/json',
+            as_attachment=True,
+            download_name=filename
+        )
+
+    except ValueError as e:
+        return make_response(
+            jsonify(
+                {'error': str(e)}
+            ),
+            404
+        )
+    except Exception as e:
+        return make_response(
+            jsonify(
+                {'error': str(e)}
+            ),
+            500
+        )
+
+
+@projects_bp.route(
+    '/import',
+    methods=['POST']
+)
+def import_project() -> Response:
+    """
+    Import a project from JSON file.
+
+    Args:
+        None (expects JSON in request body)
+
+    Returns:
+        Response: JSON response with new project ID
+    """
+
+    try:
+        # Get JSON data from request
+        import_data = request.get_json()
+
+        if not import_data:
+            return make_response(
+                jsonify(
+                    {'error': 'No data provided'}
+                ),
+                400
+            )
+
+        # Import project via the service
+        project_service = ProjectService()
+        new_project_id = project_service.import_project(import_data)
+
+        # Get the newly created project
+        new_project = project_service.read(new_project_id)
+
+        # Return the new project
+        return make_response(
+            jsonify(
+                {
+                    'message': 'Project imported successfully',
+                    'project': new_project.to_dict()
+                }
+            ),
+            201
+        )
+
+    except ValueError as e:
+        return make_response(
+            jsonify(
+                {'error': str(e)}
+            ),
+            400
+        )
     except Exception as e:
         return make_response(
             jsonify(
