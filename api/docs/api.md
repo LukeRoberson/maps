@@ -342,7 +342,7 @@ A nested structure representing the hierarchy of map areas.
 ```json
 {
     "hierarchy": {
-        "master_map": { ... },
+        "region_map": { ... },
         "suburb_maps": [ ... ],
         "smaller_maps": [ ... ]
     }

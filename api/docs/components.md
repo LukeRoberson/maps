@@ -7,11 +7,11 @@ The app consists of hierarchical components.
 First, there is a project. Multiple projects can exist, but they are independant of each other.
 
 Projects contain maps. These include:
-- A master map
-- Suburb maps, within the master map
+- A region map
+- Suburb maps, within the region map
 - Individual maps, within suburbs
 
-Maps contain boundaries. The master map has a boundary defined, and the suburb maps must be within this boundary.
+Maps contain boundaries. The region map has a boundary defined, and the suburb maps must be within this boundary.
 
 Likewise, suburbs and individual maps also have boundaries.
 
@@ -98,11 +98,11 @@ These define the default latitude and longitude of all other maps created in the
 
 
 Maps can be:
-* A master map, which is at the root of the project
-* A suburb, which is a child of a master map
+* A region map, which is at the root of the project
+* A suburb, which is a child of a region map
 * An individual map, which is the child of a suburb
 
-A master map has no parent. Other map types will all have a parent ID.
+A region map has no parent. Other map types will all have a parent ID.
 
 </br></br>
 

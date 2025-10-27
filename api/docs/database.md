@@ -143,8 +143,8 @@ Five tables are in use:
 
 Notes:
 * The project is the main *container* that everything is stored in.
-* A project contains a *master map*. This is the root of the map hierarchy.
-* Maps belong to a project. Maps, other than the master map, all have a parent map.
+* A project contains a *region map*. This is the root of the map hierarchy.
+* Maps belong to a project. Maps, other than the region map, all have a parent map.
 * Maps have boundaries defined. Child maps can be created within these boundaries.
 * Maps contain *layers*. These the containers for annotations such as labels, POI, and polygons.
 * Maps can have more than one layer, and individual layers can be hidden from view.
@@ -242,7 +242,7 @@ CREATE TABLE IF NOT EXISTS projects (
 | project_id         | INTEGER   |              | Not Null    | The project this map belongs to           |
 | parent_id          | INTEGER   |              |             | The parent map                            |
 | name               | TEXT      |              | Not Null    | The name of the map                       |
-| area_type          | TEXT      |              | Not Null    | The map type (master, suburb, individual) |
+| area_type          | TEXT      |              | Not Null    | The map type (region, suburb, individual) |
 | boundary_id        | INTEGER   |              |             |                                           |
 | default_center_lat | REAL      |              |             | Latitude of the centre of the map         |
 | default_center_lon | REAL      |              |             | Longitude of the centre of the map        |

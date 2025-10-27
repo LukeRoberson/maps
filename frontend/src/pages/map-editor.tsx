@@ -403,7 +403,7 @@ const DrawControls: React.FC<DrawControlsProps> = ({
         }
       });
     };
-  }, [map, mode, onBoundaryCreated, existingBoundary]);
+  }, [map, mode, onBoundaryCreated, existingBoundary, activeLayerId, showToast, onAnnotationCreated]);
 
   // Reset the loaded flag when existingBoundary changes
   useEffect(() => {
@@ -908,7 +908,7 @@ const MapEditor: React.FC = () => {
         console.log('No boundary found for this map area');
       }
 
-      // If this is a suburb or individual map, load the parent (master or suburb) boundary
+      // If this is a suburb or individual map, load the parent (region or suburb) boundary
       if (mapAreaData.parent_id) {
         try {
           const parentData = await apiClient.getMapArea(mapAreaData.parent_id);
@@ -927,14 +927,14 @@ const MapEditor: React.FC = () => {
           console.error('Failed to load parent map area:', error);
         }
       } else {
-        // Clear parent data if this is a master map
+        // Clear parent data if this is a region map
         setParentMapArea(null);
         setParentBoundary(null);
       }
 
       // Load child map areas based on type
-      if (mapAreaData.area_type === 'master') {
-        // Load suburbs for master maps
+      if (mapAreaData.area_type === 'region') {
+        // Load suburbs for region maps
         try {
           const suburbsData = await apiClient.listMapAreas(
             parseInt(projectId),
@@ -1005,9 +1005,9 @@ const MapEditor: React.FC = () => {
     if (!mapAreaId) return;
 
     if (mode === 'suburb') {
-      // Validate that suburb is within master boundary
+      // Validate that suburb is within region boundary
       if (boundary && !isWithinBoundary(coordinates, boundary.coordinates)) {
-        showToast('Suburb boundary must be completely within the master map boundary. Please draw within the red boundary.', 'error');
+        showToast('Suburb boundary must be completely within the region map boundary. Please draw within the red boundary.', 'error');
         return;
       }
       // Store coordinates and show dialog to name the suburb
@@ -1341,7 +1341,7 @@ const MapEditor: React.FC = () => {
                 )}
                 {parentBoundary && (mapArea.area_type === 'suburb' || mapArea.area_type === 'individual') && (
                   <p className="boundary-status" style={{ color: '#e74c3c' }}>
-                    ⓘ {parentMapArea?.area_type === 'master' ? 'Master' : 'Suburb'} boundary shown (dashed lines)
+                    ⓘ {parentMapArea?.area_type === 'region' ? 'Region' : 'Suburb'} boundary shown (dashed lines)
                   </p>
                 )}
                 {mapArea.default_center_lat && mapArea.default_center_lon && (
@@ -1412,7 +1412,7 @@ const MapEditor: React.FC = () => {
             </>
           ) : (
             <>
-              {mapArea.area_type === 'master' && (
+              {mapArea.area_type === 'region' && (
                 <button
                   className="btn btn-success"
                   onClick={() => setMode('suburb')}
@@ -1485,7 +1485,7 @@ const MapEditor: React.FC = () => {
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-          {boundary && mode !== 'boundary' && mapArea.area_type === 'master' && (
+          {boundary && mode !== 'boundary' && mapArea.area_type === 'region' && (
             <BoundaryFadeOverlay boundary={boundary} />
           )}
           {parentBoundary && mode !== 'boundary' && (mapArea.area_type === 'suburb' || mapArea.area_type === 'individual') && (

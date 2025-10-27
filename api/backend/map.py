@@ -56,9 +56,9 @@ class MapModel:
     Attributes:
         id (Optional[int]): Unique identifier
         project_id (int): Parent project ID
-        parent_id (Optional[int]): Parent map area ID (None for master map)
+        parent_id (Optional[int]): Parent map area ID (None for region map)
         name (str): Area name
-        area_type (str): Type of area (master, suburb, individual)
+        area_type (str): Type of area (region, suburb, individual)
         boundary_id (Optional[int]): Associated boundary ID
         default_center_lat (Optional[float]): Default map center latitude
         default_center_lon (Optional[float]): Default map center longitude
@@ -77,7 +77,7 @@ class MapModel:
 
     # Types of map areas
     AREA_TYPES = [
-        'master',
+        'region',
         'suburb',
         'individual'
     ]
@@ -443,15 +443,15 @@ class MapService:
 
         # Build the hierarchy structure
         hierarchy = {
-            'master': None,
+            'region': None,
             'suburbs': [],
             'individuals': []
         }
 
         # Populate the hierarchy
         for area in all_areas:
-            if area.area_type == 'master':
-                hierarchy['master'] = area.to_dict()
+            if area.area_type == 'region':
+                hierarchy['region'] = area.to_dict()
             elif area.area_type == 'suburb':
                 hierarchy['suburbs'].append(area.to_dict())
             elif area.area_type == 'individual':

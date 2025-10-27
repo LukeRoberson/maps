@@ -134,7 +134,7 @@ def create_boundary() -> Response:
                     )
                     parent_type = (
                         'suburb' if map_area.area_type == 'individual'
-                        else 'master map'
+                        else 'region map'
                     )
 
                     return make_response(

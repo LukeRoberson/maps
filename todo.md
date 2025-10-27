@@ -1,25 +1,19 @@
 # To Do List
 
-## Boundary
-
-- [x] Boundary not shown on suburb map
-    * When I edit a suburb map directly, it is not there
-    * When I edit the master map, then click a suburb (polygon) to open the suburb map, it is there
-
 ## Layers
 
-- [ ] On a map with no layers, I create a new layer, and it appears to be selected by default. I try to create a new annotation, but I'm told to select a layer first. A refresh fixes the issue.
-- [ ] If I delete all layers, I'm still allowed to create new annotations
+- [x] On a map with no layers, I create a new layer, and it appears to be selected by default. I try to create a new annotation, but I'm told to select a layer first. A refresh fixes the issue.
+- [x] If I delete all layers, I'm still allowed to create new annotations
 - [ ] Set colours for each layer (eg, for polygons, which are all green otherwise)
 
 ## Annotations
 
-- [ ] When I add a marker (annotation) and label it, two labels appear in the UI. The second label disappears when the next annotation is added, when something is deleted or added, or when the page is refreshed
+- [x] When I add a marker (annotation) and label it, two labels appear in the UI. The second label disappears when the next annotation is added, when something is deleted or added, or when the page is refreshed
 
 # Projects
 
-- [ ] When creating a new project, it redirects to a project ID of 'null'; However, the project created just fine
-- [ ] Rename 'Master' map to 'Region'
+- [x] When creating a new project, it redirects to a project ID of 'null'; However, the project created just fine
+- [x] Rename 'Master' map to 'Region'
 - [ ] Allow multiple regions in a project
 
 ## UI
@@ -30,6 +24,8 @@
   - [ ] Privacy statement
   - [ ] Changelog
   - [ ] Disclaimer (use at your own risk, do your own backups, etc)
+- [ ] A 'help' page
+  - [ ] Show information on how the different maps work, etc
 
 
 ## Export

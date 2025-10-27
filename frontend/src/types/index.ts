@@ -14,7 +14,7 @@ export interface MapArea {
   project_id: number;
   parent_id?: number;
   name: string;
-  area_type: 'master' | 'suburb' | 'individual';
+  area_type: 'region' | 'suburb' | 'individual';
   boundary_id?: number;
   default_center_lat?: number;
   default_center_lon?: number;
@@ -57,7 +57,7 @@ export interface Annotation {
 }
 
 export interface MapHierarchy {
-  master: MapArea | null;
+  region: MapArea | null;
   suburbs: MapArea[];
   individuals: MapArea[];
 }

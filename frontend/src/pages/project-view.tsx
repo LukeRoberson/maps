@@ -12,7 +12,7 @@ interface SuburbNode {
 const ProjectView: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const [project, setProject] = useState<Project | null>(null);
-  const [master, setMaster] = useState<MapArea | null>(null);
+  const [region, setRegion] = useState<MapArea | null>(null);
   const [suburbNodes, setSuburbNodes] = useState<SuburbNode[]>([]);
   const [expandedSuburbs, setExpandedSuburbs] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -35,17 +35,17 @@ const ProjectView: React.FC = () => {
       setProject(projectData);
 
       // Build hierarchy
-      const masterMap = allMapAreas.find((m) => m.area_type === 'master');
-      setMaster(masterMap || null);
+      const regionMap = allMapAreas.find((m) => m.area_type === 'region');
+      setRegion(regionMap || null);
 
-      if (masterMap) {
-        // Get suburbs that belong to master
-        const suburbs = allMapAreas.filter(
-          (m) => m.area_type === 'suburb' && m.parent_id === masterMap.id
+      if (regionMap) {
+        // Get suburbs that belong to region
+        const suburbMaps = allMapAreas.filter(
+          (m) => m.area_type === 'suburb' && m.parent_id === regionMap.id
         );
 
         // For each suburb, get its individual maps
-        const nodes: SuburbNode[] = suburbs.map((suburb) => ({
+        const nodes: SuburbNode[] = suburbMaps.map((suburb) => ({
           suburb,
           individuals: allMapAreas.filter(
             (m) => m.area_type === 'individual' && m.parent_id === suburb.id
@@ -70,18 +70,18 @@ const ProjectView: React.FC = () => {
     }
   };
 
-  const handleCreateMaster = async (): Promise<void> => {
+  const handleCreateRegion = async (): Promise<void> => {
     if (!projectId) return;
 
     try {
       const mapArea = await apiClient.createMapArea({
         project_id: parseInt(projectId),
-        name: 'Master Map',
-        area_type: 'master',
+        name: 'Region Map',
+        area_type: 'region',
       });
       navigate(`/projects/${projectId}/maps/${mapArea.id}`);
     } catch (error) {
-      console.error('Failed to create master map:', error);
+      console.error('Failed to create region map:', error);
     }
   };
 
@@ -169,24 +169,24 @@ const ProjectView: React.FC = () => {
       </div>
 
       <div className="project-content">
-        {!master ? (
+        {!region ? (
           <div className="empty-state card">
-            <h3>Create Master Map</h3>
+            <h3>Create Region Map</h3>
             <p>
-              Start by creating the master map for this project. This will be
+              Start by creating the region map for this project. This will be
               the top-level map that contains all other subdivisions.
             </p>
-            <button className="btn btn-primary" onClick={handleCreateMaster}>
-              Create Master Map
+            <button className="btn btn-primary" onClick={handleCreateRegion}>
+              Create Region Map
             </button>
           </div>
         ) : (
           <div className="tree-view">
-            {/* Master Map */}
-            <div className="tree-node master-node">
+            {/* Region Map */}
+            <div className="tree-node region-node">
               <div className="tree-node-content">
                 <span className="tree-icon">🗺️</span>
-                {editingMapId === master.id ? (
+                {editingMapId === region.id ? (
                   <input
                     type="text"
                     className="tree-rename-input"
@@ -194,35 +194,35 @@ const ProjectView: React.FC = () => {
                     onChange={(e) => setEditingName(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
-                        handleRename(master.id!);
+                        handleRename(region.id!);
                       } else if (e.key === 'Escape') {
                         cancelRenaming();
                       }
                     }}
-                    onBlur={() => handleRename(master.id!)}
+                    onBlur={() => handleRename(region.id!)}
                     autoFocus
                   />
                 ) : (
                   <span
                     className="tree-label"
-                    onDoubleClick={() => startRenaming(master)}
+                    onDoubleClick={() => startRenaming(region)}
                   >
-                    {master.name}
+                    {region.name}
                   </span>
                 )}
-                {editingMapId !== master.id && (
+                {editingMapId !== region.id && (
                   <>
                     <button
                       className="btn btn-sm btn-outline"
-                      onClick={() => startRenaming(master)}
+                      onClick={() => startRenaming(region)}
                     >
                       Rename
                     </button>
                     <button
                       className="btn btn-sm btn-outline"
-                      onClick={() => navigate(`/projects/${projectId}/maps/${master.id}`)}
+                      onClick={() => navigate(`/projects/${projectId}/maps/${region.id}`)}
                     >
-                      Edit Master
+                      Edit Region
                     </button>
                   </>
                 )}
@@ -232,7 +232,7 @@ const ProjectView: React.FC = () => {
             {/* Suburbs */}
             {suburbNodes.length === 0 ? (
               <div className="empty-tree-message">
-                <p>No suburbs yet. Open the master map to add suburbs.</p>
+                <p>No suburbs yet. Open the region map to add suburbs.</p>
               </div>
             ) : (
               <div className="tree-children">
