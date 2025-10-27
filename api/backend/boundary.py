@@ -530,7 +530,7 @@ class BoundaryService:
                 row_dict[key] = this_row[key]
             return self._row_to_model(row_dict)
 
-        raise
+        return None
 
     def update(
         self,

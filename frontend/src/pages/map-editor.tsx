@@ -801,6 +801,36 @@ const MapEditor: React.FC = () => {
     setToasts(prev => prev.filter(toast => toast.id !== id));
   }, []);
 
+  // Memoize path options to prevent unnecessary re-renders
+  const parentBoundaryPathOptions = React.useMemo(() => ({
+    color: '#e74c3c',
+    weight: 3,
+    fillColor: 'transparent',
+    fillOpacity: 0,
+    dashArray: '10, 10',
+  }), []);
+
+  const currentBoundaryPathOptions = React.useMemo(() => ({
+    color: '#e74c3c',
+    weight: 3,
+    fillColor: '#e74c3c',
+    fillOpacity: 0.1,
+  }), []);
+
+  const suburbBoundaryPathOptions = React.useMemo(() => ({
+    color: '#3498db',
+    weight: 2,
+    fillColor: '#3498db',
+    fillOpacity: 0.15,
+  }), []);
+
+  const individualBoundaryPathOptions = React.useMemo(() => ({
+    color: '#2ecc71',
+    weight: 2,
+    fillColor: '#2ecc71',
+    fillOpacity: 0.15,
+  }), []);
+
   useEffect(() => {
     loadMapData();
     loadLayers();
@@ -1463,13 +1493,7 @@ const MapEditor: React.FC = () => {
               <BoundaryFadeOverlay boundary={parentBoundary} />
               <ReadOnlyPolygon
                 positions={parentBoundary.coordinates}
-                pathOptions={{
-                  color: '#e74c3c',
-                  weight: 3,
-                  fillColor: 'transparent',
-                  fillOpacity: 0,
-                  dashArray: '10, 10',
-                }}
+                pathOptions={parentBoundaryPathOptions}
                 showToast={showToast}
               />
             </>
@@ -1477,12 +1501,7 @@ const MapEditor: React.FC = () => {
           {boundary && mode !== 'boundary' && (
             <ReadOnlyPolygon
               positions={boundary.coordinates}
-              pathOptions={{
-                color: '#e74c3c',
-                weight: 3,
-                fillColor: '#e74c3c',
-                fillOpacity: 0.1,
-              }}
+              pathOptions={currentBoundaryPathOptions}
               showToast={showToast}
             />
           )}
@@ -1492,12 +1511,7 @@ const MapEditor: React.FC = () => {
               <ReadOnlyPolygon
                 key={suburbId}
                 positions={suburbBoundary.coordinates}
-                pathOptions={{
-                  color: '#3498db',
-                  weight: 2,
-                  fillColor: '#3498db',
-                  fillOpacity: 0.15,
-                }}
+                pathOptions={suburbBoundaryPathOptions}
                 tooltipContent={suburb?.name || 'Unnamed Suburb'}
                 onClick={() => {
                   if (confirm(`Open ${suburb?.name || 'this suburb'}?`)) {
@@ -1514,12 +1528,7 @@ const MapEditor: React.FC = () => {
               <ReadOnlyPolygon
                 key={individualId}
                 positions={individualBoundary.coordinates}
-                pathOptions={{
-                  color: '#2ecc71',
-                  weight: 2,
-                  fillColor: '#2ecc71',
-                  fillOpacity: 0.15,
-                }}
+                pathOptions={individualBoundaryPathOptions}
                 tooltipContent={individual?.name || 'Unnamed Map'}
                 onClick={() => {
                   if (confirm(`Open ${individual?.name || 'this map'}?`)) {

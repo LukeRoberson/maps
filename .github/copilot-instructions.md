@@ -4,6 +4,10 @@ An app for creating printable/exportable maps, with a browser based UI.
 
 ## Features
 
+* A separate frontend and backend
+    * The frontend is in the `frontend` directory
+    * The backend is the API, which is in the `api` directory
+    * Each of these has a `docs` folder containing documentation
 * Map data comes from OpenStreetMap
 * Projects are created
     * A master map is defined at the root of the project

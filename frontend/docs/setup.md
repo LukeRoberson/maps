@@ -1,11 +1,13 @@
 # Frontend Environment
 
-The frontend is based on React and TypeScript. It is accessible through a web browser.
+The frontend is based on React, TypeScript, and Vite. It is accessible through a web browser on port 3000.
 
 </br></br>
 
 
 ## Requirements
+
+### Node.js
 
 Install Node.js and the NPM package manager.
 
@@ -27,7 +29,7 @@ If npm install fails:
 </br></br>
 
 
-## Packages
+### Packages
 
 The core packages are:
 
