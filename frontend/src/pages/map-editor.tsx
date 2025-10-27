@@ -8,6 +8,7 @@ import { toPng } from 'html-to-image';
 import { apiClient } from '@/services/api-client';
 import { LayerManager } from '@/components/layer-manager';
 import { ExportDialog, ExportOptions } from '@/components/export-dialog';
+import { TILE_LAYER_OPTIONS, getTileLayer } from '@/constants/tile-layers';
 import type { MapArea, Project, Boundary, Layer, Annotation } from '@/types';
 import './map-editor.css';
 import 'leaflet/dist/leaflet.css';
@@ -819,6 +820,7 @@ const MapEditor: React.FC = () => {
   const [annotationLayers, setAnnotationLayers] = useState<Map<number, L.Layer>>(new Map());
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [showTileLayerSelector, setShowTileLayerSelector] = useState(false);
   const navigate = useNavigate();
 
   // Toast notification helper
@@ -835,6 +837,29 @@ const MapEditor: React.FC = () => {
   const removeToast = useCallback((id: number): void => {
     setToasts(prev => prev.filter(toast => toast.id !== id));
   }, []);
+
+  // Get current tile layer configuration
+  const currentTileLayer = getTileLayer(
+    mapArea?.tile_layer || project?.tile_layer
+  );
+
+  // Handle tile layer change
+  const handleTileLayerChange = async (layerId: string): Promise<void> => {
+    if (!mapArea) return;
+    
+    try {
+      await apiClient.updateMapArea(mapArea.id!, {
+        tile_layer: layerId
+      });
+      
+      setMapArea({ ...mapArea, tile_layer: layerId });
+      setShowTileLayerSelector(false);
+      showToast('Map style updated', 'success');
+    } catch (error) {
+      console.error('Failed to update tile layer:', error);
+      showToast('Failed to update map style', 'error');
+    }
+  };
 
   // Memoize path options to prevent unnecessary re-renders
   const parentBoundaryPathOptions = React.useMemo(() => ({
@@ -1649,6 +1674,13 @@ const MapEditor: React.FC = () => {
                 Recenter to Default
               </button>
               <button 
+                className="btn btn-info" 
+                onClick={() => setShowTileLayerSelector(!showTileLayerSelector)}
+                title="Change map style"
+              >
+                Map Style
+              </button>
+              <button 
                 className="btn btn-success" 
                 onClick={() => setShowExportDialog(true)}
                 disabled={isExporting}
@@ -1693,8 +1725,11 @@ const MapEditor: React.FC = () => {
         >
           <MapViewController onMapReady={setMapInstance} />
           <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            key={currentTileLayer.id}
+            attribution={currentTileLayer.attribution}
+            url={currentTileLayer.url}
+            maxZoom={currentTileLayer.maxZoom}
+            subdomains={currentTileLayer.subdomains}
           />
           {boundary && mode !== 'boundary' && mapArea.area_type === 'region' && (
             <BoundaryFadeOverlay boundary={boundary} />
@@ -1775,6 +1810,43 @@ const MapEditor: React.FC = () => {
             layers={layers}
           />
         </MapContainer>
+
+        {/* Tile Layer Selector Panel */}
+        {showTileLayerSelector && (
+          <div className="tile-layer-selector">
+            <div className="tile-layer-header">
+              <h3>Map Style</h3>
+              <button
+                className="btn-close"
+                onClick={() => setShowTileLayerSelector(false)}
+                title="Close"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="tile-layer-options">
+              {TILE_LAYER_OPTIONS.map(layer => (
+                <div
+                  key={layer.id}
+                  className={`tile-layer-option ${
+                    currentTileLayer.id === layer.id ? 'active' : ''
+                  }`}
+                  onClick={() => handleTileLayerChange(layer.id)}
+                >
+                  <div className="tile-layer-name">
+                    {layer.name}
+                    {currentTileLayer.id === layer.id && (
+                      <span className="check-icon">✓</span>
+                    )}
+                  </div>
+                  <div className="tile-layer-description">
+                    {layer.description}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {showSuburbDialog && (

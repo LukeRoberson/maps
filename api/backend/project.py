@@ -61,6 +61,7 @@ class ProjectModel:
         center_lat (float): Center latitude of the map
         center_lon (float): Center longitude of the map
         zoom_level (int): Initial zoom level
+        tile_layer (Optional[str]): Default tile layer ID
         created_at (datetime): Creation timestamp
         updated_at (datetime): Last update timestamp
 
@@ -80,6 +81,7 @@ class ProjectModel:
         center_lat: float,
         center_lon: float,
         zoom_level: int = 13,
+        tile_layer: Optional[str] = None,
         id: Optional[int] = None,
         created_at: Optional[datetime] = None,
         updated_at: Optional[datetime] = None
@@ -107,6 +109,7 @@ class ProjectModel:
         self.center_lat = center_lat
         self.center_lon = center_lon
         self.zoom_level = zoom_level
+        self.tile_layer = tile_layer
 
         # Timestamps are in UTC
         self.created_at = created_at or datetime.now(timezone.utc)
@@ -132,6 +135,7 @@ class ProjectModel:
             'center_lat': self.center_lat,
             'center_lon': self.center_lon,
             'zoom_level': self.zoom_level,
+            'tile_layer': self.tile_layer,
             'created_at': (
                 self.created_at.isoformat()
                 if self.created_at

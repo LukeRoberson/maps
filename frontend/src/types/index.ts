@@ -5,6 +5,7 @@ export interface Project {
   center_lat: number;
   center_lon: number;
   zoom_level: number;
+  tile_layer?: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -19,6 +20,7 @@ export interface MapArea {
   default_center_lat?: number;
   default_center_lon?: number;
   default_zoom?: number;
+  tile_layer?: string;
   created_at?: string;
   updated_at?: string;
 }

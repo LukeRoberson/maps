@@ -63,6 +63,7 @@ class MapModel:
         default_center_lat (Optional[float]): Default map center latitude
         default_center_lon (Optional[float]): Default map center longitude
         default_zoom (Optional[int]): Default map zoom level
+        tile_layer (Optional[str]): Preferred tile layer ID
         created_at (datetime): Creation timestamp
         updated_at (datetime): Last update timestamp
 
@@ -92,6 +93,7 @@ class MapModel:
         default_center_lat: Optional[float] = None,
         default_center_lon: Optional[float] = None,
         default_zoom: Optional[int] = None,
+        tile_layer: Optional[str] = None,
         id: Optional[int] = None,
         created_at: Optional[datetime] = None,
         updated_at: Optional[datetime] = None
@@ -135,6 +137,7 @@ class MapModel:
         self.default_center_lat = default_center_lat
         self.default_center_lon = default_center_lon
         self.default_zoom = default_zoom
+        self.tile_layer = tile_layer
 
         # Timestamps are in UTC
         self.created_at = created_at or datetime.now(timezone.utc)
@@ -163,6 +166,7 @@ class MapModel:
             'default_center_lat': self.default_center_lat,
             'default_center_lon': self.default_center_lon,
             'default_zoom': self.default_zoom,
+            'tile_layer': self.tile_layer,
             'created_at': (
                 self.created_at.isoformat()
                 if self.created_at
