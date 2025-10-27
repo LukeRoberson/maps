@@ -1280,6 +1280,25 @@ const MapEditor: React.FC = () => {
     }
   };
 
+  const handleRecenterToDefault = (): void => {
+    if (!mapInstance || !mapArea) return;
+
+    // Use map's default view if set, otherwise fall back to project defaults
+    const centerLat = mapArea.default_center_lat ?? project?.center_lat;
+    const centerLon = mapArea.default_center_lon ?? project?.center_lon;
+    const zoom = mapArea.default_zoom ?? project?.zoom_level;
+
+    if (centerLat && centerLon && zoom) {
+      mapInstance.setView([centerLat, centerLon], zoom, {
+        animate: true,
+        duration: 0.5,
+      });
+      showToast('Recentered to default view', 'info');
+    } else {
+      showToast('No default view has been set for this map', 'warning');
+    }
+  };
+
   if (loading) {
     return <div className="loading">Loading map...</div>;
   }
@@ -1440,6 +1459,14 @@ const MapEditor: React.FC = () => {
                 title="Set current map view as default for this map"
               >
                 Set Default View
+              </button>
+              <button
+                className="btn btn-secondary"
+                onClick={handleRecenterToDefault}
+                title="Recenter map to the default view"
+                disabled={!mapArea.default_center_lat && !project?.center_lat}
+              >
+                Recenter to Default
               </button>
               <button className="btn btn-success" onClick={handleExport}>
                 Export PNG

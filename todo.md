@@ -18,14 +18,14 @@
 
 ## UI
 
-- [ ] Button to recenter the view based on map settings (location and zoom)
-- [ ] An 'about' page
-  - [ ] Brief project description
-  - [ ] Privacy statement
-  - [ ] Changelog
-  - [ ] Disclaimer (use at your own risk, do your own backups, etc)
-- [ ] A 'help' page
-  - [ ] Show information on how the different maps work, etc
+- [x] Button to recenter the view based on map settings (location and zoom)
+- [x] An 'about' page
+  - [x] Brief project description
+  - [x] Privacy statement
+  - [x] Changelog
+  - [x] Disclaimer (use at your own risk, do your own backups, etc)
+- [x] A 'help' page
+  - [x] Show information on how the different maps work, etc
 
 
 ## Export
@@ -42,12 +42,6 @@
 
 # Database
 
-- [ ] Is 'boundary_id' in map_areas table even used?
-  - [ ] If yes, document its purpose
-  - [ ] If no, clean up, and update docs
-- [ ] Is 'layer_type' in layers table always 'annotation?
-- [ ] Is 'config' in layers table used?
-- [ ] Is 'style' in annotations table used?
 - [ ] Layers include a 'config' dict (see LayerModel); Define what's allowed to be in there, and validate it
 - [ ] AnnotationModel include a 'style', which seem to be the same as 'config' in LayerModel
 

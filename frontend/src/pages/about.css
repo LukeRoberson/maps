@@ -1,0 +1,141 @@
+.about-page {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.about-page .card {
+  padding: 2rem;
+}
+
+.about-page h1 {
+  font-size: 2.5rem;
+  margin-bottom: 2rem;
+  color: var(--text-primary);
+  border-bottom: 2px solid var(--primary-color);
+  padding-bottom: 0.5rem;
+}
+
+.about-section {
+  margin-bottom: 2.5rem;
+}
+
+.about-section h2 {
+  font-size: 1.75rem;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+  margin-top: 1.5rem;
+}
+
+.about-section h3 {
+  font-size: 1.25rem;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+  margin-top: 1rem;
+}
+
+.about-section p {
+  color: var(--text-secondary);
+  line-height: 1.8;
+  margin-bottom: 1rem;
+}
+
+.feature-list,
+.tech-list {
+  list-style: none;
+  padding: 0;
+}
+
+.feature-list li,
+.tech-list li {
+  padding: 0.5rem 0;
+  padding-left: 1.5rem;
+  position: relative;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.feature-list li::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  color: var(--success-color);
+  font-weight: bold;
+}
+
+.tech-list li::before {
+  content: '•';
+  position: absolute;
+  left: 0.25rem;
+  color: var(--primary-color);
+  font-weight: bold;
+}
+
+.disclaimer-box {
+  background-color: var(--bg-tertiary);
+  border-left: 4px solid var(--warning-color);
+  padding: 1.5rem;
+  border-radius: var(--radius-md);
+  margin-top: 1rem;
+}
+
+.disclaimer-box p {
+  margin-bottom: 1rem;
+}
+
+.disclaimer-box p:last-child {
+  margin-bottom: 0;
+}
+
+.disclaimer-box strong {
+  color: var(--text-primary);
+}
+
+.disclaimer-box a {
+  color: var(--primary-color);
+  text-decoration: none;
+}
+
+.disclaimer-box a:hover {
+  text-decoration: underline;
+}
+
+.changelog {
+  background-color: var(--bg-secondary);
+  padding: 1.5rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+}
+
+.changelog-entry {
+  margin-bottom: 1.5rem;
+}
+
+.changelog-entry:last-child {
+  margin-bottom: 0;
+}
+
+.changelog-entry h3 {
+  color: var(--primary-color);
+  font-size: 1.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.changelog-entry ul {
+  list-style: none;
+  padding: 0;
+  margin-left: 0;
+}
+
+.changelog-entry li {
+  padding: 0.375rem 0;
+  padding-left: 1.5rem;
+  position: relative;
+  color: var(--text-secondary);
+}
+
+.changelog-entry li::before {
+  content: '→';
+  position: absolute;
+  left: 0;
+  color: var(--primary-color);
+}

@@ -4,6 +4,8 @@ import Layout from './components/layout/layout';
 import ProjectList from './pages/project-list';
 import ProjectView from './pages/project-view';
 import MapEditor from './pages/map-editor';
+import About from './pages/about';
+import Help from './pages/help';
 
 const App: React.FC = () => {
   return (
@@ -15,6 +17,8 @@ const App: React.FC = () => {
           path="/projects/:projectId/maps/:mapAreaId"
           element={<MapEditor />}
         />
+        <Route path="/about" element={<About />} />
+        <Route path="/help" element={<Help />} />
       </Routes>
     </Layout>
   );
