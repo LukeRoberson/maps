@@ -3,7 +3,7 @@ API routes for the maps application.
 """
 
 from .projects import projects_bp
-from .map_areas import map_areas_bp
+from .map import map_areas_bp
 from .boundaries import boundaries_bp
 from .layers import layers_bp
 from .annotations import annotations_bp

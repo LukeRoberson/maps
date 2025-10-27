@@ -54,11 +54,11 @@ logger = logging.getLogger(__name__)
 
 class BoundaryModel:
     """
-    Represents a geographic boundary for a map area.
+    Represents a geographic boundary for a map.
 
     Attributes:
         id (Optional[int]): Unique identifier
-        map_area_id (int): Associated map area ID
+        map_id (int): Associated map area ID
         coordinates (List[List[float]]): List of [lat, lon] coordinate pairs
         created_at (datetime): Creation timestamp
         updated_at (datetime): Last update timestamp
@@ -76,7 +76,7 @@ class BoundaryModel:
 
     def __init__(
         self,
-        map_area_id: int,
+        map_id: int,
         coordinates: List[List[float]],
         id: Optional[int] = None,
         created_at: Optional[datetime] = None,
@@ -86,7 +86,7 @@ class BoundaryModel:
         Initialize a new Boundary.
 
         Args:
-            map_area_id (int): Associated map area ID
+            map_id (int): Associated map area ID
             coordinates (List[List[float]]): Boundary coordinates
             id (Optional[int]): Boundary ID
             created_at (Optional[datetime]): Creation timestamp
@@ -110,7 +110,7 @@ class BoundaryModel:
                 )
 
         self.id = id
-        self.map_area_id = map_area_id
+        self.map_id = map_id
         self.coordinates = coordinates
         self.created_at = created_at or datetime.now(timezone.utc)
         self.updated_at = updated_at or datetime.now(timezone.utc)
@@ -130,7 +130,7 @@ class BoundaryModel:
 
         return {
             'id': self.id,
-            'map_area_id': self.map_area_id,
+            'map_area_id': self.map_id,
             'coordinates': self.coordinates,
             'created_at': (
                 self.created_at.isoformat()
@@ -174,7 +174,7 @@ class BoundaryModel:
         # Create and return the Boundary instance
         return cls(
             id=data.get('id'),
-            map_area_id=data['map_area_id'],
+            map_id=data['map_area_id'],
             coordinates=data['coordinates'],
             created_at=created_at,
             updated_at=updated_at
@@ -217,7 +217,7 @@ class BoundaryModel:
             },
             'properties': {
                 'id': self.id,
-                'map_area_id': self.map_area_id
+                'map_area_id': self.map_id
             }
         }
 
@@ -310,7 +310,7 @@ class BoundaryService:
 
         return BoundaryModel(
             id=row['id'],
-            map_area_id=row['map_area_id'],
+            map_id=row['map_area_id'],
             coordinates=json.loads(row['coordinates']),
             created_at=datetime.fromisoformat(row['created_at']),
             updated_at=datetime.fromisoformat(row['updated_at'])
@@ -477,7 +477,7 @@ class BoundaryService:
                 boundary.id = db_manager.create(
                     table="boundaries",
                     params={
-                        "map_area_id": boundary.map_area_id,
+                        "map_area_id": boundary.map_id,
                         "coordinates": coords_json
                     }
                 )

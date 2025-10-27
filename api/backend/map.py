@@ -427,7 +427,7 @@ class MapService:
         project_id: int
     ) -> Dict[str, Any]:
         """
-        Get hierarchical structure of map areas.
+        Get hierarchical structure of maps.
 
         Args:
             project_id (int): Project ID

@@ -13,6 +13,8 @@
 - [ ] Is 'layer_type' in layers table always 'annotation?
 - [ ] Is 'config' in layers table used?
 - [ ] Is 'style' in annotations table used?
+- [ ] Layers include a 'config' dict (see LayerModel); Define what's allowed to be in there, and validate it
+- [ ] AnnotationModel include a 'style', which seem to be the same as 'config' in LayerModel
 
 
 ## UI
@@ -41,6 +43,17 @@
   - [ ] Load config from a YAML file
   - [ ] Set the secret key securely in prod
   - [ ] There's a lot of serializing and deserializing of config; Is this needed?
+
+
+# Other
+- [ ] An 'about' page
+  - [ ] Brief project description
+  - [ ] Privacy statement
+  - [ ] Changelog
+  - [ ] Disclaimer (use at your own risk, do your own backups, etc)
+- [ ] Export project to file
+- [ ] Import project from file
+- [ ] Consider adding security to the API endpoints
 
 
 ## To Investigate
