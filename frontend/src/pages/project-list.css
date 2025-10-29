@@ -1,7 +1,25 @@
+/*
+  project-list.css
+
+  Styles for the main project page.
+*/
+
+/*
+  --------------------------
+    Project list container
+  --------------------------
+  Applied to the root div
+*/
 .project-list-page {
   width: 100%;
 }
 
+
+/*
+  -------------------------
+    Page header container
+  -------------------------
+*/
 .page-header {
   display: flex;
   justify-content: space-between;
@@ -9,30 +27,53 @@
   margin-bottom: 2rem;
 }
 
+/* For actions on the right side of the header (import project and new project) */
 .header-actions {
   display: flex;
   gap: 1rem;
   align-items: center;
 }
 
+
+/*
+  ---------------------
+    Loading container
+  ---------------------
+  Displayed while projects are being fetched
+*/
 .loading {
   text-align: center;
   padding: 3rem;
   color: var(--text-secondary);
 }
 
+
+/*
+  -------------------
+    Empty container
+  -------------------
+  Displayed when there are not projects to show
+*/
 .empty-state {
   text-align: center;
   padding: 3rem;
   color: var(--text-secondary);
 }
 
+
+/*
+  ----------------------
+    Projects container
+  ----------------------
+  A list of project cards
+*/
 .projects-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 1.5rem;
 }
 
+/* Individual project card */
 .project-card {
   display: flex;
   flex-direction: column;
@@ -40,17 +81,39 @@
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
+/* Hover effect for project cards */
 .project-card:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
 }
 
+/* Project card header */
 .project-card-header h3 {
   margin: 0;
   color: var(--text-primary);
   cursor: pointer;
 }
 
+/* Project description text */
+.project-description {
+  color: var(--text-secondary);
+  flex: 1;
+  margin: 0;
+}
+
+/* Project card footer */
+.project-card-footer {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-start;
+}
+
+
+/*
+  ------------------------
+    Rename project modal
+  ------------------------
+*/
 .rename-input {
   width: 100%;
   font-size: 1.25rem;
@@ -66,18 +129,12 @@
   border-color: var(--primary-hover);
 }
 
-.project-description {
-  color: var(--text-secondary);
-  flex: 1;
-  margin: 0;
-}
 
-.project-card-footer {
-  display: flex;
-  gap: 0.5rem;
-  justify-content: flex-start;
-}
-
+/*
+  ------------------------
+    Create project modal
+  ------------------------
+*/
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -91,6 +148,7 @@
   z-index: 2000;
 }
 
+/* Modal content container */
 .modal-content {
   width: 90%;
   max-width: 500px;
@@ -98,10 +156,12 @@
   overflow-y: auto;
 }
 
+/* Form group styling for each input */
 .form-group {
   margin-bottom: 1rem;
 }
 
+/* Labels for form inputs */
 .form-group label {
   display: block;
   margin-bottom: 0.5rem;
@@ -109,18 +169,21 @@
   color: var(--text-primary);
 }
 
+/* Inputs, textareas, and selects in form groups */
 .form-group input,
 .form-group textarea,
 .form-group select {
   width: 100%;
 }
 
+/* Grid layout for form rows with two inputs side by side */
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
 }
 
+/* Modal action buttons container */
 .modal-actions {
   display: flex;
   gap: 0.5rem;

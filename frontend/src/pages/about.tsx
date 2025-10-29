@@ -1,20 +1,41 @@
+/**
+ * @file about.tsx
+ * 
+ * @summary /about page component.
+ * 
+ * @exports About
+ */
+
+
+// External dependencies
 import React from 'react';
+
+// Internal dependencies
 import './about.css';
 
+
+/**
+ * About page component.
+ *  Provides information about the Printable Maps project,
+ *  including features, privacy statement, disclaimer, and changelog.
+ * 
+ * @returns React element representing the About page.
+ */
 const About: React.FC = () => {
   return (
+    /* Main container and for the About page */
     <div className="about-page">
       <div className="card">
+
+        {/* There is one page title per card */}
         <h1>About Printable Maps</h1>
         
+        {/* The entire page is divided into sections */}
         <section className="about-section">
           <h2>Project Description</h2>
           <p>
             Printable Maps is a web application designed to help you create custom, 
-            annotated maps that can be exported and printed. Whether you're planning 
-            a neighborhood event, documenting local landmarks, or creating reference 
-            materials, this tool provides an intuitive interface for map creation and 
-            annotation.
+            annotated maps that can be exported and printed.
           </p>
           <p>
             The application uses OpenStreetMap data to provide accurate, up-to-date 
@@ -31,7 +52,7 @@ const About: React.FC = () => {
             <li>Add annotations with markers, lines, polygons, and text</li>
             <li>Organize annotations into layers for better management</li>
             <li>Set default views for each map</li>
-            <li>Export maps as PNG images (coming soon)</li>
+            <li>Export maps as PNG images</li>
             <li>Browser-based - no installation required</li>
           </ul>
         </section>
@@ -39,13 +60,12 @@ const About: React.FC = () => {
         <section className="about-section">
           <h2>Privacy Statement</h2>
           <p>
-            This application stores all project data locally in your browser's storage 
-            or on the server you're running it from. No data is transmitted to external 
-            services except for map tile requests to OpenStreetMap's tile servers, which 
-            is necessary to display the maps.
+            This application stores project data in a database on the server.
+            No data is transmitted to external services except for map tile requests
+            to OpenStreetMap&apos;s tile servers, which is necessary to display the maps.
           </p>
           <p>
-            If you're running this application locally, all your project data remains 
+            If you&apos;re running this application locally, all your project data remains 
             on your own system. If deployed on a server, please consult with your 
             server administrator about data storage and backup policies.
           </p>
@@ -55,7 +75,7 @@ const About: React.FC = () => {
           <h2>Disclaimer</h2>
           <div className="disclaimer-box">
             <p>
-              <strong>Use at Your Own Risk:</strong> This software is provided "as is" 
+              <strong>Use at Your Own Risk:</strong> This software is provided &quot;as is&quot; 
               without any warranties or guarantees. While we strive to provide a reliable 
               tool, we cannot guarantee that your data will never be lost.
             </p>
@@ -103,26 +123,10 @@ const About: React.FC = () => {
           </div>
         </section>
 
-        <section className="about-section">
-          <h2>Technology Stack</h2>
-          <ul className="tech-list">
-            <li><strong>Frontend:</strong> React, TypeScript, Leaflet</li>
-            <li><strong>Backend:</strong> Python, Flask</li>
-            <li><strong>Database:</strong> SQLite</li>
-            <li><strong>Map Data:</strong> OpenStreetMap</li>
-          </ul>
-        </section>
-
-        <section className="about-section">
-          <h2>Open Source</h2>
-          <p>
-            This project is open source and welcomes contributions. Please check the 
-            repository for more information on how to contribute or report issues.
-          </p>
-        </section>
       </div>
     </div>
   );
 };
 
+// Default export
 export default About;

@@ -1,3 +1,33 @@
+/**
+ * @file index.ts
+ * 
+ * @summary Type definitions for the frontend.
+ * 
+ * @exports Project
+ * @exports MapArea
+ * @exports Boundary
+ * @exports Layer
+ * @exports Annotation
+ * @exports MapHierarchy
+ */
+
+
+/**
+ * Represents a project containing multiple maps.
+ * 
+ * @remarks
+ * Defines the core structure of a project.
+ * 
+ * @property {number} [id] - Unique identifier for the project. Optional.
+ * @property {string} name - Name of the project.
+ * @property {string} description - Description of the project.
+ * @property {number} center_lat - Default center latitude for the project maps.
+ * @property {number} center_lon - Default center longitude for the project maps.
+ * @property {number} zoom_level - Default zoom level for the project maps.
+ * @property {string} [tile_layer] - Optional tile layer URL template. Optional.
+ * @property {string} [created_at] - Timestamp of project creation. Optional.
+ * @property {string} [updated_at] - Timestamp of last project update. Optional.
+ */
 export interface Project {
   id?: number;
   name: string;

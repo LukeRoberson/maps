@@ -19,7 +19,7 @@ This is the file structure of the API (backend) part of the project.
 │   ├── layer.py              # Classes for managing layers on a map
 │   ├── map.py                # Classes for managing maps
 │   ├── project.py            # Classes for managing projects
-│   ├── requirements.txt
+│   └── requirements.txt
 ├── database/               # Database management
 │   ├── __init__.py
 │   ├── database.py           # Classes for managing the database

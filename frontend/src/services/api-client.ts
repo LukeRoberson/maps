@@ -1,4 +1,24 @@
-import axios, { AxiosInstance, AxiosResponse } from 'axios';
+/**
+ * @file api-clients.ts
+ * 
+ * @summary A Class for interacting with the backend API.
+ * 
+ * @class ApiClient
+ * @description Provides methods for CRUD operations on projects, map areas, boundaries, layers, annotations,
+ * 
+ * @exports apiClient
+ */
+
+
+// Axios library
+import axios from 'axios';
+
+// Axios types (interface)
+// AxiosInstance: Represents an Axios client instance
+// AxiosResponse: Represents the response from an Axios request
+import { AxiosInstance, AxiosResponse } from 'axios';
+
+// Internal dependencies
 import type {
   Project,
   MapArea,
@@ -8,11 +28,26 @@ import type {
   MapHierarchy,
 } from '@/types';
 
+
+// The base URL for the API
 const API_BASE_URL = '/api';
 
+
+/**
+ * API Client for interacting with the backend.
+ * 
+ * Provides methods for CRUD operations on projects, map areas, boundaries, layers, annotations,
+ * and exporting maps.
+ * 
+ * @class ApiClient
+ */
 class ApiClient {
+  // Instantiate Axios instance type (an interface)
+  // Limit access to the local class only
+  // This is a type that represents an Axios client
   private client: AxiosInstance;
 
+  // Initialize the API client with base URL and headers
   constructor() {
     this.client = axios.create({
       baseURL: API_BASE_URL,
@@ -22,9 +57,25 @@ class ApiClient {
     });
   }
 
+
+  /**
+   * @function listProjects
+   * 
+   * @summary Fetches the list of all projects.
+   * @remarks
+   * Makes a GET request to the /projects endpoint.
+   * AxiosResponse is a type that represents an HTTP response.
+   * The body of the response contains an array of Project objects.
+   * 
+   * @returns An array of Project objects.
+   */
   async listProjects(): Promise<Project[]> {
+    // API call to fetch projects
+    // The response is typed to expect an AxiosResponse object with a 'projects' array
     const response: AxiosResponse<{ projects: Project[] }> =
       await this.client.get('/projects');
+
+    // Return the array of projects from the response data
     return response.data.projects;
   }
 
@@ -37,30 +88,68 @@ class ApiClient {
     return response.data;
   }
 
+
+  /**
+   * @function createProject
+   * 
+   * @summary Creates a new project.
+   * @remarks
+   * Makes a POST request to the /projects endpoint.
+   * @param project
+   * @returns Requested Project object after creation.
+   */
   async createProject(
     project: Omit<Project, 'id' | 'created_at' | 'updated_at'>
   ): Promise<Project> {
+    // API call to create the project
     const response: AxiosResponse<Project> = await this.client.post(
       '/projects',
       project
     );
+
+    // Return the created project from the response data
     return response.data;
   }
 
+
+  /**
+   * @function updateProject
+   * 
+   * @summary Updates an existing project.
+   * @remarks
+   * Makes a PUT request to the /projects/{projectId} endpoint.
+   * @param projectId 
+   * @param updates 
+   * @returns requested Project object after update.
+   */
   async updateProject(
     projectId: number,
     updates: Partial<Project>
   ): Promise<Project> {
+    // API call to update the project
     const response: AxiosResponse<Project> = await this.client.put(
       `/projects/${projectId}`,
       updates
     );
+
+    // Return the updated project from the response data
     return response.data;
   }
 
+
+  /**
+   * @function deleteProject
+   * 
+   * @summary Deletes a project by its ID.
+   * @remarks
+   * Makes a DELETE request to the /projects/{projectId} endpoint.
+   * 
+   * @param projectId 
+   */
   async deleteProject(
     projectId: number
   ): Promise<void> {
+    // API call to delete the project
     await this.client.delete(`/projects/${projectId}`);
   }
 
@@ -262,13 +351,25 @@ class ApiClient {
     window.location.href = `${API_BASE_URL}/projects/${projectId}/export`;
   }
 
+
+  /**
+      * @function importProject
+   * 
+   * @summary Imports a project by sending the file content to the backend.
+   * @param fileContent 
+   * @returns Project object representing the imported project.
+   */
   async importProject(
     fileContent: unknown
   ): Promise<Project> {
+    // API call to import project, sending fileContent as the request body
     const response: AxiosResponse<{ message: string; project: Project }> =
       await this.client.post('/projects/import', fileContent);
+    
+    // Return the result directly
     return response.data.project;
   }
 }
 
+// Export the ApiClient instance for use in other modules
 export const apiClient = new ApiClient();

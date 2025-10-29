@@ -1,12 +1,28 @@
+/*
+  about.css
+
+  Styles for the About component.
+*/
+
+
+/*
+  ------------------------
+    About page container
+  ------------------------
+
+  Applied to the root div of the About page component
+*/
 .about-page {
   max-width: 900px;
   margin: 0 auto;
 }
 
+/* The root div contains a card; Everything is nested within that */
 .about-page .card {
   padding: 2rem;
 }
 
+/* Main heading */
 .about-page h1 {
   font-size: 2.5rem;
   margin-bottom: 2rem;
@@ -15,6 +31,12 @@
   padding-bottom: 0.5rem;
 }
 
+
+/*
+  -------------------
+    Section styles
+  -------------------
+*/
 .about-section {
   margin-bottom: 2.5rem;
 }
@@ -35,46 +57,21 @@
 
 .about-section p {
   color: var(--text-secondary);
-  line-height: 1.8;
+  line-height: 1.8;                   /* The vertical spacing between lines of text */
   margin-bottom: 1rem;
 }
 
-.feature-list,
-.tech-list {
-  list-style: none;
-  padding: 0;
-}
 
-.feature-list li,
-.tech-list li {
-  padding: 0.5rem 0;
-  padding-left: 1.5rem;
-  position: relative;
-  color: var(--text-secondary);
-  line-height: 1.6;
-}
-
-.feature-list li::before {
-  content: '✓';
-  position: absolute;
-  left: 0;
-  color: var(--success-color);
-  font-weight: bold;
-}
-
-.tech-list li::before {
-  content: '•';
-  position: absolute;
-  left: 0.25rem;
-  color: var(--primary-color);
-  font-weight: bold;
-}
-
+/* 
+  ----------------------
+    Disclaimer section
+  ----------------------
+*/
 .disclaimer-box {
   background-color: var(--bg-tertiary);
-  border-left: 4px solid var(--warning-color);
+  border-left: 4px solid var(--warning-color);    /* A left border to highlight the disclaimer box */
   padding: 1.5rem;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-md);                /* Rounded corners */
   margin-top: 1rem;
 }
 
@@ -82,7 +79,7 @@
   margin-bottom: 1rem;
 }
 
-.disclaimer-box p:last-child {
+.disclaimer-box p:last-child {                    /* Apply to the last paragraph (child) only */
   margin-bottom: 0;
 }
 
@@ -92,13 +89,19 @@
 
 .disclaimer-box a {
   color: var(--primary-color);
-  text-decoration: none;
+  text-decoration: none;                          /* No underlining urls by default */
 }
 
 .disclaimer-box a:hover {
-  text-decoration: underline;
+  text-decoration: underline;                     /* Underline urls on hover */
 }
 
+
+/* 
+  ---------------------
+    Changelog section
+  ---------------------
+*/
 .changelog {
   background-color: var(--bg-secondary);
   padding: 1.5rem;

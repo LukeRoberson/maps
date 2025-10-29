@@ -1,12 +1,28 @@
+/*
+  help.css
+
+  Styles for the Help component.
+*/
+
+
+/*
+  -----------------------
+    Help page container
+  -----------------------
+
+  Applied to the root div of the Help page component
+*/
 .help-page {
   max-width: 900px;
   margin: 0 auto;
 }
 
+/* The root div contains a card; Everything is nested within that */
 .help-page .card {
   padding: 2rem;
 }
 
+/* Main heading */
 .help-page h1 {
   font-size: 2.5rem;
   margin-bottom: 2rem;
@@ -15,6 +31,12 @@
   padding-bottom: 0.5rem;
 }
 
+
+/*
+  -------------------
+    Section styles
+  -------------------
+*/
 .help-section {
   margin-bottom: 2.5rem;
 }
@@ -39,6 +61,17 @@
   margin-bottom: 1rem;
 }
 
+
+/*
+  ------------------
+    Diagram styles
+  ------------------
+
+  A visual representation of the map hierarchy workflow
+  Includes boxes for each hierarchy level and arrows between them
+*/
+
+/* Parent div for the entire diagram */
 .hierarchy-diagram {
   background-color: var(--bg-secondary);
   border-radius: var(--radius-md);
@@ -47,6 +80,7 @@
   border: 1px solid var(--border-color);
 }
 
+/* Each level in the hierarchy */
 .hierarchy-level {
   background-color: var(--bg-primary);
   padding: 1rem;
@@ -56,19 +90,22 @@
   box-shadow: var(--shadow-sm);
 }
 
+/* Title within each hierarchy level box */
 .hierarchy-level strong {
-  display: block;
+  display: block;                     /* Make strong a block element to take full width if needed */
   color: var(--primary-color);
   font-size: 1.1rem;
   margin-bottom: 0.25rem;
 }
 
+/* paragraph within each hierarchy level box */
 .hierarchy-level p {
   color: var(--text-secondary);
   margin: 0;
   font-size: 0.9rem;
 }
 
+/* The arrows between hierarchy levels */ 
 .hierarchy-arrow {
   text-align: center;
   color: var(--primary-color);
@@ -76,6 +113,7 @@
   margin: 0.25rem 0;
 }
 
+/* The note box within the hierarchy section */
 .note {
   background-color: var(--bg-tertiary);
   border-left: 4px solid var(--primary-color);
@@ -84,11 +122,18 @@
   margin-top: 1rem;
 }
 
+/* Strong text within the note box */
 .note strong {
   color: var(--text-primary);
 }
 
-.step-list {
+
+/*
+  ---------------
+    List styles
+  ---------------
+*/
+.step-list {                            /* Ordered lists for step-by-step instructions */
   padding-left: 1.5rem;
   margin: 1rem 0;
 }
@@ -99,7 +144,7 @@
   margin-bottom: 0.5rem;
 }
 
-.feature-list {
+.feature-list {                         /* Unordered lists for features or options */
   list-style: none;
   padding: 0;
   margin: 1rem 0;
@@ -113,7 +158,7 @@
   line-height: 1.7;
 }
 
-.feature-list li::before {
+.feature-list li::before {              /* Custom bullet points */
   content: '•';
   position: absolute;
   left: 0;
@@ -122,13 +167,27 @@
   font-size: 1.2rem;
 }
 
+
+/*
+  ---------------------
+    Annotation styles
+  ---------------------
+  Creates a box for each annotation type
+
+  Functions:
+    repeat() - Creates rows and columns automatically
+    minmax() - Sets minimum and maximum sizes for grid items
+*/
+
+/* The container for all annotation types */
 .annotation-types {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  display: grid;                                                  /* Like flexbox but for grids */
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));    /* Tells the browser to create as many columns as fit */
   gap: 1rem;
   margin: 1.5rem 0;
 }
 
+/* The style of the boxes in the grid */
 .annotation-type {
   background-color: var(--bg-secondary);
   padding: 1rem;
@@ -136,6 +195,7 @@
   border: 1px solid var(--border-color);
 }
 
+/* Title within each annotation type box */
 .annotation-type strong {
   display: block;
   color: var(--text-primary);
@@ -143,11 +203,22 @@
   margin-bottom: 0.5rem;
 }
 
+/* Description paragraph within each annotation type box */
 .annotation-type p {
   margin: 0;
   font-size: 0.9rem;
 }
 
+
+/*
+  ----------------------
+    Keyboard shortcuts
+  ----------------------
+  HTML Elements:
+    <kbd> - Represents user input keyboard keys
+*/
+
+/* Container for all shortcuts */
 .shortcuts {
   display: flex;
   flex-direction: column;
@@ -155,6 +226,7 @@
   margin: 1rem 0;
 }
 
+/* Each individual shortcut */
 .shortcut {
   display: flex;
   align-items: center;
@@ -165,6 +237,7 @@
   border: 1px solid var(--border-color);
 }
 
+/* Style applying to the HTML <kbd> element */
 kbd {
   background-color: var(--bg-primary);
   border: 1px solid var(--border-color);
@@ -179,17 +252,26 @@ kbd {
   font-weight: 600;
 }
 
+/* Description text within each shortcut */
 .shortcut span {
   color: var(--text-secondary);
   flex: 1;
 }
 
+
+/*
+  -------------------
+    Tips and Tricks
+  -------------------
+  Contains boxes for each tip
+*/
 .tips-list {
   list-style: none;
   padding: 0;
   margin: 1rem 0;
 }
 
+/* Each list item is shown as a box */
 .tips-list li {
   padding: 1rem;
   margin-bottom: 0.75rem;
@@ -200,12 +282,21 @@ kbd {
   line-height: 1.7;
 }
 
+/* Strong text within each tip box */
 .tips-list li strong {
   color: var(--text-primary);
   display: block;
   margin-bottom: 0.25rem;
 }
 
+
+/*
+  ----------------
+    Help Section
+  ----------------
+*/
+
+/* Each issue box (a div) within the help section */
 .issue {
   background-color: var(--bg-tertiary);
   padding: 1.5rem;
@@ -214,6 +305,7 @@ kbd {
   border-left: 4px solid var(--warning-color);
 }
 
+/* Title within each issue box */
 .issue h3 {
   color: var(--text-primary);
   font-size: 1.1rem;
@@ -221,6 +313,7 @@ kbd {
   margin-top: 0;
 }
 
+/* Paragraph within each issue box */
 .issue p {
   margin: 0;
 }

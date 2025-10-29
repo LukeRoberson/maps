@@ -1,0 +1,113 @@
+/*
+  layout.css
+
+  Styles for the layout component including header and main content area.
+*/
+
+/* 
+  --------------------
+    Layout container
+  --------------------
+
+  Applied to the root div of the layout component
+  Uses full viewport height and flex column layout
+*/
+
+.layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+
+/*
+  --------------------
+    Header container
+  --------------------
+
+  Applied to the header element
+  Sticky header with background color, border, and shadow
+*/
+
+.header {
+  background-color: var(--bg-primary);            /* from global.css */
+  border-bottom: 1px solid var(--border-color);   /* from global.css */
+  box-shadow: var(--shadow-sm);                   /* from global.css */
+  position: sticky;                               /* Stick navbar to top when scrolling */
+  top: 0;
+  z-index: 1000;
+}
+
+/* The div at the root of the header; Note, margin is outside the border, padding is inside the border */
+.header-content {
+  max-width: 1400px;
+  margin: 0 auto;                        /* Center horizontally; '0' is top and bottom margins, 'auto' is left and right margins */
+  padding: 1rem 2rem;                    /* Padding: 1rem top/bottom, 2rem left/right */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Header title: h1 header */
+.header-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary);        /* from global.css */
+  margin: 0;
+}
+
+/* Navigation bar within the header */
+.header-nav {
+  display: flex;
+  gap: 1.5rem;                      /* Space between nav links (items in a flexbox) */
+}
+
+/* A link on the navbar */
+.nav-link {
+  color: var(--text-secondary);     /* from global.css */
+  text-decoration: none;            /* Remove underline from links (no text decoration */
+  font-weight: 500;
+  transition: color 0.2s ease;      /* transition effect on hover (see :hover) */
+  position: relative;
+  padding-bottom: 0.25rem;
+}
+
+/* Nav link pseudo-class: Hover effect */
+.nav-link:hover {
+  color: var(--primary-color);       /* from global.css */
+}
+
+/* Nav link active state: The link for the current (avtive) page */
+.nav-link.active {
+  color: var(--primary-color);       /* from global.css */
+}
+
+/* Nav link pseudo-element: Underline for active link */
+.nav-link.active::after {
+  content: '';                                /* Adds the content, the pseudo-element, after the main element */
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;                                /* A 2px line at the bottom of the main element */
+  background-color: var(--primary-color);
+}
+
+
+
+/*
+  ------------------
+    Main container
+  ------------------
+
+  Applied to the main content area
+  Centers content and adds padding
+*/
+
+.main-content {
+  flex: 1;                         /* Take up remaining space in flex column layout (combination of flex-grow: 1, flex-shrink: 1, flex-basis: 0%) */
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 2rem;
+}
