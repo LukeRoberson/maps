@@ -441,3 +441,32 @@
 .tile-layer-option.active .tile-layer-description {
   color: #495057;
 }
+
+/* Rotation Controls */
+.rotation-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  background-color: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+}
+
+.rotation-indicator {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  min-width: 2.5rem;
+  text-align: center;
+}
+
+.rotation-controls .btn-icon {
+  font-size: 1.25rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+}
+
+.rotation-controls .btn-icon:hover {
+  background-color: var(--bg-hover);
+}

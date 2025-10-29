@@ -823,6 +823,7 @@ const MapEditor: React.FC = () => {
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [showTileLayerSelector, setShowTileLayerSelector] = useState(false);
+  const [currentBearing, setCurrentBearing] = useState<number>(0);
   const navigate = useNavigate();
 
   // Toast notification helper
@@ -897,6 +898,15 @@ const MapEditor: React.FC = () => {
     loadMapData();
     loadLayers();
   }, [projectId, mapAreaId]);
+
+  // Apply saved bearing when map and mapArea are loaded
+  useEffect(() => {
+    if (mapArea && mapInstance) {
+      const savedBearing = mapArea.default_bearing ?? 0;
+      setCurrentBearing(savedBearing);
+      applyRotation(savedBearing);
+    }
+  }, [mapArea, mapInstance]);
 
   const loadLayers = async (): Promise<void> => {
     if (!mapAreaId) return;
@@ -1478,9 +1488,10 @@ const MapEditor: React.FC = () => {
         default_center_lat: center.lat,
         default_center_lon: center.lng,
         default_zoom: zoom,
+        default_bearing: currentBearing,
       });
       setMapArea(updated);
-      showToast(`Default view saved! (Zoom: ${zoom})`, 'success');
+      showToast(`Default view saved! (Zoom: ${zoom}, Rotation: ${currentBearing}°)`, 'success');
     } catch (error) {
       console.error('Failed to set default view:', error);
       showToast('Failed to save default view. Please try again.', 'error');
@@ -1503,6 +1514,35 @@ const MapEditor: React.FC = () => {
       showToast('Recentered to default view', 'info');
     } else {
       showToast('No default view has been set for this map', 'warning');
+    }
+  };
+
+  const handleRotateLeft = (): void => {
+    const newBearing = (currentBearing - 15 + 360) % 360;
+    setCurrentBearing(newBearing);
+    applyRotation(newBearing);
+  };
+
+  const handleRotateRight = (): void => {
+    const newBearing = (currentBearing + 15) % 360;
+    setCurrentBearing(newBearing);
+    applyRotation(newBearing);
+  };
+
+  const handleResetRotation = (): void => {
+    setCurrentBearing(0);
+    applyRotation(0);
+  };
+
+  const applyRotation = (bearing: number): void => {
+    if (!mapInstance) return;
+    
+    const mapContainer = mapInstance.getContainer();
+    const mapPane = mapContainer.querySelector('.leaflet-map-pane') as HTMLElement;
+    
+    if (mapPane) {
+      mapPane.style.transform = `rotate(${bearing}deg)`;
+      mapPane.style.transformOrigin = 'center';
     }
   };
 
@@ -1675,6 +1715,34 @@ const MapEditor: React.FC = () => {
               >
                 Recenter to Default
               </button>
+              <div className="rotation-controls">
+                <button
+                  className="btn btn-icon"
+                  onClick={handleRotateLeft}
+                  title="Rotate left 15°"
+                >
+                  ↺
+                </button>
+                <span className="rotation-indicator">
+                  {currentBearing}°
+                </span>
+                <button
+                  className="btn btn-icon"
+                  onClick={handleRotateRight}
+                  title="Rotate right 15°"
+                >
+                  ↻
+                </button>
+                {currentBearing !== 0 && (
+                  <button
+                    className="btn btn-icon"
+                    onClick={handleResetRotation}
+                    title="Reset rotation"
+                  >
+                    ⟲
+                  </button>
+                )}
+              </div>
               <button 
                 className="btn btn-info" 
                 onClick={() => setShowTileLayerSelector(!showTileLayerSelector)}

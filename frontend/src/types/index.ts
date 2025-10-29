@@ -50,6 +50,7 @@ export interface MapArea {
   default_center_lat?: number;
   default_center_lon?: number;
   default_zoom?: number;
+  default_bearing?: number;
   tile_layer?: string;
   created_at?: string;
   updated_at?: string;

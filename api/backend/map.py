@@ -63,6 +63,7 @@ class MapModel:
         default_center_lat (Optional[float]): Default map center latitude
         default_center_lon (Optional[float]): Default map center longitude
         default_zoom (Optional[int]): Default map zoom level
+        default_bearing (Optional[float]): Default map bearing/rotation
         tile_layer (Optional[str]): Preferred tile layer ID
         created_at (datetime): Creation timestamp
         updated_at (datetime): Last update timestamp
@@ -93,6 +94,7 @@ class MapModel:
         default_center_lat: Optional[float] = None,
         default_center_lon: Optional[float] = None,
         default_zoom: Optional[int] = None,
+        default_bearing: Optional[float] = None,
         tile_layer: Optional[str] = None,
         id: Optional[int] = None,
         created_at: Optional[datetime] = None,
@@ -110,6 +112,7 @@ class MapModel:
             default_center_lat (Optional[float]): Default center latitude
             default_center_lon (Optional[float]): Default center longitude
             default_zoom (Optional[int]): Default zoom level
+            default_bearing (Optional[float]): Default map bearing
             id (Optional[int]): Map area ID
             created_at (Optional[datetime]): Creation timestamp
             updated_at (Optional[datetime]): Update timestamp
@@ -137,6 +140,7 @@ class MapModel:
         self.default_center_lat = default_center_lat
         self.default_center_lon = default_center_lon
         self.default_zoom = default_zoom
+        self.default_bearing = default_bearing
         self.tile_layer = tile_layer
 
         # Timestamps are in UTC
@@ -166,6 +170,7 @@ class MapModel:
             'default_center_lat': self.default_center_lat,
             'default_center_lon': self.default_center_lon,
             'default_zoom': self.default_zoom,
+            'default_bearing': self.default_bearing,
             'tile_layer': self.tile_layer,
             'created_at': (
                 self.created_at.isoformat()
@@ -217,6 +222,7 @@ class MapModel:
             default_center_lat=data.get('default_center_lat'),
             default_center_lon=data.get('default_center_lon'),
             default_zoom=data.get('default_zoom'),
+            default_bearing=data.get('default_bearing'),
             created_at=created_at,
             updated_at=updated_at
         )
@@ -486,7 +492,8 @@ class MapService:
             'boundary_id',
             'default_center_lat',
             'default_center_lon',
-            'default_zoom'
+            'default_zoom',
+            'default_bearing'
         ]
 
         # Build a dictionary of fields/values to update
