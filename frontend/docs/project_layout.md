@@ -45,6 +45,9 @@ All routing is done on the client side. The `BrowserRouter` component from `reac
         │   ├── map-editor.css
         │   ├── project-list.tsx            # Project list and management page
         │   ├── project-list.css            # Styles for project list page
+        │   ├── use-project-list.ts         # Helper functions for project-list.tsx
+        │   ├── project-card.tsx            # Helper functions for project-list.tsx
+        │   ├── create-project-modal.tsx    # Helper functions for project-list.tsx
         │   ├── project-view.tsx
         │   └── project-view.css
         │
