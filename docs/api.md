@@ -10,6 +10,71 @@ For the most part, the API follows a CRUD-like approach, to create, read, update
 </br></br>
 
 
+## Endpoint Summary
+
+| Endpoint                   | Method | Description                    |
+| -------------------------- | ------ | ------------------------------ |
+| /api/projects              | GET    | List all projects              |
+| /api/projects              | POST   | Create a new project           |
+| /api/projects/<project_id> | GET    | Get a specific project details |
+| /api/projects/<project_id> | PUT    | Update a project               |
+| /api/projects/<project_id> | DELETE | Delete a project               |
+
+</br></br>
+
+
+| Endpoint                   | Method | Description                    |
+| -------------------------- | ------ | ------------------------------ |
+| /api/map_areas             | GET    | List maps                      |
+| /api/map_areas             | POST   | Create a map                   |
+| /api/map_areas/hierarchy   | GET    | Get the map hierarchy          |
+| /api/map_areas/<map_id>    | GET    | Get a specific map             |
+| /api/map_areas/<map_id>    | PUT    | Update a map                   |
+| /api/map_areas/<map_id>    | DELETE | Delete a map                   |
+ 
+</br></br>
+
+
+| Endpoint                     | Method | Description                  |
+| ---------------------------- | ------ | ---------------------------- |
+| /api/boundaries              | POST   | Create a boundary            |
+| /api/boundaries<map_id>      | GET    | Get a boundary on a map      |
+| /api/boundaries<boundary_id> | PUT    | Update a boundary            |
+| /api/boundaries<boundary_id> | DELETE | Delete a boundary            |
+
+</br></br>
+
+
+| Endpoint                     | Method | Description                  |
+| ---------------------------- | ------ | ---------------------------- |
+| /api/layers/<map_id>         | GET    | List layers on a map         |
+| /api/layers                  | POST   | Create a new layer           |
+| /api/layers/<layer_id>       | GET    | Get a layer                  |
+| /api/layers/<layer_id>       | PUT    | Update a layer               |
+| /api/layers/<layer_id>       | DELETE | Delete a layer               |
+
+</br></br>
+
+
+| Endpoint                         | Method | Description                  |
+| -------------------------------- | ------ | ---------------------------- |
+| /api/annotations/<layer_id>      | GET    | List annotations on a layer  |
+| /api/annotations                 | POST   | Create a new annotation      |
+| /api/annotations/<annotation_id> | GET    | Get an annotation            |
+| /api/annotations/<annotation_id> | PUT    | Update an annotation         |
+| /api/annotations/<annotation_id> | DELETE | Delete an annotation         |
+
+</br></br>
+
+
+| Endpoint                         | Method | Description                  |
+| -------------------------------- | ------ | ---------------------------- |
+| /api/exports                     | POST   | Export a map to PNG          |
+| /api/exports/<filename>          | GET    | Download a PNG               |
+
+</br></br>
+
+
 ## Security
 
 There is no explicit security on the API at this time.
@@ -1128,3 +1193,81 @@ Success message.
 
 </br></br>
 
+
+
+## Exports
+
+**Base URL**: /api/exports
+
+</br></br>
+
+
+### `export_map`
+
+Export a map to a PNG
+</br></br>
+
+**URL**: /api/exports/
+</br></br>
+
+**Method**: POST
+</br></br>
+
+**Request Body**
+JSON structure with boundary information.
+
+```json
+{
+    "map_area_id": 1,
+    "image_data": "xxx"
+}
+```
+
+Mandatory fields:
+* map_area_id
+* image_data
+
+</br></br>
+
+**Return Codes**:
+* `201 Created` if the file exported successfully
+* `400 Bad Request` if required information was missing
+* `500 Internal Server Error` if there was a problem exporting the image
+
+</br></br>
+
+**Return Data**:
+File details in JSON format.
+
+```json
+{
+    "filename": "file.png",
+    "size": 123
+}
+```
+
+</br></br>
+
+
+### `download_export`
+
+Download an exported map file
+</br></br>
+
+**URL**: /api/exports/<filename>
+</br></br>
+
+**Method**: GET
+</br></br>
+
+**Return Codes**:
+* `200 OK` If the file is available
+* `404 Not Found` if the file does not exist
+* `500 Internal Server Error` if there was a problem downloading the file
+
+</br></br>
+
+**Return Data**:
+File data wrapped in a Flask Response object.
+
+</br></br>

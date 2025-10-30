@@ -247,6 +247,7 @@ CREATE TABLE IF NOT EXISTS projects (
 | default_center_lat | REAL      |              |             | Latitude of the centre of the map         |
 | default_center_lon | REAL      |              |             | Longitude of the centre of the map        |
 | default_zoom       | INTEGER   |              |             | Default zoom level                        |
+| default_bearing    | REAL      | 0            |             | The bearing in degrees (map rotation)     |
 | created_at         | TIMESTAMP | Current Time |             | When the map was created                  |
 | updated_at         | TIMESTAMP | Current Time |             | When the map was last updated             |
 
@@ -277,6 +278,7 @@ CREATE TABLE IF NOT EXISTS map_areas (
     default_center_lat REAL,
     default_center_lon REAL,
     default_zoom INTEGER,
+    default_bearing REAL DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
