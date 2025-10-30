@@ -21,9 +21,9 @@ import { AxiosInstance, AxiosResponse } from 'axios';
 // Internal dependencies
 import type { Project } from '@/components/project/types';
 import type { MapArea, MapHierarchy } from '@/components/map/types';
-import type { Boundary } from '@/types/boundary';
-import type { Layer } from '@/types/layer';
-import type { Annotation } from '@/types/annotation';
+import type { Boundary } from '@/components/boundary/types';
+import type { Layer } from '@/components/layer/types';
+import type { Annotation } from '@/components/annotation/types';
 
 
 // The base URL for the API

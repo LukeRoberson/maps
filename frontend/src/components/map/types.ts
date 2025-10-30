@@ -1,5 +1,5 @@
 /**
- * @file map.ts
+ * @file map/types.ts
  * 
  * @summary Type definitions for maps.
  * 
@@ -7,10 +7,17 @@
  * @exports MapHierarchy
  * @exports SuburbNode
  * @exports RegionNode
+ * @exports Toast
+ * @exports ToastType
+ * @exports MapViewControllerProps
+ * @exports ReadOnlyPolygonProps
  */
 
 
 /**
+ * @interface MapArea
+ * 
+ * @summary
  * Represents a map within a project.
  * 
  * @remarks
@@ -48,6 +55,9 @@ export interface MapArea {
 
 
 /**
+ * @interface MapHierarchy
+ * 
+ * @summary
  * Represents the hierarchical structure of map areas within a project.
  * 
  * @remarks
@@ -65,6 +75,9 @@ export interface MapHierarchy {
 
 
 /**
+ * @interface SuburbNode
+ * 
+ * @summary
  * Represents a suburb node in the hierarchy.
  * 
  * @property {MapArea} suburb - The suburb map area.
@@ -77,6 +90,9 @@ export interface SuburbNode {
 
 
 /**
+ * @interface RegionNode
+ * 
+ * @summary
  * Represents a region node in the hierarchy.
  * 
  * @property {MapArea} region - The region map area.
@@ -87,3 +103,54 @@ export interface RegionNode {
   suburbs: SuburbNode[];
 }
 
+
+/**
+ * @type ToastType
+ * @summary Types of toast notifications.
+ */
+export type ToastType = 'success' | 'error' | 'info' | 'warning';
+
+
+/**
+ * @interface Toast
+ * 
+ * @summary Represents a toast notification.
+ * @property {number} id - Unique identifier for the toast.
+ * @property {string} message - Message content of the toast.
+ * @property {ToastType} type - Type of the toast notification.
+ */
+export interface Toast {
+  id: number;
+  message: string;
+  type: ToastType;
+}
+
+
+/**
+ * @interface MapViewControllerProps
+ * 
+ * @summary Props for MapViewController component.
+ * @property {(map: L.Map) => void} onMapReady - Callback when the map instance is ready.
+ */
+export interface MapViewControllerProps {
+  onMapReady: (map: L.Map) => void;
+}
+
+
+/**
+ * @interface ReadOnlyPolygonProps
+ * 
+ * @summary Props for ReadOnlyPolygon component.
+ * @property {[number, number][]} positions - Array of latitude and longitude pairs defining the polygon.
+ * @property {L.PathOptions} pathOptions - Leaflet path options for styling the polygon.
+ * @property {string} [tooltipContent] - Optional tooltip content to display on hover.
+ * @property {() => void} [onClick] - Optional click handler for the polygon.
+ * @property {(message: string, type: ToastType) => void} [showToast] - Function to show toast notifications.
+ */
+export interface ReadOnlyPolygonProps {
+  positions: [number, number][];
+  pathOptions: L.PathOptions;
+  tooltipContent?: string;
+  onClick?: () => void;
+  showToast?: (message: string, type: ToastType) => void;
+}

@@ -1,10 +1,14 @@
 /**
- * @file annotation.ts
+ * @file annotation/types.ts
  * 
  * @summary Type definitions for annotations.
  * 
  * @exports Annotation
+ * @exports AnnotationRendererProps
  */
+
+
+import type { Layer } from '@/components/layer/types';
 
 
 /**
@@ -32,3 +36,26 @@ export interface Annotation {
   created_at?: string;
   updated_at?: string;
 }
+
+
+/**
+ * @interface AnnotationRendererProps
+ * 
+ * @summary Props for AnnotationRenderer component.
+ * @property {Annotation[]} annotations - List of annotations to render.
+ * @property {Layer[]} layers - List of layers for color reference.
+ * @property {number | null} activeLayerId - Currently active layer ID.
+ * @property {(annotation: Annotation) => void} [onAnnotationClick] - Callback when an annotation is clicked.
+ * @property {(annotation: Annotation) => void} [onAnnotationUpdated] - Callback when an annotation is updated.
+ * @property {(annotationId: number) => void} [onAnnotationDeleted] - Callback when an annotation is deleted.
+ */
+export interface AnnotationRendererProps {
+  annotations: Annotation[];
+  layers: Layer[];
+  activeLayerId: number | null;
+  onAnnotationClick?: (annotation: Annotation) => void;
+  onAnnotationUpdated?: (annotation: Annotation) => void;
+  onAnnotationDeleted?: (annotationId: number) => void;
+}
+
+

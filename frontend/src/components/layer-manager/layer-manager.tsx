@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { apiClient } from '@/services/api-client';
-import type { Layer } from '@/types/layer';
+import type { Layer } from '@/components/layer/types';
 import './layer-manager.css';
 
 interface LayerManagerProps {

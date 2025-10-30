@@ -69,8 +69,8 @@ const ProjectList: React.FC = () => {
      * 
      * @summary Handles file input change event for importing a project.
      * 
-     * @param event - File input change event
-     * @returns void
+     * @param {React.ChangeEvent} event - File input change event
+     * @returns {Promise<void>}
      */
     const handleFileChange = async (
         event: React.ChangeEvent<HTMLInputElement>

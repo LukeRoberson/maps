@@ -1,9 +1,10 @@
 /**
- * @file boundary.ts
+ * @file boundary/types.ts
  * 
  * @summary Type definitions for boundaries.
  * 
  * @exports Boundary
+ * @exports BoundaryFadeOverlayProps
  */
 
 
@@ -25,4 +26,15 @@ export interface Boundary {
   coordinates: [number, number][];
   created_at?: string;
   updated_at?: string;
+}
+
+
+/**
+ * @interface BoundaryFadeOverlayProps
+ * 
+ * @summary Props for BoundaryFadeOverlay component.
+ * @property {Boundary} boundary - Boundary data to create the fade overlay.
+ */
+export interface BoundaryFadeOverlayProps {
+  boundary: Boundary;
 }
