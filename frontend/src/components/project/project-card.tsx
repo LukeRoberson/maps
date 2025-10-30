@@ -12,7 +12,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
 // Types
-import type { ProjectCardProps } from '@/components/project/project-types';
+import type { ProjectCardProps } from '@/components/project/types';
 
 
 /**

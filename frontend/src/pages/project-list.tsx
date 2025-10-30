@@ -15,7 +15,7 @@
 import React, { useState, useRef } from 'react';
 
 // Internal dependencies
-import { useProjectList } from '../components/project/use-project-list';
+import { useProjectList } from '../components/project/hooks';
 import { ProjectCard } from '../components/project/project-card';
 import { CreateProjectModal } from '../components/project/create-project-modal';
 import './project-list.css';

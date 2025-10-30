@@ -19,8 +19,8 @@ import axios from 'axios';
 import { AxiosInstance, AxiosResponse } from 'axios';
 
 // Internal dependencies
-import type { Project } from '@/components/project/project-types';
-import type { MapArea, MapHierarchy } from '@/components/map/map-types';
+import type { Project } from '@/components/project/types';
+import type { MapArea, MapHierarchy } from '@/components/map/types';
 import type { Boundary } from '@/types/boundary';
 import type { Layer } from '@/types/layer';
 import type { Annotation } from '@/types/annotation';

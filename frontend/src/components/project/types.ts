@@ -7,7 +7,15 @@
  * @exports CreateProjectModalProps
  * @exports ProjectCardProps
  * @exports UseProjectListReturn
+ * @exports UseProjectViewReturn
+ * @exports IndividualTreeNodeProps
+ * @exports SuburbTreeNodeProps
+ * @exports RegionTreeNodeProps
  */
+
+
+import type { RegionNode, MapArea } from '@/components/map/types';
+import type { SuburbNode } from '@/components/map/types';
 
 
 /**
@@ -88,4 +96,90 @@ export interface UseProjectListReturn {
   deleteProject: (id: number) => Promise<void>;
   renameProject: (id: number, name: string) => Promise<void>;
   importProject: (fileContent: string) => Promise<void>;
+}
+
+
+/**
+ * @interface UseProjectViewReturn
+ * 
+ * @summary Return type for useProjectView hook.
+ */
+export interface UseProjectViewReturn {
+  loading: boolean;
+  project: Project | null;
+  regionNodes: RegionNode[];
+  expandedRegions: Set<number>;
+  expandedSuburbs: Set<number>;
+  editingMapId: number | null;
+  editingName: string;
+  loadProject: () => Promise<void>;
+  handleCreateRegion: () => Promise<void>;
+  toggleRegion: (regionId: number) => void;
+  toggleSuburb: (suburbId: number) => void;
+  startRenaming: (mapArea: MapArea) => void;
+  cancelRenaming: () => void;
+  handleRename: (mapAreaId: number) => Promise<void>;
+  handleDelete: (mapArea: MapArea, type: 'region' | 'suburb' | 'individual') => Promise<void>;
+  handleExportProject: () => Promise<void>;
+  setEditingName: (name: string) => void;
+}
+
+
+/**
+ * @interface IndividualTreeNodeProps
+ * 
+ * @summary Props for IndividualTreeNode component.
+ */
+export interface IndividualTreeNodeProps {
+  individual: MapArea;
+  projectId: string;
+  editingMapId: number | null;
+  editingName: string;
+  onStartRename: (mapArea: MapArea) => void;
+  onCancelRename: () => void;
+  onRename: (mapAreaId: number) => Promise<void>;
+  onDelete: (mapArea: MapArea, type: 'individual') => Promise<void>;
+  onEditingNameChange: (name: string) => void;
+}
+
+
+/**
+ * @interface SuburbTreeNodeProps
+ * 
+ * @summary Props for SuburbTreeNode component.
+ */
+export interface SuburbTreeNodeProps {
+  suburbNode: SuburbNode;
+  projectId: string;
+  isExpanded: boolean;
+  editingMapId: number | null;
+  editingName: string;
+  onToggle: (suburbId: number) => void;
+  onStartRename: (mapArea: MapArea) => void;
+  onCancelRename: () => void;
+  onRename: (mapAreaId: number) => Promise<void>;
+  onDelete: (mapArea: MapArea, type: 'suburb' | 'individual') => Promise<void>;
+  onEditingNameChange: (name: string) => void;
+}
+
+
+/**
+ * @interface RegionTreeNodeProps
+ * 
+ * @summary Props for RegionTreeNode component.
+ */
+export interface RegionTreeNodeProps {
+  regionNode: RegionNode;
+  projectId: string;
+  isExpanded: boolean;
+  expandedSuburbs: Set<number>;
+  editingMapId: number | null;
+  editingName: string;
+  onToggleRegion: (regionId: number) => void;
+  onToggleSuburb: (suburbId: number) => void;
+  onStartRename: (mapArea: MapArea) => void;
+  onCancelRename: () => void;
+  onRename: (mapAreaId: number) => Promise<void>;
+  onDelete: (mapArea: MapArea, type: 'region' | 'suburb' | 'individual') => Promise<void>;
+  onEditingNameChange: (name: string) => void;
 }

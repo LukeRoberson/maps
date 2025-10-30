@@ -11,7 +11,7 @@
 import React, { useState } from 'react';
 
 // Types
-import type { Project, CreateProjectModalProps } from '@/components/project/project-types';
+import type { Project, CreateProjectModalProps } from '@/components/project/types';
 
 
 /**

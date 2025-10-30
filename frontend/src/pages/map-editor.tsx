@@ -12,8 +12,8 @@ import { LayerManager } from '@/components/layer-manager';
 import { ExportDialog, ExportOptions } from '@/components/export-dialog';
 import { TILE_LAYER_OPTIONS, getTileLayer } from '@/constants/tile-layers';
 
-import type { Project } from '@/components/project/project-types';
-import type { MapArea } from '@/components/map/map-types';
+import type { Project } from '@/components/project/types';
+import type { MapArea } from '@/components/map/types';
 import type { Boundary } from '@/types/boundary';
 import type { Layer } from '@/types/layer';
 import type { Annotation } from '@/types/annotation';

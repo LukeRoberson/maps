@@ -17,42 +17,54 @@ All routing is done on the client side. The `BrowserRouter` component from `reac
 
 ```
 .
-└── frontend/                       # Frontend code
-    ├── .eslintrc                       # ES Lint configuration
-    ├── index.html                      # Main HTML entry point
-    ├── package.json                    # App package file (metadata, dependancies, etc)
+└── frontend/                               # Frontend code
+    ├── .eslintrc                               # ES Lint configuration
+    ├── index.html                              # Main HTML entry point
+    ├── package.json                            # App package file (metadata, dependancies, etc)
     ├── tsconfig.json
     ├── tsconfig.node.json
     ├── vite.config.ts
-    ├── dist/                       # Distribution: Compiled TS/JS code
-    ├── docs/                       # Documentation
-    └── src/                        # Source code (TSX files)
-        ├── main.tsx                    # Entrypoint for the React app
-        ├── app.tsx                     # Main React app
+    ├── dist/                               # Distribution: Compiled TS/JS code
+    ├── docs/                               # Documentation
+    └── src/                                # Source code (TSX files)
+        ├── main.tsx                            # Entrypoint for the React app
+        ├── app.tsx                             # Main React app
         │
-        ├── components/                 # Custom components
-        │   ├── layout.tsx                  # <Layout /> component
-        │   ├── layout.css                  # Styles for layout and children
+        ├── components/                         # Custom components
+        │   ├── map/                                # Files relating to map operations
+        │   │   └── types.ts                            # Type definitions for maps
+        │   │
+        │   ├── project/                            # Files relating to project operations
+        │   │   ├── types.ts                            # Type definitions for projects
+        │   │   ├── hooks.ts                            # Custom hooks for managing projects
+        │   │   ├── project-card.tsx                    # A project card on the home page
+        │   │   ├── create-project-modal.tsx            # The modal to create a new project
+        │   │   ├── region-tree-node.tsx                # Region node in the map hierarchy
+        │   │   ├── suburb-tree-node.tsx                # Suburb node
+        │   │   └── individual-tree-node.tsx            # Individual map node
+        │   │
+        │   ├── layout.tsx                          # <Layout /> component
+        │   ├── layout.css                          # Styles for layout and children
         │   ├── export-dialog/
         │   └── layer-manager/
         │
-        ├── pages/                      # Page routes
-        │   ├── about.tsx                   # The /about page
-        │   ├── about.css                   # Styles for /about
-        │   ├── help.tsx                    # The /help page
-        │   ├── help.css                    # Styles for /help
+        ├── pages/                              # Page routes
+        │   ├── about.tsx                           # The /about page
+        │   ├── about.css                           # Styles for /about
+        │   ├── help.tsx                            # The /help page
+        │   ├── help.css                            # Styles for /help
         │   ├── map-editor.tsx
         │   ├── map-editor.css
-        │   ├── project-list.tsx            # Project list and management page
-        │   ├── project-list.css            # Styles for project list page
-        │   ├── use-project-list.ts         # Helper functions for project-list.tsx
-        │   ├── project-card.tsx            # Helper functions for project-list.tsx
-        │   ├── create-project-modal.tsx    # Helper functions for project-list.tsx
-        │   ├── project-view.tsx
-        │   └── project-view.css
+        │   ├── project-list.tsx                    # Project list and management page
+        │   ├── project-list.css                    # Styles for project list page
+        │   ├── use-project-list.ts                 # Helper functions for project-list.tsx
+        │   ├── project-card.tsx                    # Helper functions for project-list.tsx
+        │   ├── create-project-modal.tsx            # Helper functions for project-list.tsx
+        │   ├── project-view.tsx                    # Hierarchical view of maps in a project
+        │   └── project-view.css                    # Styles for the map hierarchy
         │
-        ├── services/                   # Code that connects to external services (APIs)
+        ├── services/                           # Code that connects to external services (APIs)
         ├── styles/
-        ├── types/                      # Datatype definitions (TS interfaces)
+        ├── types/                              # Datatype definitions (TS interfaces)
         ├── ??others??
 ```
