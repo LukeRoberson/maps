@@ -11,23 +11,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
-// Internal dependencies
-import type { Project } from '@/types';
-
-
-/**
- * Props for ProjectCard component.
- */
-interface ProjectCardProps {
-  project: Project;
-  isEditing: boolean;
-  editingName: string;
-  onStartRename: () => void;
-  onCancelRename: () => void;
-  onRename: (name: string) => Promise<void>;
-  onDelete: () => Promise<void>;
-  onEditingNameChange: (name: string) => void;
-}
+// Types
+import type { ProjectCardProps } from '@/components/project/project-types';
 
 
 /**

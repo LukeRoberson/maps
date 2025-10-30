@@ -10,17 +10,9 @@
 // External dependencies
 import React, { useState } from 'react';
 
-// Internal dependencies
-import type { Project } from '@/types';
+// Types
+import type { Project, CreateProjectModalProps } from '@/components/project/project-types';
 
-
-/**
- * Props for CreateProjectModal component.
- */
-interface CreateProjectModalProps {
-  onClose: () => void;
-  onCreate: (project: Omit<Project, 'id'>) => Promise<void>;
-}
 
 /**
  * Modal for creating a new project with form inputs.

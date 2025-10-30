@@ -11,7 +11,13 @@ import { apiClient } from '@/services/api-client';
 import { LayerManager } from '@/components/layer-manager';
 import { ExportDialog, ExportOptions } from '@/components/export-dialog';
 import { TILE_LAYER_OPTIONS, getTileLayer } from '@/constants/tile-layers';
-import type { MapArea, Project, Boundary, Layer, Annotation } from '@/types';
+
+import type { Project } from '@/components/project/project-types';
+import type { MapArea } from '@/components/map/map-types';
+import type { Boundary } from '@/types/boundary';
+import type { Layer } from '@/types/layer';
+import type { Annotation } from '@/types/annotation';
+
 import './map-editor.css';
 import 'leaflet/dist/leaflet.css';
 

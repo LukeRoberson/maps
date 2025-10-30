@@ -19,14 +19,11 @@ import axios from 'axios';
 import { AxiosInstance, AxiosResponse } from 'axios';
 
 // Internal dependencies
-import type {
-  Project,
-  MapArea,
-  Boundary,
-  Layer,
-  Annotation,
-  MapHierarchy,
-} from '@/types';
+import type { Project } from '@/components/project/project-types';
+import type { MapArea, MapHierarchy } from '@/components/map/map-types';
+import type { Boundary } from '@/types/boundary';
+import type { Layer } from '@/types/layer';
+import type { Annotation } from '@/types/annotation';
 
 
 // The base URL for the API
@@ -79,16 +76,6 @@ class ApiClient {
     return response.data.projects;
   }
 
-  async getProject(
-    projectId: number
-  ): Promise<Project> {
-    const response: AxiosResponse<Project> = await this.client.get(
-      `/projects/${projectId}`
-    );
-    return response.data;
-  }
-
-
   /**
    * @function createProject
    * 
@@ -108,6 +95,28 @@ class ApiClient {
     );
 
     // Return the created project from the response data
+    return response.data;
+  }
+
+
+  /**
+   * @function getProject
+   * 
+   * @summary Fetches a project by its ID.
+   * @remarks
+   * Makes a GET request to the /projects/{projectId} endpoint.
+   * @param projectId 
+   * @returns Requested Project object.
+   */
+  async getProject(
+    projectId: number
+  ): Promise<Project> {
+    // API call to fetch the project
+    const response: AxiosResponse<Project> = await this.client.get(
+      `/projects/${projectId}`
+    );
+
+    // Return the project from the response data
     return response.data;
   }
 
@@ -153,18 +162,91 @@ class ApiClient {
     await this.client.delete(`/projects/${projectId}`);
   }
 
+
+  /**
+   * @function importProject
+   * 
+   * @summary Imports a project by sending the file content to the backend.
+   * @param fileContent 
+   * @returns Project object representing the imported project.
+   */
+  async importProject(
+    fileContent: unknown
+  ): Promise<Project> {
+    // API call to import project, sending fileContent as the request body
+    const response: AxiosResponse<{ message: string; project: Project }> =
+      await this.client.post('/projects/import', fileContent);
+    
+    // Return the result directly
+    return response.data.project;
+  }
+
+
+  /**
+   * @function exportProject
+   * 
+   * @summary Exports a project by its ID to a JSON file.
+   * @param projectId 
+   */
+  async exportProject(
+    projectId: number
+  ): Promise<void> {
+    // Trigger download by opening URL
+    window.location.href = `${API_BASE_URL}/projects/${projectId}/export`;
+  }
+
+
+  /**
+   * @function createMapArea
+   * 
+   * @summary Creates a new map.
+   * @param mapArea 
+   * @returns Data of the created MapArea.
+   */
+  async createMapArea(
+    mapArea: Omit<MapArea, 'id' | 'created_at' | 'updated_at'>
+  ): Promise<MapArea> {
+    // API call to create the map area
+    const response: AxiosResponse<MapArea> = await this.client.post(
+      '/map-areas',
+      mapArea
+    );
+
+    // Return the created map area from the response data
+    return response.data;
+  }
+
+  
+  /**
+   * @function listMapAreas
+   * 
+   * @summary Fetches the list of map areas for a given project, optionally filtered by parent ID.
+   * @remarks
+   * Makes a GET request to the /map-areas endpoint with query parameters.
+   * @param projectId {number}
+   * @param parentId {number} (optional)
+   * @returns 
+   */
   async listMapAreas(
     projectId: number,
     parentId?: number
   ): Promise<MapArea[]> {
+    // Build URL with query parameters
     let url = `/map-areas?project_id=${projectId}`;
+    
+    // Add parent_id parameter if provided
     if (parentId !== undefined) {
       url += `&parent_id=${parentId}`;
     }
+
+    // API call to fetch map areas
     const response: AxiosResponse<{ map_areas: MapArea[] }> =
       await this.client.get(url);
+
+    // Return the array of map areas from the response data
     return response.data.map_areas;
   }
+
 
   async getMapHierarchy(
     projectId: number
@@ -184,15 +266,6 @@ class ApiClient {
     return response.data;
   }
 
-  async createMapArea(
-    mapArea: Omit<MapArea, 'id' | 'created_at' | 'updated_at'>
-  ): Promise<MapArea> {
-    const response: AxiosResponse<MapArea> = await this.client.post(
-      '/map-areas',
-      mapArea
-    );
-    return response.data;
-  }
 
   async updateMapArea(
     mapAreaId: number,
@@ -205,11 +278,22 @@ class ApiClient {
     return response.data;
   }
 
+
+  /**
+   * @function deleteMapArea
+   * 
+   * @summary Deletes a map area by its ID.
+   * @remarks
+   * Makes a DELETE request to the /map-areas/{mapAreaId} endpoint.
+   * @param mapAreaId 
+   */
   async deleteMapArea(
     mapAreaId: number
   ): Promise<void> {
+    // API call to delete the map area
     await this.client.delete(`/map-areas/${mapAreaId}`);
   }
+
 
   async getBoundaryByMapArea(
     mapAreaId: number
@@ -342,32 +426,6 @@ class ApiClient {
     filename: string
   ): string {
     return `${API_BASE_URL}/exports/${filename}`;
-  }
-
-  async exportProject(
-    projectId: number
-  ): Promise<void> {
-    // Trigger download by opening URL
-    window.location.href = `${API_BASE_URL}/projects/${projectId}/export`;
-  }
-
-
-  /**
-      * @function importProject
-   * 
-   * @summary Imports a project by sending the file content to the backend.
-   * @param fileContent 
-   * @returns Project object representing the imported project.
-   */
-  async importProject(
-    fileContent: unknown
-  ): Promise<Project> {
-    // API call to import project, sending fileContent as the request body
-    const response: AxiosResponse<{ message: string; project: Project }> =
-      await this.client.post('/projects/import', fileContent);
-    
-    // Return the result directly
-    return response.data.project;
   }
 }
 

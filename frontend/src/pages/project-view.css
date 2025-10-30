@@ -1,7 +1,33 @@
+/*
+  project-view.css
+
+  Styles for the main project page.
+*/
+
+
+/*
+  --------------------------
+    Project view container
+  --------------------------
+  Applied to the root div
+*/
 .project-view-page {
   width: 100%;
 }
 
+/* Project not found / error message */
+.error {
+  text-align: center;
+  padding: 3rem;
+  color: var(--danger-color);
+}
+
+
+/*
+  ---------------
+    Page header
+  ---------------
+*/
 .page-header {
   display: flex;
   justify-content: space-between;
@@ -9,17 +35,26 @@
   margin-bottom: 2rem;
 }
 
+/* Project description text */
+.project-description {
+  color: var(--text-secondary);
+  margin: 0.5rem 0 0 0;
+}
+
+/* Container for actions (buttons) on the right side of the header */
 .header-actions {
   display: flex;
   gap: 1rem;
   align-items: center;
 }
 
-.project-description {
-  color: var(--text-secondary);
-  margin: 0.5rem 0 0 0;
-}
 
+/*
+  --------------------------
+    Project content (tree)
+  --------------------------
+  These apply to nodes of different types
+*/
 .project-content {
   margin-top: 2rem;
 }
@@ -32,24 +67,27 @@
   padding: 1.5rem;
 }
 
-.add-region-section {
-  margin-bottom: 1.5rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 2px solid var(--border-color);
+/* Empty state styling */
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+  color: var(--text-secondary);
 }
 
+/* Root of the map hierarchy */
 .tree-section {
   margin-bottom: 2rem;
 }
-
 .tree-section:last-child {
   margin-bottom: 0;
 }
 
+/* Applies to the div at the root of each tree (region, suburb, individual) */
 .tree-node {
   margin: 0;
 }
 
+/* The div that contains items in the tree */
 .tree-node-content {
   display: flex;
   align-items: center;
@@ -58,36 +96,17 @@
   border-radius: var(--radius-md);
   transition: background-color 0.2s;
 }
-
 .tree-node-content:hover {
   background-color: var(--bg-secondary);
 }
 
-.region-node .tree-node-content {
-  background-color: rgba(231, 76, 60, 0.1);
-  border: 2px solid rgba(231, 76, 60, 0.3);
-  font-weight: 600;
-  margin-bottom: 1rem;
-}
-
-.suburb-node .tree-node-content {
-  background-color: rgba(52, 152, 219, 0.05);
-  border-left: 3px solid rgba(52, 152, 219, 0.5);
-  margin-bottom: 0.5rem;
-}
-
-.individual-node .tree-node-content {
-  background-color: rgba(46, 204, 113, 0.05);
-  border-left: 3px solid rgba(46, 204, 113, 0.5);
-  margin-bottom: 0.25rem;
-  padding: 0.5rem 1rem;
-}
-
+/* The icon that is shown next to each tree item */
 .tree-icon {
   font-size: 1.25rem;
   flex-shrink: 0;
 }
 
+/* The label text for each tree item (the map name) */
 .tree-label {
   flex: 1;
   color: var(--text-primary);
@@ -95,6 +114,7 @@
   cursor: pointer;
 }
 
+/* Input field for renaming a tree item */
 .tree-rename-input {
   flex: 1;
   font-size: 1rem;
@@ -104,20 +124,12 @@
   border-radius: var(--radius-md);
   background-color: var(--bg-primary);
 }
-
 .tree-rename-input:focus {
   outline: none;
   border-color: var(--primary-hover);
 }
 
-.tree-count {
-  color: var(--text-secondary);
-  font-size: 0.875rem;
-  background-color: var(--bg-secondary);
-  padding: 0.25rem 0.5rem;
-  border-radius: var(--radius-sm);
-}
-
+/* Tree toggle button (expand/collapse) */
 .tree-toggle {
   background: none;
   border: none;
@@ -133,17 +145,27 @@
   border-radius: var(--radius-sm);
   transition: all 0.2s;
 }
-
 .tree-toggle:hover {
   background-color: var(--bg-secondary);
   color: var(--text-primary);
 }
 
+/* The count badge shown next to each tree item (shows child items) */
+.tree-count {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  background-color: var(--bg-secondary);
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+}
+
+/* Container for child nodes */
 .tree-children {
   margin-left: 2rem;
   margin-top: 0.5rem;
 }
 
+/* Message shown when a tree has no items */
 .empty-tree-message {
   padding: 1rem;
   margin-left: 2rem;
@@ -151,19 +173,63 @@
   font-style: italic;
   font-size: 0.875rem;
 }
-
 .empty-tree-message p {
   margin: 0;
 }
 
-/* Button Styles */
+
+/*
+  -----------
+    Regions
+  -----------
+*/
+.add-region-section {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid var(--border-color);
+}
+
+/* Specific styles for region nodes in the tree */
+.region-node .tree-node-content {
+  background-color: rgba(231, 76, 60, 0.1);
+  border: 2px solid rgba(231, 76, 60, 0.3);
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+
+/*
+  -----------
+    Suburbs
+  -----------
+*/
+.suburb-node .tree-node-content {
+  background-color: rgba(52, 152, 219, 0.05);
+  border-left: 3px solid rgba(52, 152, 219, 0.5);
+  margin-bottom: 0.5rem;
+}
+
+
+/*
+  -------------------
+    Individual Maps
+  -------------------
+*/
+.individual-node .tree-node-content {
+  background-color: rgba(46, 204, 113, 0.05);
+  border-left: 3px solid rgba(46, 204, 113, 0.5);
+  margin-bottom: 0.25rem;
+  padding: 0.5rem 1rem;
+}
+
+
+/*
+  ------------------
+    Custom Buttons
+  ------------------
+*/
 .btn-sm {
   padding: 0.375rem 0.75rem;
   font-size: 0.875rem;
 }
 
-.error {
-  text-align: center;
-  padding: 3rem;
-  color: var(--danger-color);
-}

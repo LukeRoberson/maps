@@ -4,6 +4,9 @@
  * @summary Project page component.
  * Provides a list of user projects with options to create, rename, delete, and import projects.
  * 
+ * @remarks
+ * Supporting types and components are in the ../components/project/ directory.
+ * 
  * @exports ProjectList
  */
 
@@ -12,9 +15,9 @@
 import React, { useState, useRef } from 'react';
 
 // Internal dependencies
-import { useProjectList } from './use-project-list';
-import { ProjectCard } from './project-card';
-import { CreateProjectModal } from './create-project-modal';
+import { useProjectList } from '../components/project/use-project-list';
+import { ProjectCard } from '../components/project/project-card';
+import { CreateProjectModal } from '../components/project/create-project-modal';
 import './project-list.css';
 
 

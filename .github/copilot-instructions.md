@@ -183,7 +183,6 @@ applyTo: '**/*.ts'
 - Avoid `any` (implicit or explicit); prefer `unknown` plus narrowing.
 - Use discriminated unions for realtime events and state machines.
 - Centralize shared contracts instead of duplicating shapes.
-- Express intent with TypeScript utility types (e.g., `Readonly`, `Partial`, `Record`).
 
 ## Async, Events & Error Handling
 

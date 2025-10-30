@@ -13,31 +13,9 @@ import { useNavigate } from 'react-router-dom';
 
 // Internal dependencies
 import { apiClient } from '@/services/api-client';
-import type { Project } from '@/types';
 
-
-/**
- * Return type for useProjectList hook.
- * 
- * @property {Project[]} projects - List of projects.
- * @property {boolean} loading - Loading state for project list.
- * @property {boolean} isImporting - Importing state for project import.
- * @property {() => Promise<void>} loadProjects - Function to load projects.
- * @property {(projectData: Omit<Project, 'id'>) => Promise<void>} createProject - Function to create a new project.
- * @property {(id: number) => Promise<void>} deleteProject - Function to delete a project by ID.
- * @property {(id: number, name: string) => Promise<void>} renameProject - Function to rename a project.
- * @property {(fileContent: string) => Promise<void>} importProject - Function to import a project from file content.
- */
-interface UseProjectListReturn {
-  projects: Project[];
-  loading: boolean;
-  isImporting: boolean;
-  loadProjects: () => Promise<void>;
-  createProject: (projectData: Omit<Project, 'id'>) => Promise<void>;
-  deleteProject: (id: number) => Promise<void>;
-  renameProject: (id: number, name: string) => Promise<void>;
-  importProject: (fileContent: string) => Promise<void>;
-}
+// Types
+import type { Project, UseProjectListReturn } from '@/components/project/project-types';
 
 
 /**
