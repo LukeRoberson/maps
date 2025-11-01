@@ -1,0 +1,14 @@
+default_map:
+  lat: -26.1177
+  long: 134.0916
+  default_zoom: 5
+
+database:
+  folder: ../database
+  filename: maps.db
+
+export_dir: ../exports
+
+cors_origins:
+  - http://localhost:3000
+  - http://127.0.0.1:3000

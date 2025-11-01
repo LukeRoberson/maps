@@ -214,6 +214,24 @@ def health_check() -> Response:
     )
 
 
+@app.route('/api/config')
+def get_config() -> Response:
+    """
+    Get configuration defaults.
+
+    Returns:
+        Response: Configuration defaults including map center and zoom
+    """
+
+    return jsonify({
+        'default_map': {
+            'center_lat': Config.DEFAULT_MAP_LATITUDE,
+            'center_lon': Config.DEFAULT_MAP_LONGITUDE,
+            'zoom_level': Config.DEFAULT_MAP_ZOOM
+        }
+    })
+
+
 @app.route('/')
 def index() -> Response:
     """

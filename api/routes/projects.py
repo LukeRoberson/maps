@@ -54,6 +54,7 @@ from backend import (
     ProjectModel,
     ProjectService
 )
+from backend.config import Config
 
 
 # Blueprint
@@ -117,9 +118,9 @@ def create_project() -> Response:
     {
         "name": "Project Name",
         "description": "Optional description" (optional),
-        "center_lat": 37.7749,
-        "center_lon": -122.4194,
-        "zoom_level": 13 (optional, default 13)
+        "center_lat": 37.7749 (optional, uses config default),
+        "center_lon": -122.4194 (optional, uses config default),
+        "zoom_level": 13 (optional, uses config default)
     }
 
     Args:
@@ -143,11 +144,7 @@ def create_project() -> Response:
             )
 
         # Check that mandatory fields are present
-        required_fields = [
-            'name',
-            'center_lat',
-            'center_lon'
-        ]
+        required_fields = ['name']
         for field in required_fields:
             if field not in data:
                 return make_response(
@@ -158,12 +155,19 @@ def create_project() -> Response:
                 )
 
         # Build into a ProjectModel data structure
+        # Use Config defaults if values not provided
         project = ProjectModel(
             name=data['name'],
             description=data.get('description', ''),
-            center_lat=float(data['center_lat']),
-            center_lon=float(data['center_lon']),
-            zoom_level=int(data.get('zoom_level', 13))
+            center_lat=float(
+                data.get('center_lat', Config.DEFAULT_MAP_LATITUDE)
+            ),
+            center_lon=float(
+                data.get('center_lon', Config.DEFAULT_MAP_LONGITUDE)
+            ),
+            zoom_level=int(
+                data.get('zoom_level', Config.DEFAULT_MAP_ZOOM)
+            )
         )
 
         # Create the project via the service

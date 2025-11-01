@@ -8,7 +8,10 @@
 
 
 // External dependencies
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+
+// Services
+import { apiClient } from '@/services/api-client';
 
 // Types
 import type { Project, CreateProjectModalProps } from '@/components/project/types';
@@ -24,14 +27,43 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
   onClose,
   onCreate,
 }) => {
+    // Local state for config defaults
+    const [configDefaults, setConfigDefaults] = useState<{
+        center_lat: number;
+        center_lon: number;
+        zoom_level: number;
+    } | null>(null);
+
     // Local state for form data (new project details)
-    const [formData, setFormData] = useState<Omit<Project, 'id'>>({
+    const [formData, setFormData] = useState<Partial<Omit<Project, 'id'>>>({
         name: '',
         description: '',
-        center_lat: 0,
-        center_lon: 0,
-        zoom_level: 13,
+        // Don't set lat/lon/zoom here - let backend use config defaults
     });
+
+    // Local state for string input values to allow partial input like "-" or "123."
+    const [latInput, setLatInput] = useState<string>('');
+    const [lonInput, setLonInput] = useState<string>('');
+    const [zoomInput, setZoomInput] = useState<string>('');
+
+    // Fetch config defaults on mount
+    useEffect(() => {
+        const fetchConfig = async () => {
+            try {
+                const config = await apiClient.getConfig();
+                setConfigDefaults(config.default_map);
+                
+                // Set input fields to show the defaults
+                setLatInput(config.default_map.center_lat.toString());
+                setLonInput(config.default_map.center_lon.toString());
+                setZoomInput(config.default_map.zoom_level.toString());
+            } catch (error) {
+                console.error('Failed to fetch config:', error);
+            }
+        };
+        
+        fetchConfig();
+    }, []);
 
 
     /**
@@ -40,12 +72,13 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
      * @summary Handles form submission to create a new project.
      * @remarks
      * Calls the onCreate prop with form data and closes the modal on success.
+     * Only sends lat/lon/zoom if user explicitly provided values.
      * 
      * @returns void
      */
     const handleSubmit = async (): Promise<void> => {
         try {
-        await onCreate(formData);
+        await onCreate(formData as Omit<Project, 'id'>);
         onClose();
         } catch (error) {
         // Error already logged in hook
@@ -98,17 +131,30 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
                     <div className="form-group">
                         <label>Center Latitude</label>
                         <input
-                        type="number"
-                        step="0.0001"
-                        value={formData.center_lat}
+                        type="text"
+                        value={latInput}
+                        placeholder={configDefaults ? `Default: ${configDefaults.center_lat}` : 'Loading...'}
 
                         // Update formData state with new latitude
-                        onChange={(e) =>
-                            setFormData({
-                            ...formData,
-                            center_lat: parseFloat(e.target.value),
-                            })
-                        }
+                        onChange={(e) => {
+                            const value = e.target.value;
+                            setLatInput(value);
+                            
+                            // Only set in formData if value is valid
+                            if (value === '') {
+                                // Remove from formData to use backend default
+                                const { center_lat, ...rest } = formData;
+                                setFormData(rest);
+                            } else if (/^-?\d*\.?\d*$/.test(value)) {
+                                const parsed = parseFloat(value);
+                                if (!isNaN(parsed)) {
+                                    setFormData({
+                                        ...formData,
+                                        center_lat: parsed,
+                                    });
+                                }
+                            }
+                        }}
                         />
                     </div>
 
@@ -116,17 +162,30 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
                     <div className="form-group">
                         <label>Center Longitude</label>
                         <input
-                        type="number"
-                        step="0.0001"
-                        value={formData.center_lon}
+                        type="text"
+                        value={lonInput}
+                        placeholder={configDefaults ? `Default: ${configDefaults.center_lon}` : 'Loading...'}
 
                         // Update formData state with new longitude
-                        onChange={(e) =>
-                            setFormData({
-                            ...formData,
-                            center_lon: parseFloat(e.target.value),
-                            })
-                        }
+                        onChange={(e) => {
+                            const value = e.target.value;
+                            setLonInput(value);
+                            
+                            // Only set in formData if value is valid
+                            if (value === '') {
+                                // Remove from formData to use backend default
+                                const { center_lon, ...rest } = formData;
+                                setFormData(rest);
+                            } else if (/^-?\d*\.?\d*$/.test(value)) {
+                                const parsed = parseFloat(value);
+                                if (!isNaN(parsed)) {
+                                    setFormData({
+                                        ...formData,
+                                        center_lon: parsed,
+                                    });
+                                }
+                            }
+                        }}
                         />
                     </div>
                 </div>
@@ -135,18 +194,30 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
                 <div className="form-group">
                     <label>Zoom Level</label>
                     <input
-                        type="number"
-                        min="1"
-                        max="18"
-                        value={formData.zoom_level}
+                        type="text"
+                        value={zoomInput}
+                        placeholder={configDefaults ? `Default: ${configDefaults.zoom_level}` : 'Loading...'}
 
                         // Update formData state with new zoom level
-                        onChange={(e) =>
-                            setFormData({
-                                ...formData,
-                                zoom_level: parseInt(e.target.value),
-                            })
-                        }
+                        onChange={(e) => {
+                            const value = e.target.value;
+                            setZoomInput(value);
+                            
+                            // Only set in formData if value is valid
+                            if (value === '') {
+                                // Remove from formData to use backend default
+                                const { zoom_level, ...rest } = formData;
+                                setFormData(rest);
+                            } else {
+                                const parsed = parseInt(value);
+                                if (!isNaN(parsed) && parsed >= 1 && parsed <= 18) {
+                                    setFormData({
+                                        ...formData,
+                                        zoom_level: parsed,
+                                    });
+                                }
+                            }
+                        }}
                     />
                 </div>
 

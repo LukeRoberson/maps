@@ -427,6 +427,26 @@ class ApiClient {
   ): string {
     return `${API_BASE_URL}/exports/${filename}`;
   }
+
+  /**
+   * @function getConfig
+   * 
+   * @summary Fetches configuration defaults from the backend.
+   * @remarks
+   * Makes a GET request to the /config endpoint.
+   * 
+   * @returns Configuration object with default map settings.
+   */
+  async getConfig(): Promise<{
+    default_map: {
+      center_lat: number;
+      center_lon: number;
+      zoom_level: number;
+    };
+  }> {
+    const response = await this.client.get('/config');
+    return response.data;
+  }
 }
 
 // Export the ApiClient instance for use in other modules

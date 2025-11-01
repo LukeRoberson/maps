@@ -395,6 +395,7 @@ const MapEditor: React.FC = () => {
   const [isExporting, setIsExporting] = useState(false);
   const [showTileLayerSelector, setShowTileLayerSelector] = useState(false);
   const [currentBearing, setCurrentBearing] = useState<number>(0);
+  const isUpdatingDefaultView = useRef<boolean>(false);
   const navigate = useNavigate();
 
   // Toast notification helper
@@ -472,6 +473,13 @@ const MapEditor: React.FC = () => {
 
   // Apply saved bearing when map and mapArea are loaded
   useEffect(() => {
+    // Skip if we're in the middle of updating the default view
+    // to prevent the map from jumping back
+    if (isUpdatingDefaultView.current) {
+      isUpdatingDefaultView.current = false;
+      return;
+    }
+    
     if (mapArea && mapInstance) {
       const savedBearing = mapArea.default_bearing ?? 0;
       setCurrentBearing(savedBearing);
@@ -1061,7 +1069,14 @@ const MapEditor: React.FC = () => {
         default_zoom: zoom,
         default_bearing: currentBearing,
       });
+      
+      // Set flag to prevent useEffect from re-applying rotation
+      isUpdatingDefaultView.current = true;
+      
+      // Update the mapArea state with the new values
+      // This prevents the map from jumping when the component re-renders
       setMapArea(updated);
+      
       showToast(`Default view saved! (Zoom: ${zoom}, Rotation: ${currentBearing}°)`, 'success');
     } catch (error) {
       console.error('Failed to set default view:', error);
@@ -1253,6 +1268,8 @@ const MapEditor: React.FC = () => {
                 <button
                   className="btn btn-success"
                   onClick={() => setMode('suburb')}
+                  disabled={!boundary}
+                  title={!boundary ? 'Define a boundary for this region before adding suburbs' : 'Add a suburb to this region'}
                 >
                   Add Suburb
                 </button>
@@ -1261,6 +1278,8 @@ const MapEditor: React.FC = () => {
                 <button
                   className="btn btn-success"
                   onClick={() => setMode('individual')}
+                  disabled={!boundary}
+                  title={!boundary ? 'Define a boundary for this suburb before adding individual maps' : 'Add an individual map to this suburb'}
                 >
                   Add Individual Map
                 </button>

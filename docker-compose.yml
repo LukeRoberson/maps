@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: maps-api
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./api/database:/app/database
+      - ./api/exports:/app/exports
+    environment:
+      - SECRET_KEY=${SECRET_KEY:-change-this-secret-key-in-production}
+      - FLASK_ENV=production
+    restart: unless-stopped
+    networks:
+      - maps-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: maps-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+    restart: unless-stopped
+    networks:
+      - maps-network
+
+networks:
+  maps-network:
+    driver: bridge
+
+volumes:
+  database-data:
+  export-data:
