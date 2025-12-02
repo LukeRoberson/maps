@@ -17,9 +17,6 @@ services:
     restart: unless-stopped
     networks:
       - maps-network
-    tty: true
-    stdin_open: true
-    command: bash
   
   frontend:
     build:
