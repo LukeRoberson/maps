@@ -182,6 +182,12 @@ for folder in [config.EXPORT_FOLDER]:
     if not os.path.exists(folder):
         os.makedirs(folder)
 
+# Ensure database directory exists
+db_directory = os.path.dirname(config.DATABASE_PATH)
+if db_directory and not os.path.exists(db_directory):
+    os.makedirs(db_directory)
+    logging.info(f"Created database directory: {db_directory}")
+
 # Initialize database
 with DatabaseContext(config.DATABASE_PATH) as db_ctx:
     db_manager = DatabaseManager(db_ctx)

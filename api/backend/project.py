@@ -22,7 +22,6 @@ Local modules:
 
 # Standard library imports
 import logging
-import json
 from datetime import (
     datetime,
     timezone
