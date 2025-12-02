@@ -29,6 +29,7 @@ RUN mkdir -p database exports flask_session
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
 ENV FLASK_APP=app.py
+ENV PYTHONPATH=/app
 
 # Expose port
 EXPOSE 5000
