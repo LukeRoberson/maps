@@ -19,7 +19,7 @@ services:
       - maps-network
     tty: true
     stdin_open: true
-    command: /bin/bash
+    command: bash
   
   frontend:
     build:
