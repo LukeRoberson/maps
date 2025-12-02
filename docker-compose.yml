@@ -8,8 +8,8 @@ services:
     ports:
       - "${API_PORT:-5000}:5000"
     volumes:
-      - ./api/database:/app/database
-      - ./api/exports:/app/exports
+      - database-data:/app/database
+      - export-data:/app/exports
     environment:
       - SECRET_KEY=${SECRET_KEY:-change-this-secret-key-in-production}
       - FLASK_ENV=production
@@ -33,3 +33,7 @@ services:
 networks:
   maps-network:
     driver: bridge
+
+volumes:
+  database-data:
+  export-data:
