@@ -464,7 +464,8 @@ class ProjectService:
         project_id: int
     ) -> Dict[str, Any]:
         """
-        Export a project with all its data (map areas, boundaries, layers, annotations).
+        Export a project with all its data
+            (map areas, boundaries, layers, annotations).
 
         Args:
             project_id (int): Project ID
@@ -476,19 +477,23 @@ class ProjectService:
         try:
             with DatabaseContext(self.db_path) as db_ctx:
                 db_manager = DatabaseManager(db_ctx)
-                
+
                 # Get project data
                 project_row = db_manager.read(
                     table="projects",
                     fields=['*'],
                     params={'id': project_id}
                 )
-                
+
                 if not project_row:
                     raise ValueError(f"Project {project_id} not found")
-                
-                project_dict = dict(project_row) if not isinstance(project_row, list) else dict(project_row[0])
-                
+
+                project_dict = (
+                    dict(project_row)
+                    if not isinstance(project_row, list)
+                    else dict(project_row[0])
+                )
+
                 # Get all map areas
                 map_areas = db_manager.read(
                     table="map_areas",
@@ -496,17 +501,17 @@ class ProjectService:
                     params={'project_id': project_id},
                     get_all=True
                 )
-                
+
                 map_areas_list = []
                 boundaries_list = []
                 layers_list = []
                 annotations_list = []
-                
+
                 if map_areas:
                     for area_row in map_areas:
                         area_dict = dict(area_row)
                         map_areas_list.append(area_dict)
-                        
+
                         # Get boundary for this map area
                         boundary = db_manager.read(
                             table="boundaries",
@@ -514,11 +519,11 @@ class ProjectService:
                             params={'map_area_id': area_dict['id']},
                             get_all=True
                         )
-                        
+
                         if boundary:
                             for b in boundary:
                                 boundaries_list.append(dict(b))
-                        
+
                         # Get layers for this map area
                         layers = db_manager.read(
                             table="layers",
@@ -526,12 +531,12 @@ class ProjectService:
                             params={'map_area_id': area_dict['id']},
                             get_all=True
                         )
-                        
+
                         if layers:
                             for layer_row in layers:
                                 layer_dict = dict(layer_row)
                                 layers_list.append(layer_dict)
-                                
+
                                 # Get annotations for this layer
                                 annotations = db_manager.read(
                                     table="annotations",
@@ -539,11 +544,11 @@ class ProjectService:
                                     params={'layer_id': layer_dict['id']},
                                     get_all=True
                                 )
-                                
+
                                 if annotations:
                                     for ann in annotations:
                                         annotations_list.append(dict(ann))
-                
+
                 # Construct export data
                 export_data = {
                     'version': '1.0',
@@ -554,9 +559,9 @@ class ProjectService:
                     'layers': layers_list,
                     'annotations': annotations_list
                 }
-                
+
                 return export_data
-                
+
         except Exception as e:
             logger.error(f"Error exporting project: {str(e)}")
             raise
@@ -578,13 +583,16 @@ class ProjectService:
         try:
             with DatabaseContext(self.db_path) as db_ctx:
                 db_manager = DatabaseManager(db_ctx)
-                
+
                 # Validate import data
-                if 'version' not in import_data or 'project' not in import_data:
+                if (
+                    'version' not in import_data
+                    or 'project' not in import_data
+                ):
                     raise ValueError("Invalid import data format")
-                
+
                 project_data = import_data['project']
-                
+
                 # Create new project (without ID)
                 new_project = {
                     'name': project_data['name'],
@@ -593,69 +601,76 @@ class ProjectService:
                     'center_lon': project_data['center_lon'],
                     'zoom_level': project_data.get('zoom_level', 13)
                 }
-                
-                cursor = db_manager.create(
+
+                new_project_id = db_manager.create(
                     table="projects",
-                    data=new_project
+                    params=new_project
                 )
-                
-                new_project_id = cursor.lastrowid
-                
+
                 # Map old IDs to new IDs
                 map_area_id_map = {}
                 layer_id_map = {}
-                
+
                 # Import map areas
                 if 'map_areas' in import_data:
                     for area in import_data['map_areas']:
                         old_area_id = area['id']
-                        
+
                         new_area = {
                             'project_id': new_project_id,
-                            'parent_id': map_area_id_map.get(area.get('parent_id')),
+                            'parent_id': map_area_id_map.get(
+                                area.get('parent_id')
+                            ),
                             'name': area['name'],
                             'area_type': area['area_type'],
-                            'default_center_lat': area.get('default_center_lat'),
-                            'default_center_lon': area.get('default_center_lon'),
-                            'default_zoom': area.get('default_zoom')
+                            'default_center_lat': area.get(
+                                'default_center_lat'
+                            ),
+                            'default_center_lon': area.get(
+                                'default_center_lon'
+                            ),
+                            'default_zoom': area.get(
+                                'default_zoom'
+                            )
                         }
-                        
-                        cursor = db_manager.create(
+
+                        new_area_id = db_manager.create(
                             table="map_areas",
-                            data=new_area
+                            params=new_area
                         )
-                        
-                        new_area_id = cursor.lastrowid
+
                         map_area_id_map[old_area_id] = new_area_id
-                
+
                 # Import boundaries
                 if 'boundaries' in import_data:
                     for boundary in import_data['boundaries']:
                         old_map_area_id = boundary['map_area_id']
                         new_map_area_id = map_area_id_map.get(old_map_area_id)
-                        
+
                         if new_map_area_id:
                             new_boundary = {
                                 'map_area_id': new_map_area_id,
                                 'coordinates': boundary['coordinates']
                             }
-                            
+
                             db_manager.create(
                                 table="boundaries",
-                                data=new_boundary
+                                params=new_boundary
                             )
-                
+
                 # Import layers
                 if 'layers' in import_data:
                     for layer in import_data['layers']:
                         old_layer_id = layer['id']
                         old_map_area_id = layer['map_area_id']
                         new_map_area_id = map_area_id_map.get(old_map_area_id)
-                        
+
                         if new_map_area_id:
                             new_layer = {
                                 'map_area_id': new_map_area_id,
-                                'parent_layer_id': layer_id_map.get(layer.get('parent_layer_id')),
+                                'parent_layer_id': layer_id_map.get(
+                                    layer.get('parent_layer_id')
+                                ),
                                 'name': layer['name'],
                                 'layer_type': layer['layer_type'],
                                 'visible': layer.get('visible', True),
@@ -663,37 +678,41 @@ class ProjectService:
                                 'is_editable': layer.get('is_editable', True),
                                 'config': layer.get('config')
                             }
-                            
-                            cursor = db_manager.create(
+
+                            new_layer_id = db_manager.create(
                                 table="layers",
-                                data=new_layer
+                                params=new_layer
                             )
-                            
-                            new_layer_id = cursor.lastrowid
+
                             layer_id_map[old_layer_id] = new_layer_id
-                
+
                 # Import annotations
                 if 'annotations' in import_data:
                     for annotation in import_data['annotations']:
                         old_layer_id = annotation['layer_id']
                         new_layer_id = layer_id_map.get(old_layer_id)
-                        
+
                         if new_layer_id:
                             new_annotation = {
                                 'layer_id': new_layer_id,
-                                'annotation_type': annotation['annotation_type'],
+                                'annotation_type': annotation[
+                                    'annotation_type'
+                                ],
                                 'coordinates': annotation['coordinates'],
                                 'style': annotation.get('style'),
                                 'content': annotation.get('content')
                             }
-                            
+
                             db_manager.create(
                                 table="annotations",
-                                data=new_annotation
+                                params=new_annotation
                             )
-                
+
+                if new_project_id is None:
+                    raise ValueError("Failed to create project")
+
                 return new_project_id
-                
+
         except Exception as e:
             logger.error(f"Error importing project: {str(e)}")
             raise
