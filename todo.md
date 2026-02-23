@@ -16,7 +16,7 @@
 
 # Bugs
 
-- [ ] Suburb map, editing the boundary, the region boundary disappears while editing
+- [x] Suburb map, editing the boundary, the region boundary disappears while editing
 - [ ] It's letting me put a suburb boundary over a region boundary
 - [ ] Changing bearing doesn't stick; As soon as we move the map, it resets
 - [ ] Parent layers aren't being inherited

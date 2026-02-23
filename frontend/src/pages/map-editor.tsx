@@ -1394,7 +1394,7 @@ const MapEditor: React.FC = () => {
           {boundary && mode !== 'boundary' && mapArea.area_type === 'region' && (
             <BoundaryFadeOverlay boundary={boundary} />
           )}
-          {parentBoundary && mode !== 'boundary' && mode !== 'individual' && (mapArea.area_type === 'suburb' || mapArea.area_type === 'individual') && (
+          {parentBoundary && mode !== 'individual' && (mapArea.area_type === 'suburb' || mapArea.area_type === 'individual') && (
             <>
               <BoundaryFadeOverlay boundary={parentBoundary} />
               <ReadOnlyPolygon
