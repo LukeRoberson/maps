@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS projects (
     description TEXT,
     center_lat REAL NOT NULL,
     center_lon REAL NOT NULL,
-    zoom_level INTEGER DEFAULT 13,
+    zoom_level REAL DEFAULT 13,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS map_areas (
     boundary_id INTEGER,
     default_center_lat REAL,
     default_center_lon REAL,
-    default_zoom INTEGER,
+    default_zoom REAL,
     default_bearing REAL DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

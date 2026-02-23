@@ -394,6 +394,7 @@ const MapEditor: React.FC = () => {
   const [isExporting, setIsExporting] = useState(false);
   const [showTileLayerSelector, setShowTileLayerSelector] = useState(false);
   const [currentBearing, setCurrentBearing] = useState<number>(0);
+  const [isMapExpanded, setIsMapExpanded] = useState(false);
   const isUpdatingDefaultView = useRef<boolean>(false);
   const navigate = useNavigate();
 
@@ -411,6 +412,26 @@ const MapEditor: React.FC = () => {
   const removeToast = useCallback((id: number): void => {
     setToasts(prev => prev.filter(toast => toast.id !== id));
   }, []);
+
+  // Helper function for point-in-polygon test using ray-casting algorithm
+  const isPointInPolygon = (point: L.LatLng, polygon: L.LatLng[]): boolean => {
+    let inside = false;
+    const x = point.lat;
+    const y = point.lng;
+
+    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+      const xi = polygon[i].lat;
+      const yi = polygon[i].lng;
+      const xj = polygon[j].lat;
+      const yj = polygon[j].lng;
+
+      const intersect =
+        ((yi > y) !== (yj > y)) && (x < ((xj - xi) * (y - yi)) / (yj - yi) + xi);
+      if (intersect) inside = !inside;
+    }
+
+    return inside;
+  };
 
   // Get current tile layer configuration
   const currentTileLayer = getTileLayer(
@@ -485,6 +506,17 @@ const MapEditor: React.FC = () => {
       applyRotation(savedBearing);
     }
   }, [mapArea, mapInstance]);
+
+  // Handle map resize when expanded/collapsed
+  useEffect(() => {
+    if (mapInstance) {
+      // Use setTimeout to ensure DOM has updated before invalidating size
+      const timer = setTimeout(() => {
+        mapInstance.invalidateSize();
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+  }, [isMapExpanded, mapInstance]);
 
   const loadLayers = async (): Promise<void> => {
     if (!mapAreaId) return;
@@ -641,6 +673,47 @@ const MapEditor: React.FC = () => {
         } catch (error) {
           console.error('Failed to load individuals:', error);
         }
+        // Clear suburbs since we're not viewing a region
+        setSuburbs([]);
+        setSuburbBoundaries({});
+      } else if (mapAreaData.area_type === 'individual') {
+        // For individual maps, load siblings (other individuals in the same suburb)
+        try {
+          const siblingsData = await apiClient.listMapAreas(
+            parseInt(projectId),
+            mapAreaData.parent_id!
+          );
+          setIndividuals(siblingsData);
+
+          // Load boundaries for each sibling individual map
+          const boundaries: Record<number, Boundary> = {};
+          await Promise.all(
+            siblingsData.map(async (individual) => {
+              try {
+                const individualBoundary = await apiClient.getBoundaryByMapArea(
+                  individual.id!
+                );
+                if (individualBoundary) {
+                  boundaries[individual.id!] = individualBoundary;
+                }
+              } catch (error) {
+                console.log(`No boundary for individual ${individual.id}`);
+              }
+            })
+          );
+          setIndividualBoundaries(boundaries);
+        } catch (error) {
+          console.error('Failed to load sibling individual maps:', error);
+        }
+        // Clear suburbs since we're not viewing a region
+        setSuburbs([]);
+        setSuburbBoundaries({});
+      } else {
+        // For region maps, clear individuals and their boundaries
+        setIndividuals([]);
+        setIndividualBoundaries({});
+        setSuburbs([]);
+        setSuburbBoundaries({});
       }
     } catch (error) {
       console.error('Failed to load map data:', error);
@@ -672,6 +745,29 @@ const MapEditor: React.FC = () => {
         showToast('Individual map boundary must be completely within the suburb boundary. Please draw within the blue boundary.', 'error');
         return;
       }
+      
+      // Validate that individual map doesn't overlap with sibling boundaries
+      if (Object.keys(individualBoundaries).length > 0) {
+        for (const [siblingId, siblingBoundary] of Object.entries(individualBoundaries)) {
+          // Check each point of the new boundary
+          for (const point of coordinates) {
+            const latLng = L.latLng(point[0], point[1]);
+            const siblingPolygon = L.polygon(siblingBoundary.coordinates);
+            const polygonPoints = siblingBoundary.coordinates.map(coord => L.latLng(coord[0], coord[1]));
+            
+            // Check if point is inside the sibling boundary
+            if (siblingPolygon.getBounds().contains(latLng) && isPointInPolygon(latLng, polygonPoints)) {
+              const sibling = individuals.find(i => i.id === parseInt(siblingId));
+              showToast(
+                `Boundary overlaps with neighboring map "${sibling?.name || 'Unknown'}". Please draw outside existing maps.`,
+                'error'
+              );
+              return;
+            }
+          }
+        }
+      }
+      
       // Store coordinates and show dialog to name the individual map
       setPendingIndividualCoordinates(coordinates);
       setShowIndividualDialog(true);
@@ -834,6 +930,34 @@ const MapEditor: React.FC = () => {
 
   const saveBoundaryEdit = async (): Promise<void> => {
     if (!boundary || !pendingBoundaryEdit) return;
+
+    // For individual maps, validate that the boundary doesn't overlap with sibling maps
+    if (mapArea?.area_type === 'individual' && Object.keys(individualBoundaries).length > 0) {
+      // Check if any points fall within sibling individual map boundaries
+      for (const [siblingId, siblingBoundary] of Object.entries(individualBoundaries)) {
+        if (parseInt(siblingId) === mapArea.id) {
+          // Skip the current map
+          continue;
+        }
+        
+        // Check each point of the new boundary
+        for (const point of pendingBoundaryEdit) {
+          const latLng = L.latLng(point[0], point[1]);
+          const siblingPolygon = L.polygon(siblingBoundary.coordinates);
+          const polygonPoints = siblingBoundary.coordinates.map(coord => L.latLng(coord[0], coord[1]));
+          
+          // Check if point is inside the sibling boundary
+          if (siblingPolygon.getBounds().contains(latLng) && isPointInPolygon(latLng, polygonPoints)) {
+            const sibling = individuals.find(i => i.id === parseInt(siblingId));
+            showToast(
+              `Boundary point overlaps with neighboring map "${sibling?.name || 'Unknown'}". Please adjust your boundary.`,
+              'error'
+            );
+            return;
+          }
+        }
+      }
+    }
 
     try {
       const updated = await apiClient.updateBoundary(
@@ -1326,6 +1450,14 @@ const MapEditor: React.FC = () => {
                 )}
               </div>
               <button 
+                className="btn btn-icon" 
+                onClick={() => setIsMapExpanded(!isMapExpanded)}
+                title={isMapExpanded ? 'Collapse map view' : 'Expand map view'}
+                style={{ fontSize: '1.25rem' }}
+              >
+                {isMapExpanded ? '⊡' : '⛶'}
+              </button>
+              <button 
                 className="btn btn-info" 
                 onClick={() => setShowTileLayerSelector(!showTileLayerSelector)}
                 title="Change map style"
@@ -1359,9 +1491,9 @@ const MapEditor: React.FC = () => {
         </div>
       </div>
 
-      <div className="editor-content">
+      <div className={`editor-content ${isMapExpanded ? 'editor-content-expanded' : ''}`}>
         {/* Sidebar for layer management */}
-        <div className="editor-sidebar">
+        <div className={`editor-sidebar ${isMapExpanded ? 'editor-sidebar-hidden' : ''}`}>
           {mapAreaId && (
             <LayerManager 
               mapAreaId={parseInt(mapAreaId)}
@@ -1382,6 +1514,9 @@ const MapEditor: React.FC = () => {
             mapArea.default_center_lon ?? project.center_lon,
           ]}
           zoom={mapArea.default_zoom ?? project.zoom_level}
+          zoomDelta={0.5}
+          zoomSnap={0.5}
+          wheelPxPerZoomLevel={120}
           style={{ height: '100%', width: '100%' }}
         >
           <MapViewController onMapReady={setMapInstance} />
@@ -1430,6 +1565,10 @@ const MapEditor: React.FC = () => {
             );
           })}
           {Object.entries(individualBoundaries).map(([individualId, individualBoundary]) => {
+            // Don't render the current map's boundary here - it's rendered above in red
+            if (parseInt(individualId) === parseInt(mapAreaId || '0')) {
+              return null;
+            }
             const individual = individuals.find(i => i.id === parseInt(individualId));
             return (
               <ReadOnlyPolygon

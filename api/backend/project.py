@@ -59,7 +59,7 @@ class ProjectModel:
         description (str): Project description
         center_lat (float): Center latitude of the map
         center_lon (float): Center longitude of the map
-        zoom_level (int): Initial zoom level
+        zoom_level (float): Initial zoom level
         tile_layer (Optional[str]): Default tile layer ID
         created_at (datetime): Creation timestamp
         updated_at (datetime): Last update timestamp
@@ -79,7 +79,7 @@ class ProjectModel:
         description: str,
         center_lat: float,
         center_lon: float,
-        zoom_level: int = 13,
+        zoom_level: float = 13,
         tile_layer: Optional[str] = None,
         id: Optional[int] = None,
         created_at: Optional[datetime] = None,
@@ -93,7 +93,7 @@ class ProjectModel:
             description (str): Project description
             center_lat (float): Center latitude
             center_lon (float): Center longitude
-            zoom_level (int): Initial zoom level
+            zoom_level (float): Initial zoom level
             id (Optional[int]): Project ID
             created_at (Optional[datetime]): Creation timestamp
             updated_at (Optional[datetime]): Update timestamp

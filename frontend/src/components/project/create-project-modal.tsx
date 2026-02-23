@@ -209,7 +209,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
                                 const { zoom_level, ...rest } = formData;
                                 setFormData(rest);
                             } else {
-                                const parsed = parseInt(value);
+                                const parsed = parseFloat(value);
                                 if (!isNaN(parsed) && parsed >= 1 && parsed <= 18) {
                                     setFormData({
                                         ...formData,

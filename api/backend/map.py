@@ -62,7 +62,7 @@ class MapModel:
         boundary_id (Optional[int]): Associated boundary ID
         default_center_lat (Optional[float]): Default map center latitude
         default_center_lon (Optional[float]): Default map center longitude
-        default_zoom (Optional[int]): Default map zoom level
+        default_zoom (Optional[float]): Default map zoom level
         default_bearing (Optional[float]): Default map bearing/rotation
         tile_layer (Optional[str]): Preferred tile layer ID
         created_at (datetime): Creation timestamp
@@ -93,7 +93,7 @@ class MapModel:
         boundary_id: Optional[int] = None,
         default_center_lat: Optional[float] = None,
         default_center_lon: Optional[float] = None,
-        default_zoom: Optional[int] = None,
+        default_zoom: Optional[float] = None,
         default_bearing: Optional[float] = None,
         tile_layer: Optional[str] = None,
         id: Optional[int] = None,
@@ -111,7 +111,7 @@ class MapModel:
             boundary_id (Optional[int]): Boundary ID
             default_center_lat (Optional[float]): Default center latitude
             default_center_lon (Optional[float]): Default center longitude
-            default_zoom (Optional[int]): Default zoom level
+            default_zoom (Optional[float]): Default zoom level
             default_bearing (Optional[float]): Default map bearing
             id (Optional[int]): Map area ID
             created_at (Optional[datetime]): Creation timestamp
