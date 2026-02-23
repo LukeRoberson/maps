@@ -9,12 +9,13 @@
 
 
 // External dependencies
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
 // Internal dependencies
 import { useProjectView } from '@/components/project/hooks';
 import { RegionTreeNode } from '@/components/project/region-tree-node';
+import type { RegionNode, SuburbNode } from '@/components/map/types';
 import './project-view.css';
 
 
@@ -53,6 +54,28 @@ const ProjectView: React.FC = () => {
     setEditingName,
   } = useProjectView(projectId);
 
+  // State for alphabetical sorting
+  const [sortAlphabetically, setSortAlphabetically] = useState(false);
+
+  // Sort region nodes alphabetically if enabled
+  const sortedRegionNodes = useMemo(() => {
+    if (!sortAlphabetically) {
+      return regionNodes;
+    }
+
+    // Deep copy and sort the region nodes
+    return regionNodes.map(regionNode => ({
+      ...regionNode,
+      suburbs: [...regionNode.suburbs]
+        .sort((a, b) => a.suburb.name.localeCompare(b.suburb.name))
+        .map(suburbNode => ({
+          ...suburbNode,
+          individuals: [...suburbNode.individuals]
+            .sort((a, b) => a.name.localeCompare(b.name))
+        }))
+    })).sort((a, b) => a.region.name.localeCompare(b.region.name));
+  }, [regionNodes, sortAlphabetically]);
+
 
   // Render loading state
   if (loading) {
@@ -79,6 +102,15 @@ const ProjectView: React.FC = () => {
 
         {/* Header Actions (buttons) */}
         <div className="header-actions">
+          {/* Sort Alphabetically Toggle Button */}
+          <button 
+            className={`btn ${sortAlphabetically ? 'btn-primary' : 'btn-outline'}`}
+            onClick={() => setSortAlphabetically(!sortAlphabetically)}
+            title="Toggle alphabetical sorting"
+          >
+            {sortAlphabetically ? '✓ ' : ''}Sort A-Z
+          </button>
+
           {/* Export Project Button */}
           <button 
             className="btn btn-secondary" 
@@ -115,7 +147,7 @@ const ProjectView: React.FC = () => {
             Regions
             Ternary: Show regions or empty state
           */}
-          {regionNodes.length === 0 ? (
+          {sortedRegionNodes.length === 0 ? (
             /* Empty State for No Regions */
             <div className="empty-state card">
               <h3>No Regions Yet</h3>
@@ -127,7 +159,7 @@ const ProjectView: React.FC = () => {
 
           ) : (
             // Regions hierarchy
-            regionNodes.map((regionNode) => (
+            sortedRegionNodes.map((regionNode) => (
               <RegionTreeNode
                 key={regionNode.region.id}
                 regionNode={regionNode}
