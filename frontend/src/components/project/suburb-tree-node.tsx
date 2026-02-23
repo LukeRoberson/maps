@@ -108,10 +108,12 @@ export const SuburbTreeNode: React.FC<SuburbTreeNodeProps> = ({
           />
 
         ) : (
-          // Just the suburb name, double-click to rename
+          // Just the suburb name, click to open, double-click to rename
           <span
             className="tree-label"
+            onClick={() => navigate(`/projects/${projectId}/maps/${suburbNode.suburb.id}`)}
             onDoubleClick={() => onStartRename(suburbNode.suburb)}
+            style={{ cursor: 'pointer' }}
           >
             {suburbNode.suburb.name}
           </span>
@@ -133,14 +135,14 @@ export const SuburbTreeNode: React.FC<SuburbTreeNodeProps> = ({
               Rename
             </button>
 
-            {/* Edit Suburb button */}
+            {/* Open Suburb button */}
             <button
-              className="btn btn-sm btn-outline"
+              className="btn btn-sm btn-primary"
               onClick={() =>
                 navigate(`/projects/${projectId}/maps/${suburbNode.suburb.id}`)
               }
             >
-              Edit
+              Open
             </button>
 
             {/* Delete Suburb button */}

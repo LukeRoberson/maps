@@ -94,10 +94,12 @@ export const IndividualTreeNode: React.FC<IndividualTreeNodeProps> = ({
           />
 
         ) : (
-          /* Map name, double-click to rename */
+          /* Map name, click to open, double-click to rename */
           <span
             className="tree-label"
+            onClick={() => navigate(`/projects/${projectId}/maps/${individual.id}`)}
             onDoubleClick={() => onStartRename(individual)}
+            style={{ cursor: 'pointer' }}
           >
             {individual.name}
           </span>

@@ -227,7 +227,12 @@ def create_map_area() -> Response:
             name=data['name'],
             area_type=data['area_type'],
             parent_id=data.get('parent_id'),
-            boundary_id=data.get('boundary_id')
+            boundary_id=data.get('boundary_id'),
+            default_center_lat=data.get('default_center_lat'),
+            default_center_lon=data.get('default_center_lon'),
+            default_zoom=data.get('default_zoom'),
+            default_bearing=data.get('default_bearing'),
+            tile_layer=data.get('tile_layer')
         )
 
         # Create the map

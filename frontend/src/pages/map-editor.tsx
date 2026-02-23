@@ -371,7 +371,6 @@ const MapEditor: React.FC = () => {
   const [suburbs, setSuburbs] = useState<MapArea[]>([]);
   const [suburbBoundaries, setSuburbBoundaries] = useState<Record<number, Boundary>>({});
   const [toasts, setToasts] = useState<Toast[]>([]);
-  const [statusExpanded, setStatusExpanded] = useState<boolean>(false);
   const toastIdRef = useRef<number>(0);
   const [individuals, setIndividuals] = useState<MapArea[]>([]);
   const [individualBoundaries, setIndividualBoundaries] = useState<Record<number, Boundary>>({});
@@ -706,11 +705,22 @@ const MapEditor: React.FC = () => {
     if (!projectId || !suburbName || !pendingSuburbCoordinates) return;
 
     try {
-      // Calculate center from boundary coordinates
-      const lats = pendingSuburbCoordinates.map(coord => coord[0]);
-      const lons = pendingSuburbCoordinates.map(coord => coord[1]);
-      const centerLat = (Math.min(...lats) + Math.max(...lats)) / 2;
-      const centerLon = (Math.min(...lons) + Math.max(...lons)) / 2;
+      // Capture the current map view to inherit from parent
+      let defaultCenterLat: number | undefined;
+      let defaultCenterLon: number | undefined;
+      let defaultZoom: number | undefined;
+      
+      if (mapInstance) {
+        const currentCenter = mapInstance.getCenter();
+        defaultCenterLat = currentCenter.lat;
+        defaultCenterLon = currentCenter.lng;
+        defaultZoom = mapInstance.getZoom();
+      } else {
+        // Fallback to stored defaults if map instance not available
+        defaultCenterLat = mapArea?.default_center_lat ?? project?.center_lat;
+        defaultCenterLon = mapArea?.default_center_lon ?? project?.center_lon;
+        defaultZoom = mapArea?.default_zoom ?? project?.zoom_level;
+      }
       
       // Create the suburb map area with inherited default view from parent
       const suburb = await apiClient.createMapArea({
@@ -718,9 +728,9 @@ const MapEditor: React.FC = () => {
         parent_id: parseInt(mapAreaId!),
         name: suburbName,
         area_type: 'suburb',
-        default_center_lat: centerLat,
-        default_center_lon: centerLon,
-        default_zoom: mapArea?.default_zoom ?? project?.zoom_level,
+        default_center_lat: defaultCenterLat,
+        default_center_lon: defaultCenterLon,
+        default_zoom: defaultZoom,
       });
 
       // Create the boundary for the suburb
@@ -851,11 +861,22 @@ const MapEditor: React.FC = () => {
     if (!projectId || !individualName || !pendingIndividualCoordinates) return;
 
     try {
-      // Calculate center from boundary coordinates
-      const lats = pendingIndividualCoordinates.map(coord => coord[0]);
-      const lons = pendingIndividualCoordinates.map(coord => coord[1]);
-      const centerLat = (Math.min(...lats) + Math.max(...lats)) / 2;
-      const centerLon = (Math.min(...lons) + Math.max(...lons)) / 2;
+      // Capture the current map view to inherit from parent
+      let defaultCenterLat: number | undefined;
+      let defaultCenterLon: number | undefined;
+      let defaultZoom: number | undefined;
+      
+      if (mapInstance) {
+        const currentCenter = mapInstance.getCenter();
+        defaultCenterLat = currentCenter.lat;
+        defaultCenterLon = currentCenter.lng;
+        defaultZoom = mapInstance.getZoom();
+      } else {
+        // Fallback to stored defaults if map instance not available
+        defaultCenterLat = mapArea?.default_center_lat ?? project?.center_lat;
+        defaultCenterLon = mapArea?.default_center_lon ?? project?.center_lon;
+        defaultZoom = mapArea?.default_zoom ?? project?.zoom_level;
+      }
       
       // Create the individual map area with inherited default view from parent
       const individual = await apiClient.createMapArea({
@@ -863,9 +884,9 @@ const MapEditor: React.FC = () => {
         parent_id: parseInt(mapAreaId!),
         name: individualName,
         area_type: 'individual',
-        default_center_lat: centerLat,
-        default_center_lon: centerLon,
-        default_zoom: mapArea?.default_zoom ?? project?.zoom_level,
+        default_center_lat: defaultCenterLat,
+        default_center_lon: defaultCenterLon,
+        default_zoom: defaultZoom,
       });
 
       // Create the boundary for the individual map
@@ -1175,35 +1196,6 @@ const MapEditor: React.FC = () => {
           <p className="breadcrumb">
             {project.name} / {mapArea.area_type}
           </p>
-          <div className="status-section">
-            <button 
-              className="status-toggle"
-              onClick={() => setStatusExpanded(!statusExpanded)}
-              aria-expanded={statusExpanded}
-            >
-              <span>{statusExpanded ? '▼' : '▶'}</span>
-              Status
-            </button>
-            {statusExpanded && (
-              <div className="status-content">
-                {boundary && (
-                  <p className="boundary-status">
-                    ✓ Boundary defined ({boundary.coordinates.length} points)
-                  </p>
-                )}
-                {parentBoundary && (mapArea.area_type === 'suburb' || mapArea.area_type === 'individual') && (
-                  <p className="boundary-status" style={{ color: '#e74c3c' }}>
-                    ⓘ {parentMapArea?.area_type === 'region' ? 'Region' : 'Suburb'} boundary shown (dashed lines)
-                  </p>
-                )}
-                {mapArea.default_center_lat && mapArea.default_center_lon && (
-                  <p className="boundary-status">
-                    ✓ Default view set ({mapArea.default_center_lat.toFixed(6)}, {mapArea.default_center_lon.toFixed(6)}, zoom {mapArea.default_zoom})
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
         </div>
         <div className="editor-actions">
           {mode === 'boundary' && pendingBoundaryEdit ? (
@@ -1347,6 +1339,15 @@ const MapEditor: React.FC = () => {
               >
                 {isExporting ? 'Exporting...' : 'Export PNG'}
               </button>
+              {parentMapArea && (
+                <button
+                  className="btn btn-outline"
+                  onClick={() => navigate(`/projects/${projectId}/maps/${parentMapArea.id}`)}
+                  title={`Back to ${parentMapArea.name}`}
+                >
+                  Back to Parent
+                </button>
+              )}
               <button
                 className="btn btn-outline"
                 onClick={() => navigate(`/projects/${projectId}`)}

@@ -1,10 +1,15 @@
 # To Do List
 
-- [ ] Remove the 'status' dropdown from maps, it's not useful
+- [x] Remove the 'status' dropdown from maps, it's not useful
 - [ ] Enable map editor to go full screen (or close to it)
-- [ ] Suburb inherit default view from region, not project
-- [ ] Individual inherit default view from suburb, not project
+- [x] Suburb inherit default view from region, not project
+- [x] Individual inherit default view from suburb, not project
 - [ ] Suburb and region boundaries should have a different colour, so they stand out as different
+- [x] New maps should inherit coords from parent by default
+- [x] Click the suburb to open the map (currently need to click 'edit')
+- [x] Remove the 'Sort A-Z' button, and just sort by default
+- [ ] Slider to hide suburbs with no child maps
+
 - [ ] Annotation:
   - [ ] Change marker colour to match layer colour
   - [ ] Centre align text label to marker

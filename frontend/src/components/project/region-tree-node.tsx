@@ -113,7 +113,9 @@ export const RegionTreeNode: React.FC<RegionTreeNodeProps> = ({
           ) : (
             <span
               className="tree-label"
+              onClick={() => navigate(`/projects/${projectId}/maps/${regionNode.region.id}`)}
               onDoubleClick={() => onStartRename(regionNode.region)}
+              style={{ cursor: 'pointer' }}
             >
               {/* Region Name */}
               {regionNode.region.name}

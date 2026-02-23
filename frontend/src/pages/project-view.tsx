@@ -9,7 +9,7 @@
 
 
 // External dependencies
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
 // Internal dependencies
@@ -54,16 +54,9 @@ const ProjectView: React.FC = () => {
     setEditingName,
   } = useProjectView(projectId);
 
-  // State for alphabetical sorting
-  const [sortAlphabetically, setSortAlphabetically] = useState(false);
-
-  // Sort region nodes alphabetically if enabled
+  // Sort region nodes alphabetically
   const sortedRegionNodes = useMemo(() => {
-    if (!sortAlphabetically) {
-      return regionNodes;
-    }
-
-    // Deep copy and sort the region nodes
+    // Deep copy and sort the region nodes alphabetically
     return regionNodes.map(regionNode => ({
       ...regionNode,
       suburbs: [...regionNode.suburbs]
@@ -74,7 +67,7 @@ const ProjectView: React.FC = () => {
             .sort((a, b) => a.name.localeCompare(b.name))
         }))
     })).sort((a, b) => a.region.name.localeCompare(b.region.name));
-  }, [regionNodes, sortAlphabetically]);
+  }, [regionNodes]);
 
 
   // Render loading state
@@ -102,15 +95,6 @@ const ProjectView: React.FC = () => {
 
         {/* Header Actions (buttons) */}
         <div className="header-actions">
-          {/* Sort Alphabetically Toggle Button */}
-          <button 
-            className={`btn ${sortAlphabetically ? 'btn-primary' : 'btn-outline'}`}
-            onClick={() => setSortAlphabetically(!sortAlphabetically)}
-            title="Toggle alphabetical sorting"
-          >
-            {sortAlphabetically ? '✓ ' : ''}Sort A-Z
-          </button>
-
           {/* Export Project Button */}
           <button 
             className="btn btn-secondary" 
