@@ -43,6 +43,7 @@ L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
   iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+  tooltipAnchor: [0, -32],
 });
 
 // Component to render annotations on the map
@@ -112,7 +113,7 @@ const AnnotationRenderer: React.FC<AnnotationRendererProps> = ({
         }
       } else if (annotation.annotation_type === 'text') {
         const [lat, lng] = annotation.coordinates as [number, number];
-        const fontSize = (annotation.style as any)?.fontSize || 14;
+        const fontSize = (annotation.style as any)?.fontSize || 20;
         layer = L.marker([lat, lng], {
           icon: L.divIcon({
             className: 'text-annotation',
@@ -356,6 +357,30 @@ const ReadOnlyPolygon: React.FC<ReadOnlyPolygonProps> = ({
   return null;
 };
 
+interface AncestorBoundaryData {
+  mapArea: MapArea;
+  boundary: Boundary;
+}
+
+interface OpenMapTarget {
+  id: number;
+  name: string;
+  areaType: 'suburb' | 'individual';
+}
+
+const getAreaTypeLabel = (areaType?: MapArea['area_type']): string => {
+  switch (areaType) {
+    case 'region':
+      return 'Region';
+    case 'suburb':
+      return 'Suburb';
+    case 'individual':
+      return 'Individual';
+    default:
+      return '';
+  }
+};
+
 const MapEditor: React.FC = () => {
   const { projectId, mapAreaId } = useParams<{
     projectId: string;
@@ -366,6 +391,7 @@ const MapEditor: React.FC = () => {
   const [boundary, setBoundary] = useState<Boundary | null>(null);
   const [parentMapArea, setParentMapArea] = useState<MapArea | null>(null);
   const [parentBoundary, setParentBoundary] = useState<Boundary | null>(null);
+  const [ancestorBoundaries, setAncestorBoundaries] = useState<AncestorBoundaryData[]>([]);
   const [suburbs, setSuburbs] = useState<MapArea[]>([]);
   const [suburbBoundaries, setSuburbBoundaries] = useState<Record<number, Boundary>>({});
   const [suburbIdsWithChildren, setSuburbIdsWithChildren] = useState<Set<number>>(new Set());
@@ -394,8 +420,9 @@ const MapEditor: React.FC = () => {
   const [isExporting, setIsExporting] = useState(false);
   const [editingTextAnnotation, setEditingTextAnnotation] = useState<Annotation | null>(null);
   const [editingTextContent, setEditingTextContent] = useState('');
-  const [editingFontSize, setEditingFontSize] = useState<number>(14);
+  const [editingFontSize, setEditingFontSize] = useState<number>(20);
   const [showTileLayerSelector, setShowTileLayerSelector] = useState(false);
+  const [openMapTarget, setOpenMapTarget] = useState<OpenMapTarget | null>(null);
   const [currentBearing, setCurrentBearing] = useState<number>(0);
   const [isMapExpanded, setIsMapExpanded] = useState(false);
   const isUpdatingDefaultView = useRef<boolean>(false);
@@ -416,6 +443,27 @@ const MapEditor: React.FC = () => {
   const removeToast = useCallback((id: number): void => {
     setToasts(prev => prev.filter(toast => toast.id !== id));
   }, []);
+
+  const handleOpenMapPrompt = useCallback(
+    (id: number, name: string, areaType: OpenMapTarget['areaType']): void => {
+      setOpenMapTarget({ id, name, areaType });
+    },
+    []
+  );
+
+  const handleCancelOpenMap = useCallback((): void => {
+    setOpenMapTarget(null);
+  }, []);
+
+  const handleConfirmOpenMap = useCallback((): void => {
+    if (!openMapTarget || !projectId) {
+      return;
+    }
+
+    const selectedMapId = openMapTarget.id;
+    setOpenMapTarget(null);
+    navigate(`/projects/${projectId}/maps/${selectedMapId}`);
+  }, [navigate, openMapTarget, projectId]);
 
   // Helper function for point-in-polygon test using ray-casting algorithm
   const isPointInPolygon = (point: L.LatLng, polygon: L.LatLng[]): boolean => {
@@ -460,28 +508,66 @@ const MapEditor: React.FC = () => {
     }
   };
 
-  // Memoize path options to prevent unnecessary re-renders
-  const parentBoundaryPathOptions = React.useMemo(() => {
-    // Get inherited parent boundary layer color if available
-    let color = '#e74c3c'; // Default red
-    if (parentBoundary?.layer_id) {
-      const inheritedBoundaryLayer = layers.find(l => 
-        l.parent_layer_id === parentBoundary.layer_id && 
-        l.layer_type === 'boundary' &&
-        !l.is_editable
-      );
-      if (inheritedBoundaryLayer?.config?.color) {
-        color = inheritedBoundaryLayer.config.color as string;
+  const findInheritedBoundaryLayer = useCallback(
+    (
+      ancestorBoundary: Boundary,
+      ancestorAreaType?: MapArea['area_type']
+    ): Layer | undefined => {
+      if (ancestorBoundary.layer_id) {
+        const directMatch = layers.find(l =>
+          l.parent_layer_id === ancestorBoundary.layer_id &&
+          l.layer_type === 'boundary' &&
+          !l.is_editable
+        );
+
+        if (directMatch) {
+          return directMatch;
+        }
       }
-    }
-    return {
-      color: color,
-      weight: 3,
-      fillColor: 'transparent',
-      fillOpacity: 0,
-      dashArray: '10, 10',
-    };
-  }, [parentBoundary, layers]);
+
+      const areaTypeLabel = getAreaTypeLabel(ancestorAreaType);
+      if (!areaTypeLabel) {
+        return undefined;
+      }
+
+      return layers.find(l =>
+        l.layer_type === 'boundary' &&
+        !l.is_editable &&
+        l.name === `${areaTypeLabel} Boundary`
+      );
+    },
+    [layers]
+  );
+
+  const getInheritedBoundaryPathOptions = useCallback(
+    (
+      ancestorBoundary: Boundary,
+      ancestorAreaType?: MapArea['area_type']
+    ): L.PathOptions => {
+      const inheritedBoundaryLayer = findInheritedBoundaryLayer(
+        ancestorBoundary,
+        ancestorAreaType
+      );
+      const inheritedColor = inheritedBoundaryLayer?.config.color;
+      const color = typeof inheritedColor === 'string'
+        ? inheritedColor
+        : '#e74c3c';
+
+      return {
+        color,
+        weight: 3,
+        fillColor: 'transparent',
+        fillOpacity: 0,
+        dashArray: '10, 10',
+      };
+    },
+    [findInheritedBoundaryLayer]
+  );
+
+  const ancestorBoundariesToRender = React.useMemo(
+    () => [...ancestorBoundaries].reverse(),
+    [ancestorBoundaries]
+  );
 
   const currentBoundaryPathOptions = React.useMemo(() => {
     // Get boundary layer color if available
@@ -537,6 +623,23 @@ const MapEditor: React.FC = () => {
   useEffect(() => {
     loadMapData();
   }, [projectId, mapAreaId]);
+
+  useEffect(() => {
+    if (!openMapTarget) {
+      return;
+    }
+
+    const handleEscape = (event: KeyboardEvent): void => {
+      if (event.key === 'Escape') {
+        setOpenMapTarget(null);
+      }
+    };
+
+    window.addEventListener('keydown', handleEscape);
+    return () => {
+      window.removeEventListener('keydown', handleEscape);
+    };
+  }, [openMapTarget]);
 
   // Load layers after mapArea is loaded so we have the correct area_type
   useEffect(() => {
@@ -684,36 +787,79 @@ const MapEditor: React.FC = () => {
         );
         setBoundary(boundaryData);
       } catch (error) {
-        // Boundary might not exist yet, that's ok
-        console.log('No boundary found for this map area');
+        console.error('Failed to load boundary:', error);
+        setBoundary(null);
       }
 
-      // If this is a suburb or individual map, load the parent (region or suburb) boundary
+      setParentMapArea(null);
+      setParentBoundary(null);
+      setAncestorBoundaries([]);
+
+      // If this is a suburb or individual map, load the full parent chain and boundaries
       if (mapAreaData.parent_id) {
-        try {
-          const parentData = await apiClient.getMapArea(mapAreaData.parent_id);
-          setParentMapArea(parentData);
-          
-          // Load parent boundary
+        const ancestorMapAreas: MapArea[] = [];
+        let currentAncestorId: number | undefined = mapAreaData.parent_id;
+
+        while (currentAncestorId) {
           try {
-            const parentBoundaryData = await apiClient.getBoundaryByMapArea(
-              mapAreaData.parent_id
-            );
-            setParentBoundary(parentBoundaryData);
+            const ancestorMapArea = await apiClient.getMapArea(currentAncestorId);
+            ancestorMapAreas.push(ancestorMapArea);
+            currentAncestorId = ancestorMapArea.parent_id;
           } catch (error) {
-            console.log('No boundary found for parent map area');
+            console.error('Failed to load ancestor map area:', error);
+            break;
           }
-        } catch (error) {
-          console.error('Failed to load parent map area:', error);
         }
-      } else {
-        // Clear parent data if this is a region map
-        setParentMapArea(null);
-        setParentBoundary(null);
+
+        const immediateParent = ancestorMapAreas[0] ?? null;
+        setParentMapArea(immediateParent);
+
+        const loadedAncestorBoundaries = (
+          await Promise.all(
+            ancestorMapAreas.map(async (ancestorMapArea) => {
+              try {
+                const ancestorBoundary = await apiClient.getBoundaryByMapArea(
+                  ancestorMapArea.id!
+                );
+
+                if (!ancestorBoundary) {
+                  return null;
+                }
+
+                return {
+                  mapArea: ancestorMapArea,
+                  boundary: ancestorBoundary,
+                };
+              } catch (error) {
+                console.error(
+                  `Failed to load boundary for ancestor map area ${ancestorMapArea.id}:`,
+                  error
+                );
+                return null;
+              }
+            })
+          )
+        ).filter(
+          (
+            ancestorBoundaryData
+          ): ancestorBoundaryData is AncestorBoundaryData =>
+            ancestorBoundaryData !== null
+        );
+
+        setAncestorBoundaries(loadedAncestorBoundaries);
+        setParentBoundary(
+          loadedAncestorBoundaries.find(
+            ancestorBoundaryData => ancestorBoundaryData.mapArea.id === immediateParent?.id
+          )?.boundary ?? null
+        );
       }
 
       // Load child map areas based on type
       if (mapAreaData.area_type === 'region') {
+        // Region view should only display suburb-level children.
+        setIndividuals([]);
+        setIndividualBoundaries({});
+
         // Load suburbs for region maps
         try {
           const [suburbsData, hierarchyData] = await Promise.all([
@@ -1010,7 +1156,7 @@ const MapEditor: React.FC = () => {
   const handleTextAnnotationEdit = (annotation: Annotation): void => {
     setEditingTextAnnotation(annotation);
     setEditingTextContent(annotation.content || '');
-    setEditingFontSize((annotation.style as any)?.fontSize || 14);
+    setEditingFontSize((annotation.style as any)?.fontSize || 20);
   };
 
   const handleTextAnnotationSave = async (): Promise<void> => {
@@ -1660,35 +1806,46 @@ const MapEditor: React.FC = () => {
             }
             return <BoundaryFadeOverlay boundary={boundary} />;
           })()}
-          {parentBoundary && mode !== 'individual' && (mapArea.area_type === 'suburb' || mapArea.area_type === 'individual') && (() => {
-            // Check if the inherited parent boundary layer is visible
-            if (parentBoundary.layer_id) {
-              // Find the inherited layer that corresponds to the parent boundary's layer
-              const inheritedBoundaryLayer = layers.find(l => 
-                l.parent_layer_id === parentBoundary.layer_id && 
-                l.layer_type === 'boundary' &&
-                !l.is_editable
+          {parentBoundary &&
+            mapArea.area_type === 'individual' &&
+            mode !== 'individual' &&
+            (() => {
+              const inheritedBoundaryLayer = findInheritedBoundaryLayer(
+                parentBoundary,
+                parentMapArea?.area_type
               );
-              
-              // If inherited layer exists and is not visible, don't render
+
               if (inheritedBoundaryLayer && !inheritedBoundaryLayer.visible) {
                 return null;
               }
-            }
-            
-            return (
-              <>
-                {mapArea.area_type === 'individual' && (
-                  <BoundaryFadeOverlay boundary={parentBoundary} />
-                )}
+
+              return <BoundaryFadeOverlay boundary={parentBoundary} />;
+            })()}
+          {ancestorBoundariesToRender.length > 0 &&
+            mode !== 'individual' &&
+            (mapArea.area_type === 'suburb' || mapArea.area_type === 'individual') &&
+            ancestorBoundariesToRender.map(({ mapArea: ancestorMapArea, boundary: ancestorBoundary }) => {
+              const inheritedBoundaryLayer = findInheritedBoundaryLayer(
+                ancestorBoundary,
+                ancestorMapArea.area_type
+              );
+
+              if (inheritedBoundaryLayer && !inheritedBoundaryLayer.visible) {
+                return null;
+              }
+
+              return (
                 <ReadOnlyPolygon
-                  positions={parentBoundary.coordinates}
-                  pathOptions={parentBoundaryPathOptions}
+                  key={`ancestor-boundary-${ancestorMapArea.id}`}
+                  positions={ancestorBoundary.coordinates}
+                  pathOptions={getInheritedBoundaryPathOptions(
+                    ancestorBoundary,
+                    ancestorMapArea.area_type
+                  )}
                   showToast={showToast}
                 />
-              </>
-            );
-          })()}
+              );
+            })}
           {boundary && mode !== 'boundary' && (() => {
             // Check if boundary layer is visible
             if (boundary.layer_id) {
@@ -1715,20 +1872,26 @@ const MapEditor: React.FC = () => {
                 pathOptions={suburbBoundaryPathOptions}
                 tooltipContent={suburb?.name || 'Unnamed Suburb'}
                 onClick={mode === 'annotation' || mode === 'boundary' ? () => {
-                  if (confirm(`Open ${suburb?.name || 'this suburb'}?`)) {
-                    navigate(`/projects/${projectId}/maps/${parsedSuburbId}`);
-                  }
+                  handleOpenMapPrompt(
+                    parsedSuburbId,
+                    suburb?.name || 'Unnamed Suburb',
+                    'suburb'
+                  );
                 } : undefined}
                 showToast={showToast}
               />
             );
           })}
-          {peerMapsLayerVisible && Object.entries(individualBoundaries).map(([individualId, individualBoundary]) => {
+          {(mapArea.area_type === 'suburb' || mapArea.area_type === 'individual') && peerMapsLayerVisible && Object.entries(individualBoundaries).map(([individualId, individualBoundary]) => {
+            const parsedIndividualId = parseInt(individualId, 10);
+
             // Don't render the current map's boundary here - it's rendered above in red
-            if (parseInt(individualId) === parseInt(mapAreaId || '0')) {
+            if (parsedIndividualId === parseInt(mapAreaId || '0', 10)) {
               return null;
             }
-            const individual = individuals.find(i => i.id === parseInt(individualId));
+
+            const individual = individuals.find(i => i.id === parsedIndividualId);
+
             return (
               <ReadOnlyPolygon
                 key={individualId}
@@ -1736,9 +1899,11 @@ const MapEditor: React.FC = () => {
                 pathOptions={individualBoundaryPathOptions}
                 tooltipContent={individual?.name || 'Unnamed Map'}
                 onClick={mode === 'annotation' || mode === 'boundary' || mode === 'suburb' ? () => {
-                  if (confirm(`Open ${individual?.name || 'this map'}?`)) {
-                    navigate(`/projects/${projectId}/maps/${individualId}`);
-                  }
+                  handleOpenMapPrompt(
+                    parsedIndividualId,
+                    individual?.name || 'Unnamed Map',
+                    'individual'
+                  );
                 } : undefined}
                 showToast={showToast}
               />
@@ -1808,6 +1973,40 @@ const MapEditor: React.FC = () => {
           </div>
         )}
       </div>
+
+      {openMapTarget && (
+        <div className="dialog-overlay" onClick={handleCancelOpenMap}>
+          <div
+            className="dialog map-open-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="open-map-dialog-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="map-open-dialog-icon" aria-hidden="true">
+              {openMapTarget.areaType === 'suburb' ? '📍' : '🗺️'}
+            </div>
+            <h3 id="open-map-dialog-title">Open {openMapTarget.name}?</h3>
+            <p>
+              You are about to switch to the {openMapTarget.areaType === 'suburb' ? 'suburb' : 'individual'} editor.
+            </p>
+            <div className="map-open-dialog-meta">
+              <span className="map-open-dialog-badge">
+                {openMapTarget.areaType === 'suburb' ? 'Suburb' : 'Individual Map'}
+              </span>
+              <span className="map-open-dialog-name">{openMapTarget.name}</span>
+            </div>
+            <div className="dialog-actions">
+              <button className="btn btn-outline" onClick={handleCancelOpenMap}>
+                Stay Here
+              </button>
+              <button className="btn btn-primary" onClick={handleConfirmOpenMap} autoFocus>
+                Open Map
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showSuburbDialog && (
         <div className="dialog-overlay">
@@ -1906,7 +2105,7 @@ const MapEditor: React.FC = () => {
               min={6}
               max={96}
               value={editingFontSize}
-              onChange={(e) => setEditingFontSize(Math.max(6, Math.min(96, parseInt(e.target.value) || 14)))}
+              onChange={(e) => setEditingFontSize(Math.max(6, Math.min(96, parseInt(e.target.value) || 20)))}
             />
             <div className="dialog-actions">
               <button

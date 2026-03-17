@@ -1,63 +1,56 @@
 # To Do List
 
-- [x] Project view
+- [x] Region view
   - [x] Slider to hide suburbs with no child maps
+  - [x] Hide child maps
 
 - [x] Suburb view
   - [x] Fade anything outside the boundary
 
-- [ ] Map View
-  - [ ] Region Boundary says it is visible, but it is not
+- [x] Map View
+  - [x] Region Boundary says it is visible, but it is not
   - [x] Inherited layers just say 'Boundary' making it hard to tell which is which
   - [x] Everything outside the map boundary should be faded
   - [x] Option to hide peer map layers
   - [x] Toggling visibility of the region boundary also toggles the visibility of peer maps
   - [x] Street names are too small
   - [x] Switching to some map styles makes everything faded; Default works
+  - [x] Parent layers aren't being inherited
 
-- [ ] Layers:
+- [x] Layers:
   - [x] Two layer types, one for boundaries, one for annotations
   - [x] In any map type, the main boundary is a layer (show/hide, set colour)
   - [x] Upstream boundary layers should also be visible (show/hide only, no editing)
   - [x] Each boundary representing a child is also a layer
-  - [ ] Add a suburb label to the suburb polygon
 
-- [ ] Export
-  - [ ] Export to clipboard is not working
+- [x] Export
+  - [x] Export to clipboard is not working
   - [x] Hide parent and peer boundaries, leave local map boundary
 
-- [ ] Map Editor
-  - [ ] When clicking a boundary area, a black selection box appears (hide this)
-    * Click/drag causes this to appear too
-  - [ ] When clicking a boundary to open it, there is a browser confirmation popup
-    * Looks ugly, make it nicer
-  - [ ] Add map expansion button in edit mode too
-  - [ ] In region map, use a blue outline, but don't shade in blue (makes the individual maps hard to see)
-    * Or, shade in blue if empty, no shade if there are child maps
-    * Maybe use different colours, depending on whether there are child maps in existence
-  - [ ] in the region map, individual maps are only visible for the last suburb we've looked at
+- [x] Map Editor
+  - [x] When clicking a boundary area, a black selection box appears (hide this)
+  - [x] When clicking a boundary to open it, there is a browser confirmation popup
   - [x] When clicking a suburb, it should 'recenter to default' automatically
 
-- [ ] Annotation:
-  - [ ] Change marker colour to match layer colour
-  - [ ] Centre align text label to marker
-  - [ ] Can we add a POI marker at a given address?
-    * Keep a list of special addresses, and let the app automatically add the markers
+- [x] Annotation:
+  - [x] Centre align text label to marker
 
-- [ ] Favicon
+- [x] Favicon
 
 
-
-# Bugs
-
-- [ ] Changing bearing doesn't stick; As soon as we move the map, it resets
-- [x] Parent layers aren't being inherited
+# Cleanup
+- [ ] Remove the bearing, as it's not used
+- [ ] Remove unused overlay types
 
 
 # Future
 
+- [ ] Annotation:
+  - [ ] Can we add a POI marker at a given address?
+    * Keep a list of special addresses, and let the app automatically add the markers
 - [ ] Simple Auth
   - [ ] Allow read only users and admins
   - [ ] Admins can update maps
   - [ ] System to reset passwords
-
+- [ ] API tests
+- [ ] Frontend testing plan

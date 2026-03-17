@@ -341,7 +341,7 @@ export const DrawControls: React.FC<DrawControlsProps> = ({
                 style.color = layerColor;
               }
 
-              style.fontSize = 14;
+              style.fontSize = 20;
               
               const annotationData: Omit<Annotation, 'id' | 'created_at' | 'updated_at'> = {
                 layer_id: activeLayerId,

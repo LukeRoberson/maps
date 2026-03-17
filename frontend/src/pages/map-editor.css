@@ -194,7 +194,8 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(9, 20, 35, 0.48);
+  backdrop-filter: blur(3px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -206,8 +207,8 @@
   border-radius: var(--radius-lg);
   padding: 2rem;
   box-shadow: var(--shadow-lg);
-  min-width: 400px;
-  max-width: 500px;
+  min-width: min(400px, calc(100vw - 2rem));
+  max-width: min(500px, calc(100vw - 2rem));
 }
 
 .dialog h3 {
@@ -238,6 +239,80 @@
   display: flex;
   gap: 0.5rem;
   justify-content: flex-end;
+}
+
+.map-open-dialog {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(20, 107, 176, 0.22);
+  background:
+    radial-gradient(circle at top right, rgba(51, 153, 219, 0.18), transparent 50%),
+    linear-gradient(165deg, #ffffff 0%, #f5faff 100%);
+  animation: mapOpenDialogIn 0.22s ease-out;
+}
+
+.map-open-dialog-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+  background: rgba(33, 150, 243, 0.12);
+  font-size: 1.35rem;
+  margin-bottom: 0.85rem;
+}
+
+.map-open-dialog-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1.4rem;
+}
+
+.map-open-dialog-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.25rem 0.6rem;
+  background-color: rgba(33, 150, 243, 0.14);
+  color: #0f5d95;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.map-open-dialog-name {
+  color: var(--text-primary);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+@keyframes mapOpenDialogIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 640px) {
+  .map-open-dialog {
+    width: calc(100vw - 1.5rem);
+    padding: 1.4rem;
+  }
+
+  .map-open-dialog .dialog-actions {
+    flex-direction: column-reverse;
+  }
+
+  .map-open-dialog .dialog-actions .btn {
+    width: 100%;
+  }
 }
 
 /* Status Section */
