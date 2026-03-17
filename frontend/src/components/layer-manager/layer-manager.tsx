@@ -64,12 +64,17 @@ export const LayerManager: React.FC<LayerManagerProps> = ({
       // Add synthetic "Peer Maps" layer for individual maps
       let layersToSet = loadedLayers;
       if (areaType === 'individual') {
+        // Preserve current synthetic visibility instead of resetting on reload.
+        const existingPeerMapsLayer = layers.find(
+          l => l.id === -1 && l.map_area_id === mapAreaId
+        );
+
         const peerMapsLayer: Layer = {
           id: -1, // Synthetic ID for peer maps layer
           map_area_id: mapAreaId,
           name: 'Peer Maps',
           layer_type: 'boundary',
-          visible: true,
+          visible: existingPeerMapsLayer?.visible ?? true,
           z_index: 0,
           is_editable: false,
           config: { color: '#2ecc71' }, // Green to match individual map boundaries
@@ -198,7 +203,7 @@ export const LayerManager: React.FC<LayerManagerProps> = ({
     if (layer.id! < 0) {
       // For synthetic layers, just update local state
       const newVisible = !layer.visible;
-      setLayers(layers.map(l => 
+      setLayers(prev => prev.map(l =>
         l.id === layer.id ? { ...l, visible: newVisible } : l
       ));
       // Notify parent of synthetic layer visibility change

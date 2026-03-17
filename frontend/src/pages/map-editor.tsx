@@ -594,17 +594,23 @@ const MapEditor: React.FC = () => {
     if (!mapAreaId) return;
 
     try {
-      const loadedLayers = await apiClient.listLayers(parseInt(mapAreaId));
+      const numericMapAreaId = parseInt(mapAreaId);
+      const loadedLayers = await apiClient.listLayers(numericMapAreaId);
       
       // Add synthetic "Peer Maps" layer for individual maps
       let layersToSet = loadedLayers;
       if (areaType === 'individual') {
+        // Preserve current synthetic visibility instead of resetting on every reload.
+        const existingPeerMapsLayer = layers.find(
+          l => l.id === -1 && l.map_area_id === numericMapAreaId
+        );
+
         const peerMapsLayer: Layer = {
           id: -1, // Synthetic ID for peer maps layer
-          map_area_id: parseInt(mapAreaId),
+          map_area_id: numericMapAreaId,
           name: 'Peer Maps',
           layer_type: 'boundary',
-          visible: true,
+          visible: existingPeerMapsLayer?.visible ?? true,
           z_index: 0,
           is_editable: false,
           config: { color: '#2ecc71' }, // Green to match individual map boundaries
