@@ -82,6 +82,7 @@ def validate_style(
         'dashArray',      # Dash pattern
         'lineCap',        # Line cap style
         'lineJoin',       # Line join style
+        'fontSize',       # Font size in px for text annotations
     }
 
     sanitized = {}
@@ -142,6 +143,16 @@ def validate_style(
                     "lineJoin must be 'miter', 'round', or 'bevel'"
                 )
             sanitized[key] = value
+
+        # Validate fontSize (integer, 6-96)
+        elif key == 'fontSize':
+            if not isinstance(value, (int, float)) or \
+               int(value) < 6 or \
+               int(value) > 96:
+                raise ValueError(
+                    'fontSize must be a number between 6 and 96'
+                )
+            sanitized[key] = int(value)
 
     return sanitized
 

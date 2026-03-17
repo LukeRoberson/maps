@@ -340,6 +340,8 @@ export const DrawControls: React.FC<DrawControlsProps> = ({
                 // Marker layers - use default color
                 style.color = layerColor;
               }
+
+              style.fontSize = 14;
               
               const annotationData: Omit<Annotation, 'id' | 'created_at' | 'updated_at'> = {
                 layer_id: activeLayerId,

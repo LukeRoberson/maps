@@ -48,6 +48,7 @@ export interface Annotation {
  * @property {(annotation: Annotation) => void} [onAnnotationClick] - Callback when an annotation is clicked.
  * @property {(annotation: Annotation) => void} [onAnnotationUpdated] - Callback when an annotation is updated.
  * @property {(annotationId: number) => void} [onAnnotationDeleted] - Callback when an annotation is deleted.
+ * @property {(annotation: Annotation) => void} [onTextAnnotationEdit] - Callback to open the text annotation edit modal.
  */
 export interface AnnotationRendererProps {
   annotations: Annotation[];
@@ -56,6 +57,7 @@ export interface AnnotationRendererProps {
   onAnnotationClick?: (annotation: Annotation) => void;
   onAnnotationUpdated?: (annotation: Annotation) => void;
   onAnnotationDeleted?: (annotationId: number) => void;
+  onTextAnnotationEdit?: (annotation: Annotation) => void;
 }
 
 

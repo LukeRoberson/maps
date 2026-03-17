@@ -53,6 +53,7 @@ const AnnotationRenderer: React.FC<AnnotationRendererProps> = ({
   onAnnotationClick,
   onAnnotationUpdated,
   onAnnotationDeleted,
+  onTextAnnotationEdit,
 }) => {
   const map = useMap();
   const layerRefsRef = useRef<Map<number, L.Layer>>(new Map());
@@ -111,10 +112,11 @@ const AnnotationRenderer: React.FC<AnnotationRendererProps> = ({
         }
       } else if (annotation.annotation_type === 'text') {
         const [lat, lng] = annotation.coordinates as [number, number];
+        const fontSize = (annotation.style as any)?.fontSize || 14;
         layer = L.marker([lat, lng], {
           icon: L.divIcon({
             className: 'text-annotation',
-            html: `<div style="white-space: nowrap;">${annotation.content || ''}</div>`,
+            html: `<div style="white-space: nowrap; font-size: ${fontSize}px;">${annotation.content || ''}</div>`,
           }),
         });
       }
@@ -171,12 +173,8 @@ const AnnotationRenderer: React.FC<AnnotationRendererProps> = ({
             L.DomEvent.stopPropagation(e);
             
             if (annotation.annotation_type === 'text') {
-              const newContent = prompt('Edit text:', annotation.content || '');
-              if (newContent !== null && onAnnotationUpdated) {
-                onAnnotationUpdated({
-                  ...annotation,
-                  content: newContent,
-                });
+              if (onTextAnnotationEdit) {
+                onTextAnnotationEdit(annotation);
               }
             } else if (annotation.annotation_type === 'marker' || annotation.annotation_type === 'polygon') {
               const currentLabel = annotation.content || '';
@@ -394,6 +392,9 @@ const MapEditor: React.FC = () => {
   const [annotationLayers, setAnnotationLayers] = useState<Map<number, L.Layer>>(new Map());
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [editingTextAnnotation, setEditingTextAnnotation] = useState<Annotation | null>(null);
+  const [editingTextContent, setEditingTextContent] = useState('');
+  const [editingFontSize, setEditingFontSize] = useState<number>(14);
   const [showTileLayerSelector, setShowTileLayerSelector] = useState(false);
   const [currentBearing, setCurrentBearing] = useState<number>(0);
   const [isMapExpanded, setIsMapExpanded] = useState(false);
@@ -1025,6 +1026,30 @@ const MapEditor: React.FC = () => {
     } catch (error) {
       console.error('Failed to update annotation:', error);
       showToast('Failed to update annotation. Please try again.', 'error');
+    }
+  };
+
+  const handleTextAnnotationEdit = (annotation: Annotation): void => {
+    setEditingTextAnnotation(annotation);
+    setEditingTextContent(annotation.content || '');
+    setEditingFontSize((annotation.style as any)?.fontSize || 14);
+  };
+
+  const handleTextAnnotationSave = async (): Promise<void> => {
+    if (!editingTextAnnotation) return;
+    try {
+      const updated = await apiClient.updateAnnotation(editingTextAnnotation.id!, {
+        coordinates: editingTextAnnotation.coordinates,
+        content: editingTextContent,
+        style: { ...editingTextAnnotation.style, fontSize: editingFontSize },
+      });
+      setAnnotations(prev => prev.map(a => a.id === updated.id ? updated : a));
+      showToast('Text annotation updated!', 'success');
+      setEditingTextAnnotation(null);
+      await loadMapData();
+    } catch (error) {
+      console.error('Failed to update text annotation:', error);
+      showToast('Failed to update text annotation. Please try again.', 'error');
     }
   };
 
@@ -1661,7 +1686,7 @@ const MapEditor: React.FC = () => {
             subdomains={currentTileLayer.subdomains}
           />
           {currentStreetLabelOverlay && (
-            <Pane name="street-labels-pane" style={{ zIndex: 450, pointerEvents: 'none' }}>
+            <Pane name="street-labels-pane" style={{ zIndex: 350, pointerEvents: 'none' }}>
               <TileLayer
                 key={`street-labels-${currentTileLayer.id}-${currentStreetLabelOverlay.zoomOffset ?? 0}`}
                 pane="street-labels-pane"
@@ -1776,6 +1801,7 @@ const MapEditor: React.FC = () => {
             onAnnotationClick={handleAnnotationClick}
             onAnnotationUpdated={handleAnnotationUpdated}
             onAnnotationDeleted={handleAnnotationDeleted}
+            onTextAnnotationEdit={handleTextAnnotationEdit}
           />
           <DrawControls
             mode={mode}
@@ -1901,6 +1927,50 @@ const MapEditor: React.FC = () => {
                 disabled={!individualName}
               >
                 Create Map
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {editingTextAnnotation && (
+        <div className="dialog-overlay">
+          <div className="dialog">
+            <h3>Edit Text Annotation</h3>
+            <p>Text</p>
+            <input
+              type="text"
+              className="input"
+              value={editingTextContent}
+              onChange={(e) => setEditingTextContent(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleTextAnnotationSave();
+                if (e.key === 'Escape') setEditingTextAnnotation(null);
+              }}
+              autoFocus
+            />
+            <p style={{ marginTop: '12px' }}>Font size (px)</p>
+            <input
+              type="number"
+              className="input"
+              min={6}
+              max={96}
+              value={editingFontSize}
+              onChange={(e) => setEditingFontSize(Math.max(6, Math.min(96, parseInt(e.target.value) || 14)))}
+            />
+            <div className="dialog-actions">
+              <button
+                className="btn btn-outline"
+                onClick={() => setEditingTextAnnotation(null)}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn btn-primary"
+                onClick={handleTextAnnotationSave}
+                disabled={!editingTextContent.trim()}
+              >
+                Save
               </button>
             </div>
           </div>
