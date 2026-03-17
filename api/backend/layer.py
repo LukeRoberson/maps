@@ -379,6 +379,52 @@ class LayerService:
 
         return updated_layers
 
+    # Human-readable labels used in inherited layer names.
+    _AREA_TYPE_LABELS: Dict[str, str] = {
+        'region': 'Region',
+        'suburb': 'Suburb',
+        'individual': 'Individual',
+    }
+
+    def _get_descriptive_layer_name(
+        self,
+        parent_layer: 'LayerModel',
+        parent_area_type: Optional[str]
+    ) -> str:
+        """
+        Compute a descriptive display name for an inherited layer.
+
+        Rules:
+          - If the layer being inherited is itself already an inherited
+            copy (parent_layer.parent_layer_id is not None), its name
+            was already prefixed at a higher level, so keep it unchanged.
+          - Otherwise, prefix with the parent map area's type label so
+            that, e.g., "Boundary" on a region becomes "Region Boundary"
+            when seen from a suburb or individual map.
+
+        Args:
+            parent_layer (LayerModel): The layer being inherited.
+            parent_area_type (Optional[str]): The area_type of the map
+                that owns or intermediates the parent_layer.
+
+        Returns:
+            str: Descriptive name for the inherited copy.
+        """
+
+        # Already a previously-prefixed inherited layer - keep as-is.
+        if parent_layer.parent_layer_id is not None:
+            return parent_layer.name
+
+        # Own layer: prefix with the parent map type label.
+        label = self._AREA_TYPE_LABELS.get(
+            parent_area_type or '',
+            (parent_area_type or '').capitalize()
+        )
+        if label:
+            return f"{label} {parent_layer.name}"
+
+        return parent_layer.name
+
     def _get_inherited_layers(
         self,
         map_id: int
@@ -386,11 +432,11 @@ class LayerService:
         """
         Get layers inherited from parent map areas.
 
-        1. Get the parent map ID (if there is one)
+        1. Get the parent map ID and area_type (if there is one)
         2. Get a list of layers from the parent map
         3. For each parent layer, check if an inherited copy exists
            on the current map
-        4. If exists, use it; if not, create a new inherited layer
+        4. If exists, make sure its name is up-to-date; otherwise create it
 
         Args:
             map_id (int): Map ID
@@ -399,7 +445,7 @@ class LayerService:
             List[Layer]: List of inherited layers
         """
 
-        # Get the parent map ID
+        # Get the parent map ID and its area_type in one query
         try:
             with DatabaseContext(self.db_path) as db_ctx:
                 db_manager = DatabaseManager(db_ctx)
@@ -438,12 +484,44 @@ class LayerService:
             )
             raise
 
+        # Fetch the parent map area's area_type so we can build a
+        # descriptive name (e.g. "Region Boundary", "Suburb Boundary").
+        parent_area_type: Optional[str] = None
+        try:
+            with DatabaseContext(self.db_path) as db_ctx:
+                db_manager = DatabaseManager(db_ctx)
+                area_row = db_manager.read(
+                    table="map_areas",
+                    fields=['area_type'],
+                    params={'id': parent_id}
+                )
+            if area_row:
+                if isinstance(area_row, list):
+                    area_row = area_row[0]
+
+                # sqlite3.Row does not guarantee dict-like .get()
+                # so we resolve the value defensively.
+                try:
+                    parent_area_type = area_row['area_type']
+                except (KeyError, TypeError, IndexError):
+                    parent_area_type = area_row[0] if area_row else None
+        except Exception as e:
+            logger.warning(
+                f"Could not fetch area_type for parent map "
+                f"{parent_id}: {str(e)}"
+            )
+
         # Get layers from parent recursively
         parent_layers = self.read(map_id=parent_id)
 
         # Create inherited copies of layers for the parent map
         inherited_layers = []
         for parent_layer in parent_layers:
+            # Compute the descriptive name this inherited copy should have
+            descriptive_name = self._get_descriptive_layer_name(
+                parent_layer, parent_area_type
+            )
+
             # Check if inherited version already exists
             try:
                 with DatabaseContext(self.db_path) as db_ctx:
@@ -465,16 +543,35 @@ class LayerService:
                 )
                 continue
 
-            # If exists, use it
+            # If exists, ensure the stored name is up-to-date
             if existing_row:
-                inherited_layers.append(self._row_to_model(existing_row))
+                existing_layer = self._row_to_model(existing_row)
+                if existing_layer.name != descriptive_name:
+                    try:
+                        with DatabaseContext(self.db_path) as db_ctx:
+                            db_manager = DatabaseManager(db_ctx)
+                            db_manager.update(
+                                table="layers",
+                                fields={
+                                    "name": descriptive_name,
+                                    "updated_at": "CURRENT_TIMESTAMP"
+                                },
+                                parameters={'id': existing_layer.id}
+                            )
+                        existing_layer.name = descriptive_name
+                    except Exception as e:
+                        logger.warning(
+                            f"Could not rename inherited layer "
+                            f"{existing_layer.id}: {str(e)}"
+                        )
+                inherited_layers.append(existing_layer)
 
-            # Create new inherited layer
+            # Create new inherited layer with a descriptive name
             else:
                 inherited_layer = LayerModel(
                     map_area_id=map_id,
                     parent_layer_id=parent_layer.id,
-                    name=parent_layer.name,
+                    name=descriptive_name,
                     layer_type=parent_layer.layer_type,
                     visible=parent_layer.visible,
                     z_index=parent_layer.z_index,

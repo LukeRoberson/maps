@@ -8,9 +8,12 @@
 
 - [ ] Map View
   - [ ] Region Boundary says it is visible, but it is not
-  - [ ] Inherited layers just say 'Boundary' making it hard to tell which is which
+  - [x] Inherited layers just say 'Boundary' making it hard to tell which is which
   - [x] Everything outside the map boundary should be faded
-  - [ ] Option to hide peer map layers
+  - [x] Option to hide peer map layers
+  - [ ] Toggling visibility of the region boundary also toggles the visibility of peer maps
+  - [ ] Street names are too small
+  - [x] Switching to some map styles makes everything faded; Default works
 
 - [ ] Layers:
   - [x] Two layer types, one for boundaries, one for annotations
@@ -21,7 +24,7 @@
 
 - [ ] Export
   - [ ] Export to clipboard is not working
-  - [ ] Hide parent and peer boundaries, leave local map boundary
+  - [x] Hide parent and peer boundaries, leave local map boundary
 
 - [ ] Map Editor
   - [ ] When clicking a boundary area, a black selection box appears (hide this)

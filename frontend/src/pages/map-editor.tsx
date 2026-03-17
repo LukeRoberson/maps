@@ -10,7 +10,7 @@
 // External dependencies
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { MapContainer, TileLayer, useMap } from 'react-leaflet';
+import { MapContainer, Pane, TileLayer, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import '@geoman-io/leaflet-geoman-free';
 import '@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css';
@@ -20,7 +20,7 @@ import { toPng } from 'html-to-image';
 import { apiClient } from '@/services/api-client';
 import { LayerManager } from '@/components/layer-manager';
 import { ExportDialog, ExportOptions } from '@/components/export-dialog';
-import { TILE_LAYER_OPTIONS, getTileLayer } from '@/constants/tile-layers';
+import { TILE_LAYER_OPTIONS, getStreetLabelOverlay, getTileLayer } from '@/constants/tile-layers';
 import { isWithinBoundary } from '@/utils/geometry';
 import { DrawControls } from '@/components/draw/draw-controls';
 
@@ -436,10 +436,10 @@ const MapEditor: React.FC = () => {
     return inside;
   };
 
-  // Get current tile layer configuration
-  const currentTileLayer = getTileLayer(
-    mapArea?.tile_layer || project?.tile_layer
-  );
+  // Get current tile and label overlay configuration
+  const currentTileLayerId = mapArea?.tile_layer || project?.tile_layer;
+  const currentTileLayer = getTileLayer(currentTileLayerId);
+  const currentStreetLabelOverlay = getStreetLabelOverlay(currentTileLayerId);
 
   // Handle tile layer change
   const handleTileLayerChange = async (layerId: string): Promise<void> => {
@@ -485,19 +485,23 @@ const MapEditor: React.FC = () => {
   const currentBoundaryPathOptions = React.useMemo(() => {
     // Get boundary layer color if available
     let color = '#e74c3c'; // Default red
+    const isIndividualMap = mapArea?.area_type === 'individual';
+
     if (boundary?.layer_id) {
       const boundaryLayer = layers.find(l => l.id === boundary.layer_id);
       if (boundaryLayer?.config?.color) {
         color = boundaryLayer.config.color as string;
       }
     }
+
     return {
       color: color,
       weight: 3,
       fillColor: color,
-      fillOpacity: 0.1,
+      fill: !isIndividualMap,
+      fillOpacity: isIndividualMap ? 0 : 0.1,
     };
-  }, [boundary, layers]);
+  }, [boundary, layers, mapArea?.area_type]);
 
   const suburbBoundaryPathOptions = React.useMemo(() => ({
     color: '#3498db',
@@ -1648,6 +1652,18 @@ const MapEditor: React.FC = () => {
             maxZoom={currentTileLayer.maxZoom}
             subdomains={currentTileLayer.subdomains}
           />
+          {currentStreetLabelOverlay && (
+            <Pane name="street-labels-pane" style={{ zIndex: 450, pointerEvents: 'none' }}>
+              <TileLayer
+                key={`street-labels-${currentTileLayer.id}`}
+                pane="street-labels-pane"
+                attribution={currentStreetLabelOverlay.attribution}
+                url={currentStreetLabelOverlay.url}
+                maxZoom={currentStreetLabelOverlay.maxZoom}
+                subdomains={currentStreetLabelOverlay.subdomains}
+              />
+            </Pane>
+          )}
           {boundary && mode !== 'boundary' && (mapArea.area_type === 'region' || mapArea.area_type === 'suburb' || mapArea.area_type === 'individual') && (() => {
             // Check if boundary layer is visible
             if (boundary.layer_id) {
