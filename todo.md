@@ -1,11 +1,16 @@
 # To Do List
 
-- [ ] Project view
-  - [ ] Slider to hide suburbs with no child maps
+- [x] Project view
+  - [x] Slider to hide suburbs with no child maps
 
-- [ ] Suburb view
-  - [ ] Fade anything outside the boundary
-  - [ ] Inherited boundary layer off by default
+- [x] Suburb view
+  - [x] Fade anything outside the boundary
+
+- [ ] Map View
+  - [ ] Region Boundary says it is visible, but it is not
+  - [ ] Inherited layers just say 'Boundary' making it hard to tell which is which
+  - [x] Everything outside the map boundary should be faded
+  - [ ] Option to hide peer map layers
 
 - [ ] Layers:
   - [x] Two layer types, one for boundaries, one for annotations
@@ -13,6 +18,10 @@
   - [x] Upstream boundary layers should also be visible (show/hide only, no editing)
   - [x] Each boundary representing a child is also a layer
   - [ ] Add a suburb label to the suburb polygon
+
+- [ ] Export
+  - [ ] Export to clipboard is not working
+  - [ ] Hide parent and peer boundaries, leave local map boundary
 
 - [ ] Map Editor
   - [ ] When clicking a boundary area, a black selection box appears (hide this)

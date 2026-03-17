@@ -5,7 +5,9 @@ import './layer-manager.css';
 
 interface LayerManagerProps {
   mapAreaId: number;
+  areaType?: 'region' | 'suburb' | 'individual';
   onLayersChange?: () => void;
+  onSyntheticLayerVisibilityChange?: (layerId: number, visible: boolean) => void;
   showToast?: (message: string, type: 'success' | 'error' | 'info' | 'warning') => void;
   activeLayerId?: number | null;
   onActiveLayerChange?: (layerId: number | null) => void;
@@ -18,7 +20,9 @@ interface LayerManagerProps {
  */
 export const LayerManager: React.FC<LayerManagerProps> = ({
   mapAreaId,
+  areaType,
   onLayersChange,
+  onSyntheticLayerVisibilityChange,
   showToast,
   activeLayerId,
   onActiveLayerChange,
@@ -49,14 +53,31 @@ export const LayerManager: React.FC<LayerManagerProps> = ({
     () => {
       loadLayers();
     },
-    [mapAreaId]
+    [mapAreaId, areaType]
   );
 
   const loadLayers = async (): Promise<void> => {
     try {
       setIsLoading(true);
       const loadedLayers = await apiClient.listLayers(mapAreaId);
-      setLayers(loadedLayers);
+      
+      // Add synthetic "Peer Maps" layer for individual maps
+      let layersToSet = loadedLayers;
+      if (areaType === 'individual') {
+        const peerMapsLayer: Layer = {
+          id: -1, // Synthetic ID for peer maps layer
+          map_area_id: mapAreaId,
+          name: 'Peer Maps',
+          layer_type: 'boundary',
+          visible: true,
+          z_index: 0,
+          is_editable: false,
+          config: { color: '#2ecc71' }, // Green to match individual map boundaries
+        };
+        layersToSet = [...loadedLayers, peerMapsLayer];
+      }
+      
+      setLayers(layersToSet);
     } catch (error) {
       console.error('Error loading layers:', error);
       showToast?.('Failed to load layers', 'error');
@@ -173,6 +194,18 @@ export const LayerManager: React.FC<LayerManagerProps> = ({
   const handleToggleVisibility = async (
     layer: Layer
   ): Promise<void> => {
+    // Skip API call for synthetic layers (negative IDs)
+    if (layer.id! < 0) {
+      // For synthetic layers, just update local state
+      const newVisible = !layer.visible;
+      setLayers(layers.map(l => 
+        l.id === layer.id ? { ...l, visible: newVisible } : l
+      ));
+      // Notify parent of synthetic layer visibility change
+      onSyntheticLayerVisibilityChange?.(layer.id!, newVisible);
+      return;
+    }
+
     try {
       await apiClient.updateLayer(layer.id!, {
         visible: !layer.visible,

@@ -254,7 +254,7 @@ const BoundaryFadeOverlay: React.FC<BoundaryFadeOverlayProps> = ({ boundary }) =
       {
         color: 'transparent',
         fillColor: '#ffffff',
-        fillOpacity: 0.4,
+        fillOpacity: 0.65,
         interactive: false,
         pane: 'overlayPane',
         pmIgnore: true, // Tell Geoman to ignore this layer completely
@@ -517,6 +517,11 @@ const MapEditor: React.FC = () => {
     );
   }, [suburbBoundaries, hideEmptySuburbs, suburbIdsWithChildren]);
 
+  const peerMapsLayerVisible = React.useMemo(() => {
+    const peerMapsLayer = layers.find(l => l.id === -1);
+    return peerMapsLayer?.visible ?? true;
+  }, [layers]);
+
   const individualBoundaryPathOptions = React.useMemo(() => ({
     color: '#2ecc71',
     weight: 2,
@@ -526,8 +531,14 @@ const MapEditor: React.FC = () => {
 
   useEffect(() => {
     loadMapData();
-    loadLayers();
   }, [projectId, mapAreaId]);
+
+  // Load layers after mapArea is loaded so we have the correct area_type
+  useEffect(() => {
+    if (mapArea) {
+      loadLayers(mapArea.area_type);
+    }
+  }, [mapArea?.id, mapArea?.area_type]);
 
   // Apply saved bearing when map and mapArea are loaded
   useEffect(() => {
@@ -575,15 +586,32 @@ const MapEditor: React.FC = () => {
     }
   }, [isMapExpanded, mapInstance]);
 
-  const loadLayers = async (): Promise<void> => {
+  const loadLayers = async (areaType?: string): Promise<void> => {
     if (!mapAreaId) return;
 
     try {
       const loadedLayers = await apiClient.listLayers(parseInt(mapAreaId));
-      setLayers(loadedLayers);
+      
+      // Add synthetic "Peer Maps" layer for individual maps
+      let layersToSet = loadedLayers;
+      if (areaType === 'individual') {
+        const peerMapsLayer: Layer = {
+          id: -1, // Synthetic ID for peer maps layer
+          map_area_id: parseInt(mapAreaId),
+          name: 'Peer Maps',
+          layer_type: 'boundary',
+          visible: true,
+          z_index: 0,
+          is_editable: false,
+          config: { color: '#2ecc71' }, // Green to match individual map boundaries
+        };
+        layersToSet = [...loadedLayers, peerMapsLayer];
+      }
+      
+      setLayers(layersToSet);
       
       // Set first editable layer as active by default if no layer is currently active
-      const editableLayers = loadedLayers.filter(l => l.is_editable);
+      const editableLayers = layersToSet.filter(l => l.is_editable);
       
       // Use functional update to check current state value
       setActiveLayerId(currentActiveId => {
@@ -599,7 +627,7 @@ const MapEditor: React.FC = () => {
         return currentActiveId;
       });
 
-      // Load annotations for all layers
+      // Load annotations for all layers (skip synthetic peer maps layer)
       await loadAllAnnotations(loadedLayers);
     } catch (error) {
       console.error('Failed to load layers:', error);
@@ -1585,10 +1613,15 @@ const MapEditor: React.FC = () => {
           {mapAreaId && (
             <LayerManager 
               mapAreaId={parseInt(mapAreaId)}
+              areaType={mapArea?.area_type as 'region' | 'suburb' | 'individual' | undefined}
               showToast={showToast}
               activeLayerId={activeLayerId}
               onActiveLayerChange={setActiveLayerId}
-              onLayersChange={loadLayers}
+              onLayersChange={() => loadLayers(mapArea?.area_type)}
+              onSyntheticLayerVisibilityChange={(layerId, visible) => {
+                // Update synthetic layer visibility in map-editor's layers state
+                setLayers(prev => prev.map(l => l.id === layerId ? { ...l, visible } : l));
+              }}
             />
           )}
         </div>
@@ -1615,7 +1648,7 @@ const MapEditor: React.FC = () => {
             maxZoom={currentTileLayer.maxZoom}
             subdomains={currentTileLayer.subdomains}
           />
-          {boundary && mode !== 'boundary' && mapArea.area_type === 'region' && (() => {
+          {boundary && mode !== 'boundary' && (mapArea.area_type === 'region' || mapArea.area_type === 'suburb' || mapArea.area_type === 'individual') && (() => {
             // Check if boundary layer is visible
             if (boundary.layer_id) {
               const boundaryLayer = layers.find(l => l.id === boundary.layer_id);
@@ -1643,7 +1676,9 @@ const MapEditor: React.FC = () => {
             
             return (
               <>
-                <BoundaryFadeOverlay boundary={parentBoundary} />
+                {mapArea.area_type === 'individual' && (
+                  <BoundaryFadeOverlay boundary={parentBoundary} />
+                )}
                 <ReadOnlyPolygon
                   positions={parentBoundary.coordinates}
                   pathOptions={parentBoundaryPathOptions}
@@ -1686,7 +1721,7 @@ const MapEditor: React.FC = () => {
               />
             );
           })}
-          {Object.entries(individualBoundaries).map(([individualId, individualBoundary]) => {
+          {peerMapsLayerVisible && Object.entries(individualBoundaries).map(([individualId, individualBoundary]) => {
             // Don't render the current map's boundary here - it's rendered above in red
             if (parseInt(individualId) === parseInt(mapAreaId || '0')) {
               return null;
