@@ -560,6 +560,8 @@ const MapEditor: React.FC = () => {
     }
   }, [mapArea, mapInstance]);
 
+
+
   // Recenter to default view when opening a new map
   useEffect(() => {
     if (!mapInstance || !mapArea) return;
@@ -1661,12 +1663,15 @@ const MapEditor: React.FC = () => {
           {currentStreetLabelOverlay && (
             <Pane name="street-labels-pane" style={{ zIndex: 450, pointerEvents: 'none' }}>
               <TileLayer
-                key={`street-labels-${currentTileLayer.id}`}
+                key={`street-labels-${currentTileLayer.id}-${currentStreetLabelOverlay.zoomOffset ?? 0}`}
                 pane="street-labels-pane"
                 attribution={currentStreetLabelOverlay.attribution}
                 url={currentStreetLabelOverlay.url}
                 maxZoom={currentStreetLabelOverlay.maxZoom}
+                minZoom={1}
                 subdomains={currentStreetLabelOverlay.subdomains}
+                zoomOffset={currentStreetLabelOverlay.zoomOffset ?? 0}
+                tileSize={currentStreetLabelOverlay.tileSize ?? 256}
               />
             </Pane>
           )}

@@ -425,6 +425,12 @@
     0 2px 0 #fff !important;
 }
 
+/* Keep label-only Carto overlay tiles readable over the base layer. */
+.leaflet-street-labels-pane .leaflet-tile {
+  mix-blend-mode: normal !important;
+  opacity: 1 !important;
+}
+
 /* Tile Layer Selector */
 .tile-layer-selector {
   position: absolute;

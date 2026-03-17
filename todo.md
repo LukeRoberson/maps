@@ -41,6 +41,8 @@
 - [ ] Annotation:
   - [ ] Change marker colour to match layer colour
   - [ ] Centre align text label to marker
+  - [ ] Can we add a POI marker at a given address?
+    * Keep a list of special addresses, and let the app automatically add the markers
 
 - [ ] Favicon
 

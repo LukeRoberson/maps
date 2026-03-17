@@ -20,6 +20,8 @@ export interface StreetLabelOverlayOption {
   attribution: string;
   maxZoom: number;
   subdomains?: string[];
+  zoomOffset?: number;
+  tileSize?: number;
 }
 
 const DEFAULT_TILE_LAYER_ID = 'carto-voyager';
@@ -50,6 +52,8 @@ export const TILE_LAYER_OPTIONS: TileLayerOption[] = [
       attribution: '',
       maxZoom: 20,
       subdomains: ['a', 'b', 'c', 'd'],
+      zoomOffset: -1,
+      tileSize: 512,
     }
   },
   {
@@ -65,6 +69,8 @@ export const TILE_LAYER_OPTIONS: TileLayerOption[] = [
       attribution: '',
       maxZoom: 20,
       subdomains: ['a', 'b', 'c', 'd'],
+      zoomOffset: -1,
+      tileSize: 512,
     }
   },
   {
@@ -90,6 +96,8 @@ export const TILE_LAYER_OPTIONS: TileLayerOption[] = [
       attribution: '',
       maxZoom: 20,
       subdomains: ['a', 'b', 'c', 'd'],
+      zoomOffset: -1,
+      tileSize: 512,
     }
   },
   {
