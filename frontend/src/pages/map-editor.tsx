@@ -861,28 +861,6 @@ const MapEditor: React.FC = () => {
         return;
       }
       
-      // Validate that individual map doesn't overlap with sibling boundaries
-      if (Object.keys(individualBoundaries).length > 0) {
-        for (const [siblingId, siblingBoundary] of Object.entries(individualBoundaries)) {
-          // Check each point of the new boundary
-          for (const point of coordinates) {
-            const latLng = L.latLng(point[0], point[1]);
-            const siblingPolygon = L.polygon(siblingBoundary.coordinates);
-            const polygonPoints = siblingBoundary.coordinates.map(coord => L.latLng(coord[0], coord[1]));
-            
-            // Check if point is inside the sibling boundary
-            if (siblingPolygon.getBounds().contains(latLng) && isPointInPolygon(latLng, polygonPoints)) {
-              const sibling = individuals.find(i => i.id === parseInt(siblingId));
-              showToast(
-                `Boundary overlaps with neighboring map "${sibling?.name || 'Unknown'}". Please draw outside existing maps.`,
-                'error'
-              );
-              return;
-            }
-          }
-        }
-      }
-      
       // Store coordinates and show dialog to name the individual map
       setPendingIndividualCoordinates(coordinates);
       setShowIndividualDialog(true);
@@ -1069,34 +1047,6 @@ const MapEditor: React.FC = () => {
 
   const saveBoundaryEdit = async (): Promise<void> => {
     if (!boundary || !pendingBoundaryEdit) return;
-
-    // For individual maps, validate that the boundary doesn't overlap with sibling maps
-    if (mapArea?.area_type === 'individual' && Object.keys(individualBoundaries).length > 0) {
-      // Check if any points fall within sibling individual map boundaries
-      for (const [siblingId, siblingBoundary] of Object.entries(individualBoundaries)) {
-        if (parseInt(siblingId) === mapArea.id) {
-          // Skip the current map
-          continue;
-        }
-        
-        // Check each point of the new boundary
-        for (const point of pendingBoundaryEdit) {
-          const latLng = L.latLng(point[0], point[1]);
-          const siblingPolygon = L.polygon(siblingBoundary.coordinates);
-          const polygonPoints = siblingBoundary.coordinates.map(coord => L.latLng(coord[0], coord[1]));
-          
-          // Check if point is inside the sibling boundary
-          if (siblingPolygon.getBounds().contains(latLng) && isPointInPolygon(latLng, polygonPoints)) {
-            const sibling = individuals.find(i => i.id === parseInt(siblingId));
-            showToast(
-              `Boundary point overlaps with neighboring map "${sibling?.name || 'Unknown'}". Please adjust your boundary.`,
-              'error'
-            );
-            return;
-          }
-        }
-      }
-    }
 
     try {
       const updated = await apiClient.updateBoundary(
