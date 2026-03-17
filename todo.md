@@ -11,7 +11,7 @@
   - [x] Inherited layers just say 'Boundary' making it hard to tell which is which
   - [x] Everything outside the map boundary should be faded
   - [x] Option to hide peer map layers
-  - [ ] Toggling visibility of the region boundary also toggles the visibility of peer maps
+  - [x] Toggling visibility of the region boundary also toggles the visibility of peer maps
   - [x] Street names are too small
   - [x] Switching to some map styles makes everything faded; Default works
 
@@ -51,7 +51,7 @@
 # Bugs
 
 - [ ] Changing bearing doesn't stick; As soon as we move the map, it resets
-- [ ] Parent layers aren't being inherited
+- [x] Parent layers aren't being inherited
 
 
 # Future
