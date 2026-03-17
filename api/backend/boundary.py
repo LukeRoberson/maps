@@ -487,7 +487,7 @@ class BoundaryService:
                 }
                 if boundary.layer_id is not None:
                     params["layer_id"] = boundary.layer_id
-                    
+
                 boundary.id = db_manager.create(
                     table="boundaries",
                     params=params

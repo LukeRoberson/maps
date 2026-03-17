@@ -30,11 +30,6 @@
   - [ ] Change marker colour to match layer colour
   - [ ] Centre align text label to marker
 
-- [ ] Simple Auth
-  - [ ] Allow read only users and admins
-  - [ ] Admins can update maps
-  - [ ] System to reset passwords
-
 - [ ] Favicon
 
 
@@ -44,4 +39,11 @@
 - [ ] Changing bearing doesn't stick; As soon as we move the map, it resets
 - [ ] Parent layers aren't being inherited
 
+
+# Future
+
+- [ ] Simple Auth
+  - [ ] Allow read only users and admins
+  - [ ] Admins can update maps
+  - [ ] System to reset passwords
 

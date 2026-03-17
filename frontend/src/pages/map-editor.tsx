@@ -370,10 +370,12 @@ const MapEditor: React.FC = () => {
   const [parentBoundary, setParentBoundary] = useState<Boundary | null>(null);
   const [suburbs, setSuburbs] = useState<MapArea[]>([]);
   const [suburbBoundaries, setSuburbBoundaries] = useState<Record<number, Boundary>>({});
+  const [suburbIdsWithChildren, setSuburbIdsWithChildren] = useState<Set<number>>(new Set());
   const [toasts, setToasts] = useState<Toast[]>([]);
   const toastIdRef = useRef<number>(0);
   const [individuals, setIndividuals] = useState<MapArea[]>([]);
   const [individualBoundaries, setIndividualBoundaries] = useState<Record<number, Boundary>>({});
+  const [hideEmptySuburbs, setHideEmptySuburbs] = useState(false);
   const [mode, setMode] = useState<'boundary' | 'annotation' | 'suburb' | 'individual'>('annotation');
   const [loading, setLoading] = useState(true);
   const [suburbName, setSuburbName] = useState('');
@@ -503,6 +505,17 @@ const MapEditor: React.FC = () => {
     fillColor: '#3498db',
     fillOpacity: 0.15,
   }), []);
+
+  const visibleSuburbBoundaryEntries = React.useMemo(() => {
+    const entries = Object.entries(suburbBoundaries);
+    if (!hideEmptySuburbs) {
+      return entries;
+    }
+
+    return entries.filter(([suburbId]) =>
+      suburbIdsWithChildren.has(parseInt(suburbId, 10))
+    );
+  }, [suburbBoundaries, hideEmptySuburbs, suburbIdsWithChildren]);
 
   const individualBoundaryPathOptions = React.useMemo(() => ({
     color: '#2ecc71',
@@ -662,11 +675,22 @@ const MapEditor: React.FC = () => {
       if (mapAreaData.area_type === 'region') {
         // Load suburbs for region maps
         try {
-          const suburbsData = await apiClient.listMapAreas(
-            parseInt(projectId),
-            parseInt(mapAreaId)
-          );
+          const [suburbsData, hierarchyData] = await Promise.all([
+            apiClient.listMapAreas(
+              parseInt(projectId),
+              parseInt(mapAreaId)
+            ),
+            apiClient.getMapHierarchy(parseInt(projectId)),
+          ]);
+
           setSuburbs(suburbsData);
+          setSuburbIdsWithChildren(
+            new Set(
+              hierarchyData.individuals
+                .map((individual) => individual.parent_id)
+                .filter((parentId): parentId is number => typeof parentId === 'number')
+            )
+          );
 
           // Load boundaries for each suburb
           const boundaries: Record<number, Boundary> = {};
@@ -687,6 +711,9 @@ const MapEditor: React.FC = () => {
           setSuburbBoundaries(boundaries);
         } catch (error) {
           console.error('Failed to load suburbs:', error);
+          setSuburbs([]);
+          setSuburbBoundaries({});
+          setSuburbIdsWithChildren(new Set());
         }
       } else if (mapAreaData.area_type === 'suburb') {
         // Load individuals for suburb maps
@@ -720,6 +747,7 @@ const MapEditor: React.FC = () => {
         // Clear suburbs since we're not viewing a region
         setSuburbs([]);
         setSuburbBoundaries({});
+        setSuburbIdsWithChildren(new Set());
       } else if (mapAreaData.area_type === 'individual') {
         // For individual maps, load siblings (other individuals in the same suburb)
         try {
@@ -752,12 +780,14 @@ const MapEditor: React.FC = () => {
         // Clear suburbs since we're not viewing a region
         setSuburbs([]);
         setSuburbBoundaries({});
+        setSuburbIdsWithChildren(new Set());
       } else {
         // For region maps, clear individuals and their boundaries
         setIndividuals([]);
         setIndividualBoundaries({});
         setSuburbs([]);
         setSuburbBoundaries({});
+        setSuburbIdsWithChildren(new Set());
       }
     } catch (error) {
       console.error('Failed to load map data:', error);
@@ -1434,6 +1464,20 @@ const MapEditor: React.FC = () => {
                   Add Suburb
                 </button>
               )}
+              {mapArea.area_type === 'region' && (
+                <div className="suburb-filter-control">
+                  <span className="suburb-filter-label">Hide Empty Suburbs</span>
+                  <label className="suburb-filter-switch" title="Hide suburbs that have no child maps">
+                    <input
+                      type="checkbox"
+                      checked={hideEmptySuburbs}
+                      onChange={(e) => setHideEmptySuburbs(e.target.checked)}
+                      aria-label="Hide suburbs that have no child maps"
+                    />
+                    <span className="suburb-filter-slider" />
+                  </label>
+                </div>
+              )}
               {mapArea.area_type === 'suburb' && (
                 <button
                   className="btn btn-success"
@@ -1624,8 +1668,9 @@ const MapEditor: React.FC = () => {
               />
             );
           })()}
-          {Object.entries(suburbBoundaries).map(([suburbId, suburbBoundary]) => {
-            const suburb = suburbs.find(s => s.id === parseInt(suburbId));
+          {visibleSuburbBoundaryEntries.map(([suburbId, suburbBoundary]) => {
+            const parsedSuburbId = parseInt(suburbId, 10);
+            const suburb = suburbs.find(s => s.id === parsedSuburbId);
             return (
               <ReadOnlyPolygon
                 key={suburbId}
@@ -1634,7 +1679,7 @@ const MapEditor: React.FC = () => {
                 tooltipContent={suburb?.name || 'Unnamed Suburb'}
                 onClick={mode === 'annotation' || mode === 'boundary' ? () => {
                   if (confirm(`Open ${suburb?.name || 'this suburb'}?`)) {
-                    navigate(`/projects/${projectId}/maps/${suburbId}`);
+                    navigate(`/projects/${projectId}/maps/${parsedSuburbId}`);
                   }
                 } : undefined}
                 showToast={showToast}

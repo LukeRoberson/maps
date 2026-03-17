@@ -154,15 +154,17 @@ def create_boundary() -> Response:
 
         # Create a boundary layer for this map area
         layer_service = LayerService()
-        
+
         # Check if a boundary layer already exists for this map area
-        existing_layers = layer_service.list(map_area_id=data['map_area_id'])
+        existing_layers = layer_service.read(
+            map_id=data['map_area_id']
+        )
         boundary_layer = None
         for layer in existing_layers:
             if layer.layer_type == 'boundary':
                 boundary_layer = layer
                 break
-        
+
         # If no boundary layer exists, create one
         if not boundary_layer:
             boundary_layer = LayerModel(
