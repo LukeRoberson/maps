@@ -48,7 +48,9 @@ from flask import (
 from backend import (
     MapService,
     BoundaryModel,
-    BoundaryService
+    BoundaryService,
+    LayerModel,
+    LayerService
 )
 
 
@@ -150,9 +152,34 @@ def create_boundary() -> Response:
                         400
                     )
 
-        # Create boundary model
+        # Create a boundary layer for this map area
+        layer_service = LayerService()
+        
+        # Check if a boundary layer already exists for this map area
+        existing_layers = layer_service.list(map_area_id=data['map_area_id'])
+        boundary_layer = None
+        for layer in existing_layers:
+            if layer.layer_type == 'boundary':
+                boundary_layer = layer
+                break
+        
+        # If no boundary layer exists, create one
+        if not boundary_layer:
+            boundary_layer = LayerModel(
+                map_area_id=data['map_area_id'],
+                name='Boundary',
+                layer_type='boundary',
+                visible=True,
+                z_index=0,
+                is_editable=True,
+                config={'color': '#e74c3c'}  # Red color for boundaries
+            )
+            boundary_layer = layer_service.create(boundary_layer)
+
+        # Create boundary model with layer_id
         boundary = BoundaryModel(
             map_id=data['map_area_id'],
+            layer_id=boundary_layer.id,
             coordinates=data['coordinates']
         )
 

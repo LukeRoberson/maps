@@ -101,6 +101,14 @@ def list_layers() -> Union[Response, Tuple[Response, int]]:
             ), 200
         )
 
+    except ValueError as e:
+        return make_response(
+            jsonify(
+                {'error': str(e)}
+            ),
+            400
+        )
+
     except Exception as e:
         return make_response(
             jsonify(
@@ -268,7 +276,6 @@ def update_layer(
 
     try:
         layer_service = LayerService()
-
         # Get JSON data from request
         data = request.get_json()
         if not data:
@@ -278,7 +285,6 @@ def update_layer(
                 ),
                 400
             )
-
         # Validate and sanitize config field if present
         if 'config' in data:
             if not isinstance(data['config'], dict):
@@ -288,7 +294,6 @@ def update_layer(
                     ),
                     400
                 )
-            
             # Only allow specific whitelisted fields
             sanitized_config = {}
             allowed_config_fields = {'color'}

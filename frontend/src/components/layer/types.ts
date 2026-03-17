@@ -17,7 +17,7 @@
  * @property {number} map_area_id - Identifier of the associated map area.
  * @property {number} [parent_layer_id] - Identifier of the parent layer, if applicable. Optional.
  * @property {string} name - Name of the layer.
- * @property {'annotation' | 'custom'} layer_type - Type of the layer.
+ * @property {'annotation' | 'boundary' | 'custom'} layer_type - Type of the layer.
  * @property {boolean} visible - Visibility status of the layer.
  * @property {number} z_index - Z-index for layer stacking order.
  * @property {boolean} is_editable - Indicates if the layer is editable.
@@ -30,7 +30,7 @@ export interface Layer {
   map_area_id: number;
   parent_layer_id?: number;
   name: string;
-  layer_type: 'annotation' | 'custom';
+  layer_type: 'annotation' | 'boundary' | 'custom';
   visible: boolean;
   z_index: number;
   is_editable: boolean;

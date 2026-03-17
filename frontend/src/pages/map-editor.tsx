@@ -396,6 +396,7 @@ const MapEditor: React.FC = () => {
   const [currentBearing, setCurrentBearing] = useState<number>(0);
   const [isMapExpanded, setIsMapExpanded] = useState(false);
   const isUpdatingDefaultView = useRef<boolean>(false);
+  const lastCenteredMapId = useRef<string | null>(null);
   const navigate = useNavigate();
 
   // Toast notification helper
@@ -457,20 +458,44 @@ const MapEditor: React.FC = () => {
   };
 
   // Memoize path options to prevent unnecessary re-renders
-  const parentBoundaryPathOptions = React.useMemo(() => ({
-    color: '#e74c3c',
-    weight: 3,
-    fillColor: 'transparent',
-    fillOpacity: 0,
-    dashArray: '10, 10',
-  }), []);
+  const parentBoundaryPathOptions = React.useMemo(() => {
+    // Get inherited parent boundary layer color if available
+    let color = '#e74c3c'; // Default red
+    if (parentBoundary?.layer_id) {
+      const inheritedBoundaryLayer = layers.find(l => 
+        l.parent_layer_id === parentBoundary.layer_id && 
+        l.layer_type === 'boundary' &&
+        !l.is_editable
+      );
+      if (inheritedBoundaryLayer?.config?.color) {
+        color = inheritedBoundaryLayer.config.color as string;
+      }
+    }
+    return {
+      color: color,
+      weight: 3,
+      fillColor: 'transparent',
+      fillOpacity: 0,
+      dashArray: '10, 10',
+    };
+  }, [parentBoundary, layers]);
 
-  const currentBoundaryPathOptions = React.useMemo(() => ({
-    color: '#e74c3c',
-    weight: 3,
-    fillColor: '#e74c3c',
-    fillOpacity: 0.1,
-  }), []);
+  const currentBoundaryPathOptions = React.useMemo(() => {
+    // Get boundary layer color if available
+    let color = '#e74c3c'; // Default red
+    if (boundary?.layer_id) {
+      const boundaryLayer = layers.find(l => l.id === boundary.layer_id);
+      if (boundaryLayer?.config?.color) {
+        color = boundaryLayer.config.color as string;
+      }
+    }
+    return {
+      color: color,
+      weight: 3,
+      fillColor: color,
+      fillOpacity: 0.1,
+    };
+  }, [boundary, layers]);
 
   const suburbBoundaryPathOptions = React.useMemo(() => ({
     color: '#3498db',
@@ -506,6 +531,25 @@ const MapEditor: React.FC = () => {
       applyRotation(savedBearing);
     }
   }, [mapArea, mapInstance]);
+
+  // Recenter to default view when opening a new map
+  useEffect(() => {
+    if (!mapInstance || !mapArea) return;
+
+    const currentMapId = String(mapArea.id ?? mapAreaId ?? '');
+    if (!currentMapId || lastCenteredMapId.current === currentMapId) {
+      return;
+    }
+
+    const centerLat = mapArea.default_center_lat ?? project?.center_lat;
+    const centerLon = mapArea.default_center_lon ?? project?.center_lon;
+    const zoom = mapArea.default_zoom ?? project?.zoom_level;
+
+    if (centerLat != null && centerLon != null && zoom != null) {
+      mapInstance.setView([centerLat, centerLon], zoom, { animate: false });
+      lastCenteredMapId.current = currentMapId;
+    }
+  }, [mapArea, mapAreaId, mapInstance, project]);
 
   // Handle map resize when expanded/collapsed
   useEffect(() => {
@@ -1527,26 +1571,59 @@ const MapEditor: React.FC = () => {
             maxZoom={currentTileLayer.maxZoom}
             subdomains={currentTileLayer.subdomains}
           />
-          {boundary && mode !== 'boundary' && mapArea.area_type === 'region' && (
-            <BoundaryFadeOverlay boundary={boundary} />
-          )}
-          {parentBoundary && mode !== 'individual' && (mapArea.area_type === 'suburb' || mapArea.area_type === 'individual') && (
-            <>
-              <BoundaryFadeOverlay boundary={parentBoundary} />
+          {boundary && mode !== 'boundary' && mapArea.area_type === 'region' && (() => {
+            // Check if boundary layer is visible
+            if (boundary.layer_id) {
+              const boundaryLayer = layers.find(l => l.id === boundary.layer_id);
+              if (boundaryLayer && !boundaryLayer.visible) {
+                return null;
+              }
+            }
+            return <BoundaryFadeOverlay boundary={boundary} />;
+          })()}
+          {parentBoundary && mode !== 'individual' && (mapArea.area_type === 'suburb' || mapArea.area_type === 'individual') && (() => {
+            // Check if the inherited parent boundary layer is visible
+            if (parentBoundary.layer_id) {
+              // Find the inherited layer that corresponds to the parent boundary's layer
+              const inheritedBoundaryLayer = layers.find(l => 
+                l.parent_layer_id === parentBoundary.layer_id && 
+                l.layer_type === 'boundary' &&
+                !l.is_editable
+              );
+              
+              // If inherited layer exists and is not visible, don't render
+              if (inheritedBoundaryLayer && !inheritedBoundaryLayer.visible) {
+                return null;
+              }
+            }
+            
+            return (
+              <>
+                <BoundaryFadeOverlay boundary={parentBoundary} />
+                <ReadOnlyPolygon
+                  positions={parentBoundary.coordinates}
+                  pathOptions={parentBoundaryPathOptions}
+                  showToast={showToast}
+                />
+              </>
+            );
+          })()}
+          {boundary && mode !== 'boundary' && (() => {
+            // Check if boundary layer is visible
+            if (boundary.layer_id) {
+              const boundaryLayer = layers.find(l => l.id === boundary.layer_id);
+              if (boundaryLayer && !boundaryLayer.visible) {
+                return null;
+              }
+            }
+            return (
               <ReadOnlyPolygon
-                positions={parentBoundary.coordinates}
-                pathOptions={parentBoundaryPathOptions}
+                positions={boundary.coordinates}
+                pathOptions={currentBoundaryPathOptions}
                 showToast={showToast}
               />
-            </>
-          )}
-          {boundary && mode !== 'boundary' && (
-            <ReadOnlyPolygon
-              positions={boundary.coordinates}
-              pathOptions={currentBoundaryPathOptions}
-              showToast={showToast}
-            />
-          )}
+            );
+          })()}
           {Object.entries(suburbBoundaries).map(([suburbId, suburbBoundary]) => {
             const suburb = suburbs.find(s => s.id === parseInt(suburbId));
             return (

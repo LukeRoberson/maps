@@ -21,6 +21,7 @@ Local modules:
 
 
 # Standard library imports
+import json
 import logging
 from datetime import (
     datetime,
@@ -643,6 +644,9 @@ class ProjectService:
 
                 # Import boundaries
                 if 'boundaries' in import_data:
+                    # Track which map areas have boundaries
+                    boundary_map_areas = set()
+
                     for boundary in import_data['boundaries']:
                         old_map_area_id = boundary['map_area_id']
                         new_map_area_id = map_area_id_map.get(old_map_area_id)
@@ -653,10 +657,39 @@ class ProjectService:
                                 'coordinates': boundary['coordinates']
                             }
 
+                            # Note: layer_id set after creating boundary layers
                             db_manager.create(
                                 table="boundaries",
                                 params=new_boundary
                             )
+
+                            boundary_map_areas.add(new_map_area_id)
+
+                    # Create boundary layers for map areas with boundaries
+                    # Handles imports from before boundary layers existed
+                    for map_area_id in boundary_map_areas:
+                        # Create a boundary layer for this map area
+                        boundary_layer = {
+                            'map_area_id': map_area_id,
+                            'name': 'Boundary',
+                            'layer_type': 'boundary',
+                            'visible': True,
+                            'z_index': 0,
+                            'is_editable': True,
+                            'config': json.dumps({'color': '#e74c3c'})
+                        }
+
+                        layer_id = db_manager.create(
+                            table="layers",
+                            params=boundary_layer
+                        )
+
+                        # Update the boundary with the layer_id
+                        db_manager.update(
+                            table="boundaries",
+                            fields={'layer_id': layer_id},
+                            parameters={'map_area_id': map_area_id}
+                        )
 
                 # Import layers
                 if 'layers' in import_data:

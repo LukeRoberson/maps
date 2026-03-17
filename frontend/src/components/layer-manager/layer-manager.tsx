@@ -109,16 +109,25 @@ export const LayerManager: React.FC<LayerManagerProps> = ({
   const handleSaveEdit = async (
     layerId: number
   ): Promise<void> => {
-    if (!editingName.trim()) {
+    const layer = layers.find(l => l.id === layerId);
+    
+    // For annotation layers, validate name
+    if (layer?.layer_type === 'annotation' && !editingName.trim()) {
       showToast?.('Please enter a layer name', 'warning');
       return;
     }
 
     try {
-      await apiClient.updateLayer(layerId, {
-        name: editingName.trim(),
+      const updates: Partial<Layer> = {
         config: { color: editingColor },
-      });
+      };
+      
+      // Only update name for annotation layers
+      if (layer?.layer_type === 'annotation') {
+        updates.name = editingName.trim();
+      }
+      
+      await apiClient.updateLayer(layerId, updates);
 
       showToast?.('Layer updated', 'success');
       setEditingLayerId(null);
@@ -177,8 +186,10 @@ export const LayerManager: React.FC<LayerManagerProps> = ({
     }
   };
 
-  const editableLayers = layers.filter(l => l.is_editable);
-  const inheritedLayers = layers.filter(l => !l.is_editable);
+  const boundaryLayers = layers.filter(l => l.layer_type === 'boundary' && l.is_editable);
+  const annotationLayers = layers.filter(l => l.layer_type === 'annotation' && l.is_editable);
+  const inheritedBoundaryLayers = layers.filter(l => l.layer_type === 'boundary' && !l.is_editable);
+  const inheritedAnnotationLayers = layers.filter(l => l.layer_type === 'annotation' && !l.is_editable);
 
   return (
     <div className="layer-manager">
@@ -198,17 +209,117 @@ export const LayerManager: React.FC<LayerManagerProps> = ({
             <div className="loading">Loading layers...</div>
           ) : (
             <>
-              {editableLayers.length === 0 && !isCreating && (
-                <div className="no-layers">
-                  No layers yet. Create one to get started.
+              {boundaryLayers.length > 0 && (
+                <div className="layers-section">
+                  <h4>Boundary Layers</h4>
+                  <ul className="layer-list">
+                    {boundaryLayers.map((layer) => (
+                      <li key={layer.id} className="layer-item boundary-layer">
+                        {editingLayerId === layer.id ? (
+                          <div className="layer-edit-form">
+                            <span className="layer-name-readonly">{layer.name}</span>
+                            <select
+                              value={editingColor}
+                              onChange={(e) => setEditingColor(e.target.value)}
+                              className="layer-color-select"
+                              title="Select color"
+                            >
+                              {colorOptions.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                  {option.label}
+                                </option>
+                              ))}
+                            </select>
+                            <div className="layer-edit-actions">
+                              <button
+                                onClick={() => handleSaveEdit(layer.id!)}
+                                className="btn-save"
+                                title="Save"
+                              >
+                                ✓
+                              </button>
+                              <button
+                                onClick={handleCancelEdit}
+                                className="btn-cancel"
+                                title="Cancel"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="layer-info">
+                              <div 
+                                className="layer-color-indicator"
+                                style={{ backgroundColor: (layer.config as any)?.color || '#e74c3c' }}
+                                title="Layer color"
+                              />
+                              <button
+                                onClick={() => handleToggleVisibility(layer)}
+                                className={`btn-visibility ${layer.visible ? 'visible' : 'hidden'}`}
+                                title={layer.visible ? 'Hide boundary' : 'Show boundary'}
+                              >
+                                {layer.visible ? '👁' : '👁‍🗨'}
+                              </button>
+                              <span className="layer-name">{layer.name}</span>
+                            </div>
+                            <div className="layer-actions">
+                              <button
+                                onClick={() => handleStartEdit(layer)}
+                                className="btn-edit"
+                                title="Edit color"
+                              >
+                                🎨
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               )}
 
-              {editableLayers.length > 0 && (
+              {inheritedBoundaryLayers.length > 0 && (
                 <div className="layers-section">
-                  <h4>Map Layers</h4>
+                  <h4>Inherited Boundary Layers</h4>
                   <ul className="layer-list">
-                    {editableLayers.map((layer) => (
+                    {inheritedBoundaryLayers.map((layer) => (
+                      <li key={layer.id} className="layer-item inherited boundary-layer">
+                        <div className="layer-info">
+                          <div 
+                            className="layer-color-indicator"
+                            style={{ backgroundColor: (layer.config as any)?.color || '#e74c3c' }}
+                            title="Layer color"
+                          />
+                          <button
+                            onClick={() => handleToggleVisibility(layer)}
+                            className={`btn-visibility ${layer.visible ? 'visible' : 'hidden'}`}
+                            title={layer.visible ? 'Hide boundary' : 'Show boundary'}
+                          >
+                            {layer.visible ? '👁' : '👁‍🗨'}
+                          </button>
+                          <span className="layer-name">{layer.name}</span>
+                          <span className="inherited-badge">inherited</span>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {annotationLayers.length === 0 && !isCreating && (
+                <div className="no-layers">
+                  No annotation layers yet. Create one to get started.
+                </div>
+              )}
+
+              {annotationLayers.length > 0 && (
+                <div className="layers-section">
+                  <h4>Annotation Layers</h4>
+                  <ul className="layer-list">
+                    {annotationLayers.map((layer) => (
                       <li key={layer.id} className="layer-item">
                         {editingLayerId === layer.id ? (
                           <div className="layer-edit-form">
@@ -309,11 +420,11 @@ export const LayerManager: React.FC<LayerManagerProps> = ({
                 </div>
               )}
 
-              {inheritedLayers.length > 0 && (
+              {inheritedAnnotationLayers.length > 0 && (
                 <div className="layers-section">
-                  <h4>Inherited Layers</h4>
+                  <h4>Inherited Annotation Layers</h4>
                   <ul className="layer-list">
-                    {inheritedLayers.map((layer) => (
+                    {inheritedAnnotationLayers.map((layer) => (
                       <li key={layer.id} className="layer-item inherited">
                         <div className="layer-info">
                           <div 

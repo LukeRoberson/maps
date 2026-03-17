@@ -80,6 +80,7 @@ class LayerModel:
     # Define valid layer types
     LAYER_TYPES = [
         'annotation',
+        'boundary',
         'custom'
     ]
 
@@ -410,18 +411,25 @@ class LayerService:
                     }
                 )
 
+            # Normalize to a single row
+            if isinstance(parent_row, list):
+                parent_row = parent_row[0] if parent_row else None
+
             # Check if there is a parent
-            if not parent_row or not parent_row[0]:
+            if not parent_row:
                 return []
 
             # Get the parent ID from the row
-            parent_id_value = getattr(parent_row, 'parent_id', None)
+            try:
+                parent_id_value = parent_row['parent_id']
+            except (KeyError, TypeError, IndexError):
+                parent_id_value = parent_row[0] if parent_row else None
 
             # Confirm parent_id_value is valid
             if not parent_id_value:
                 return []
 
-            # Store the parent ID as in integer
+            # Store the parent ID as an integer
             parent_id: int = int(parent_id_value)
 
         except Exception as e:
@@ -661,10 +669,17 @@ class LayerService:
             return None
 
         if not layer.is_editable:
-            raise ValueError(
-                "Cannot update inherited layer. "
-                "Inherited layers are read-only."
-            )
+            allowed_inherited_fields = {
+                'visible'
+            }
+            invalid_fields = [
+                field for field in updates
+                if field not in allowed_inherited_fields
+            ]
+            if invalid_fields:
+                raise ValueError(
+                    "Inherited layers can only update visibility."
+                )
 
         # Fields that may appear in updates
         allowed_fields = [

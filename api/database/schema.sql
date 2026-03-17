@@ -51,10 +51,12 @@ CREATE TABLE IF NOT EXISTS map_areas (
 CREATE TABLE IF NOT EXISTS boundaries (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     map_area_id INTEGER NOT NULL,
+    layer_id INTEGER,
     coordinates TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (map_area_id) REFERENCES map_areas(id) ON DELETE CASCADE
+    FOREIGN KEY (map_area_id) REFERENCES map_areas(id) ON DELETE CASCADE,
+    FOREIGN KEY (layer_id) REFERENCES layers(id) ON DELETE SET NULL
 );
 
 -- Layers Table

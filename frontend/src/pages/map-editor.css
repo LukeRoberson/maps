@@ -103,6 +103,12 @@
   background-color: var(--bg-primary);
 }
 
+/* Prevent focus outlines on SVG paths when clicking boundaries */
+.map-container .leaflet-interactive:focus,
+.map-container .leaflet-interactive:active {
+  outline: none;
+}
+
 /* Expanded map view styles */
 .editor-content-expanded {
   gap: 0;
