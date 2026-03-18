@@ -161,7 +161,7 @@ def create_boundary() -> Response:
         )
         boundary_layer = None
         for layer in existing_layers:
-            if layer.layer_type == 'boundary':
+            if layer.layer_type == 'boundary' and layer.is_editable:
                 boundary_layer = layer
                 break
 

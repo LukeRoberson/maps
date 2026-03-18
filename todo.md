@@ -23,10 +23,10 @@
 - [ ] CSS error in console:
   * Error inlining remote css file SecurityError: Failed to read the 'cssRules' property from 'CSSStyleSheet': Cannot access rules
   * Error while reading CSS rules from https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css SecurityError: Failed to read the 'cssRules' property from 'CSSStyleSheet'
-- [ ] Annotations are not enforced into any layer
+- [x] Annotations are not enforced into any layer
   * Presumably they belong to the 'Boundary' layer
   * A layer should be selected first, or annotations shouldn't be allowed
-- [ ] New maps don't have a boundary layer
+- [x] New maps don't have a boundary layer
   * Old maps still have them
   * Hising the suburb boundary hides the map boundary too
   * Can still edit the boundary
