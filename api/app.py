@@ -58,6 +58,7 @@ from backend.config import Config
 from database import (
     DatabaseContext,
     DatabaseManager,
+    run_migrations,
 )
 from routes import (
     projects_bp,
@@ -192,6 +193,9 @@ if db_directory and not os.path.exists(db_directory):
 with DatabaseContext(config.DATABASE_PATH) as db_ctx:
     db_manager = DatabaseManager(db_ctx)
     db_manager.initialise()
+
+# Run database migrations
+run_migrations(config.DATABASE_PATH)
 
 Session(app)
 
