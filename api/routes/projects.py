@@ -445,6 +445,14 @@ def import_project() -> Response:
         # Get the newly created project
         new_project = project_service.read(new_project_id)
 
+        if not new_project:
+            return make_response(
+                jsonify(
+                    {'error': 'Failed to retrieve newly imported project'}
+                ),
+                500
+            )
+
         # Return the new project
         return make_response(
             jsonify(
