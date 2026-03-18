@@ -32,7 +32,6 @@
  * @property {number} [default_center_lat] - Default center latitude for the map area. Optional.
  * @property {number} [default_center_lon] - Default center longitude for the map area. Optional.
  * @property {number} [default_zoom] - Default zoom level for the map area. Optional.
- * @property {number} [default_bearing] - Default bearing for the map area. Optional.
  * @property {string} [tile_layer] - Optional tile layer URL template. Optional.
  * @property {string} [created_at] - Timestamp of map area creation. Optional.
  * @property {string} [updated_at] - Timestamp of last map area update. Optional.
@@ -47,7 +46,6 @@ export interface MapArea {
   default_center_lat?: number;
   default_center_lon?: number;
   default_zoom?: number;
-  default_bearing?: number;
   tile_layer?: string;
   created_at?: string;
   updated_at?: string;

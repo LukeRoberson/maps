@@ -231,7 +231,6 @@ def create_map_area() -> Response:
             default_center_lat=data.get('default_center_lat'),
             default_center_lon=data.get('default_center_lon'),
             default_zoom=data.get('default_zoom'),
-            default_bearing=data.get('default_bearing'),
             tile_layer=data.get('tile_layer')
         )
 

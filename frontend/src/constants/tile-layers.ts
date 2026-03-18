@@ -84,23 +84,6 @@ export const TILE_LAYER_OPTIONS: TileLayerOption[] = [
     streetLabelOverlay: null,
   },
   {
-    id: 'carto-dark',
-    name: 'Carto Dark (Simplified)',
-    url: 'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png',
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-    description: 'Dark theme without POI clutter',
-    maxZoom: 20,
-    subdomains: ['a', 'b', 'c', 'd'],
-    streetLabelOverlay: {
-      url: 'https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png',
-      attribution: '',
-      maxZoom: 20,
-      subdomains: ['a', 'b', 'c', 'd'],
-      zoomOffset: -1,
-      tileSize: 512,
-    }
-  },
-  {
     id: 'osm-hot',
     name: 'Humanitarian OSM',
     url: 'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png',

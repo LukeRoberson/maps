@@ -423,9 +423,7 @@ const MapEditor: React.FC = () => {
   const [editingFontSize, setEditingFontSize] = useState<number>(20);
   const [showTileLayerSelector, setShowTileLayerSelector] = useState(false);
   const [openMapTarget, setOpenMapTarget] = useState<OpenMapTarget | null>(null);
-  const [currentBearing, setCurrentBearing] = useState<number>(0);
   const [isMapExpanded, setIsMapExpanded] = useState(false);
-  const isUpdatingDefaultView = useRef<boolean>(false);
   const lastCenteredMapId = useRef<string | null>(null);
   const navigate = useNavigate();
 
@@ -647,24 +645,6 @@ const MapEditor: React.FC = () => {
       loadLayers(mapArea.area_type);
     }
   }, [mapArea?.id, mapArea?.area_type]);
-
-  // Apply saved bearing when map and mapArea are loaded
-  useEffect(() => {
-    // Skip if we're in the middle of updating the default view
-    // to prevent the map from jumping back
-    if (isUpdatingDefaultView.current) {
-      isUpdatingDefaultView.current = false;
-      return;
-    }
-    
-    if (mapArea && mapInstance) {
-      const savedBearing = mapArea.default_bearing ?? 0;
-      setCurrentBearing(savedBearing);
-      applyRotation(savedBearing);
-    }
-  }, [mapArea, mapInstance]);
-
-
 
   // Recenter to default view when opening a new map
   useEffect(() => {
@@ -1447,17 +1427,13 @@ const MapEditor: React.FC = () => {
         default_center_lat: center.lat,
         default_center_lon: center.lng,
         default_zoom: zoom,
-        default_bearing: currentBearing,
       });
-      
-      // Set flag to prevent useEffect from re-applying rotation
-      isUpdatingDefaultView.current = true;
       
       // Update the mapArea state with the new values
       // This prevents the map from jumping when the component re-renders
       setMapArea(updated);
-      
-      showToast(`Default view saved! (Zoom: ${zoom}, Rotation: ${currentBearing}°)`, 'success');
+
+      showToast(`Default view saved! (Zoom: ${zoom})`, 'success');
     } catch (error) {
       console.error('Failed to set default view:', error);
       showToast('Failed to save default view. Please try again.', 'error');
@@ -1480,35 +1456,6 @@ const MapEditor: React.FC = () => {
       showToast('Recentered to default view', 'info');
     } else {
       showToast('No default view has been set for this map', 'warning');
-    }
-  };
-
-  const handleRotateLeft = (): void => {
-    const newBearing = (currentBearing - 15 + 360) % 360;
-    setCurrentBearing(newBearing);
-    applyRotation(newBearing);
-  };
-
-  const handleRotateRight = (): void => {
-    const newBearing = (currentBearing + 15) % 360;
-    setCurrentBearing(newBearing);
-    applyRotation(newBearing);
-  };
-
-  const handleResetRotation = (): void => {
-    setCurrentBearing(0);
-    applyRotation(0);
-  };
-
-  const applyRotation = (bearing: number): void => {
-    if (!mapInstance) return;
-    
-    const mapContainer = mapInstance.getContainer();
-    const mapPane = mapContainer.querySelector('.leaflet-map-pane') as HTMLElement;
-    
-    if (mapPane) {
-      mapPane.style.transform = `rotate(${bearing}deg)`;
-      mapPane.style.transformOrigin = 'center';
     }
   };
 
@@ -1670,34 +1617,6 @@ const MapEditor: React.FC = () => {
               >
                 Recenter to Default
               </button>
-              <div className="rotation-controls">
-                <button
-                  className="btn btn-icon"
-                  onClick={handleRotateLeft}
-                  title="Rotate left 15°"
-                >
-                  ↺
-                </button>
-                <span className="rotation-indicator">
-                  {currentBearing}°
-                </span>
-                <button
-                  className="btn btn-icon"
-                  onClick={handleRotateRight}
-                  title="Rotate right 15°"
-                >
-                  ↻
-                </button>
-                {currentBearing !== 0 && (
-                  <button
-                    className="btn btn-icon"
-                    onClick={handleResetRotation}
-                    title="Reset rotation"
-                  >
-                    ⟲
-                  </button>
-                )}
-              </div>
               <button 
                 className="btn btn-icon" 
                 onClick={() => setIsMapExpanded(!isMapExpanded)}

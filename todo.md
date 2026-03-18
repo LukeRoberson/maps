@@ -40,7 +40,7 @@
 
 # Cleanup
 - [ ] Remove the bearing, as it's not used
-- [ ] Remove unused overlay types
+- [x] Remove unused overlay types
 
 
 # Future
@@ -48,9 +48,17 @@
 - [ ] Annotation:
   - [ ] Can we add a POI marker at a given address?
     * Keep a list of special addresses, and let the app automatically add the markers
+- [ ] Map Editor
+  - [ ] Can we move the predefined suburb name? Sometimes its in the way (this comes from the overlay)
 - [ ] Simple Auth
   - [ ] Allow read only users and admins
   - [ ] Admins can update maps
   - [ ] System to reset passwords
 - [ ] API tests
 - [ ] Frontend testing plan
+- [ ] Settings
+  - [ ] Add a settings page (based on config.yaml)
+  - [ ] Add additional configurable features
+    * Zoom increments
+    * Street text size
+    * Default annotation text size

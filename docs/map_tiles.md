@@ -189,7 +189,6 @@ For complete control and real-time base maps, consider:
 |----------|-------------------|
 | General map viewing | Raster tiles (OSM Standard or Carto Light) |
 | Minimal clutter for print | Raster tiles (Carto Light No Labels) |
-| Dark theme preference | Raster tiles (Carto Dark) |
 | Humanitarian mapping | Raster tiles (OSM HOT) |
 | Custom POI filtering | Vector tiles (MapTiler) with API key |
 | Complete control | Self-hosted rendering (not implemented) |
@@ -215,7 +214,6 @@ The application supports multiple tile layer providers, configured in `frontend/
 - **OpenStreetMap Standard**: Full detail with all features including POIs and bus stops
 - **Carto Light**: Clean, minimal style without POI clutter
 - **Carto Light (No Labels)**: Extremely minimal - roads and water only
-- **Carto Dark**: Dark theme variant with simplified labeling
 - **Humanitarian OSM**: Optimized for humanitarian mapping with infrastructure emphasis
 
 #### Vector Tile Providers (Customizable, Power Users)
