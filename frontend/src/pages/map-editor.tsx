@@ -706,8 +706,8 @@ const MapEditor: React.FC = () => {
       
       setLayers(layersToSet);
       
-      // Set first editable layer as active by default if no layer is currently active
-      const editableLayers = layersToSet.filter(l => l.is_editable);
+      // Set first editable annotation layer as active by default if no layer is currently active
+      const editableLayers = layersToSet.filter(l => l.is_editable && l.layer_type === 'annotation');
       
       // Use functional update to check current state value
       setActiveLayerId(currentActiveId => {

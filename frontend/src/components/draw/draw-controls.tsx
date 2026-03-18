@@ -142,18 +142,23 @@ export const DrawControls: React.FC<DrawControlsProps> = ({
     // Add keyboard event listener
     document.addEventListener('keydown', handleEscapeKey);
 
-    // Prevent drawing annotations without an active layer
+    // Prevent drawing annotations without an active annotation layer
     const handleDrawStart: LeafletEventHandlerFn = (): void => {
-      if (mode === 'annotation' && !activeLayerId) {
-        if (showToast) {
-          showToast(
-            'Please select a layer before creating annotations',
-            'warning'
-          );
+      if (mode === 'annotation') {
+        const activeAnnotationLayer = layers?.find(
+          l => l.id === activeLayerId && l.layer_type === 'annotation' && l.is_editable
+        );
+        if (!activeAnnotationLayer) {
+          if (showToast) {
+            showToast(
+              'Please select an annotation layer before creating annotations',
+              'warning'
+            );
+          }
+          
+          // Disable the drawing mode that just started
+          map.pm.disableDraw();
         }
-        
-        // Disable the drawing mode that just started
-        map.pm.disableDraw();
       }
     };
 
@@ -275,6 +280,18 @@ export const DrawControls: React.FC<DrawControlsProps> = ({
 
         onBoundaryCreated(coordinates);
       } else if (mode === 'annotation') {
+        // Guard: if no active annotation layer is selected, remove the drawn shape and warn the user
+        const activeAnnotationLayer = layers?.find(
+          l => l.id === activeLayerId && l.layer_type === 'annotation' && l.is_editable
+        );
+        if (!activeAnnotationLayer) {
+          map.removeLayer(layer);
+          if (showToast) {
+            showToast('Please select an annotation layer before creating annotations', 'warning');
+          }
+          return;
+        }
+
         // Handle annotation creation
         console.log('Annotation created:', e.shape, layer.toGeoJSON());
         
