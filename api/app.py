@@ -232,6 +232,30 @@ def migrate_add_parent_layer_id(
         logger.info("parent_layer_id column already exists in layers table")
 
 
+def migrate_add_boundaries_layer_id(
+    cursor: sqlite3.Cursor,
+    conn: sqlite3.Connection
+) -> None:
+    """
+    Migration: Add layer_id column to boundaries table if it doesn't exist.
+    """
+    if not column_exists(cursor, 'boundaries', 'layer_id'):
+        try:
+            logger.info("Adding layer_id column to boundaries table...")
+            cursor.execute("""
+                ALTER TABLE boundaries
+                ADD COLUMN layer_id INTEGER REFERENCES layers(id) ON DELETE SET NULL
+            """)
+            conn.commit()
+            logger.info("Successfully added layer_id column to boundaries table")
+        except Exception as e:
+            logger.error(f"Error adding layer_id column to boundaries: {e}")
+            conn.rollback()
+            raise
+    else:
+        logger.info("layer_id column already exists in boundaries table")
+
+
 def run_migrations(db_path: str) -> None:
     """
     Run all pending database migrations.
@@ -248,6 +272,7 @@ def run_migrations(db_path: str) -> None:
 
         # Run migrations in order
         migrate_add_parent_layer_id(cursor, conn)
+        migrate_add_boundaries_layer_id(cursor, conn)
 
         conn.close()
         logger.info("All migrations completed successfully")
