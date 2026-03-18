@@ -52,7 +52,6 @@ from flask import (
 from flask_session import Session
 import os
 import logging
-import sqlite3
 
 # Custom Module Imports
 from backend.config import Config

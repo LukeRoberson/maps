@@ -305,6 +305,9 @@ export const DrawControls: React.FC<DrawControlsProps> = ({
             if (textAnnotationSaved) {
               return; // Already saved
             }
+            // Mark synchronously so the companion event (pm:disable fires after pm:textblur)
+            // doesn't enqueue a second save before the first setTimeout runs.
+            textAnnotationSaved = true;
 
             // Type-safe access to Geoman text methods
             const geomanLayer = layer as unknown as {
@@ -316,51 +319,55 @@ export const DrawControls: React.FC<DrawControlsProps> = ({
             
             content = geomanLayer.pm?.getText?.() || geomanLayer._text || '';
 
-            // Only save if text was actually entered
-            if (
-              onAnnotationCreated && 
-              coordinates && 
-              activeLayerId && 
-              content && 
-              content.trim()
-            ) {
-              // Get layer color from active layer config
-              const activeLayer = layers?.find(l => l.id === activeLayerId);
-              const layerColor = (activeLayer?.config as LayerConfig)?.color || '#2ecc71';
-              
-              // Build style object with type-safe property access
-              const style: AnnotationStyle = {};
-              
-              if (hasPathOptions(layer)) {
-                style.color = layer.options.color || layerColor;
-                style.fillColor = layer.options.fillColor;
-                style.fillOpacity = layer.options.fillOpacity;
-                style.weight = layer.options.weight;
-              } else {
-                // Marker layers - use default color
-                style.color = layerColor;
-              }
+            // Defer state update so Geoman can finish its own DOM cleanup before React
+            // re-renders. Without this, React's removeChild call races with Geoman moving
+            // the text-input node during the blur event, causing a white-screen crash.
+            setTimeout(() => {
+              // Only save if text was actually entered
+              if (
+                onAnnotationCreated && 
+                coordinates && 
+                activeLayerId && 
+                content && 
+                content.trim()
+              ) {
+                // Get layer color from active layer config
+                const activeLayer = layers?.find(l => l.id === activeLayerId);
+                const layerColor = (activeLayer?.config as LayerConfig)?.color || '#2ecc71';
+                
+                // Build style object with type-safe property access
+                const style: AnnotationStyle = {};
+                
+                if (hasPathOptions(layer)) {
+                  style.color = layer.options.color || layerColor;
+                  style.fillColor = layer.options.fillColor;
+                  style.fillOpacity = layer.options.fillOpacity;
+                  style.weight = layer.options.weight;
+                } else {
+                  // Marker layers - use default color
+                  style.color = layerColor;
+                }
 
-              style.fontSize = 20;
-              
-              const annotationData: Omit<Annotation, 'id' | 'created_at' | 'updated_at'> = {
-                layer_id: activeLayerId,
-                annotation_type: 'text',
-                coordinates: coordinates,
-                style: style,
-                content: content,
-              };
-              
-              onAnnotationCreated(annotationData as Annotation);
-              textAnnotationSaved = true;
-              
-              if (showToast) {
-                showToast('Text annotation created and saved!', 'success');
+                style.fontSize = 20;
+                
+                const annotationData: Omit<Annotation, 'id' | 'created_at' | 'updated_at'> = {
+                  layer_id: activeLayerId,
+                  annotation_type: 'text',
+                  coordinates: coordinates,
+                  style: style,
+                  content: content,
+                };
+                
+                onAnnotationCreated(annotationData as Annotation);
+                
+                if (showToast) {
+                  showToast('Text annotation created and saved!', 'success');
+                }
+              } else if (!content || !content.trim()) {
+                // Remove the layer if no text was entered
+                map.removeLayer(layer);
               }
-            } else if (!content || !content.trim()) {
-              // Remove the layer if no text was entered
-              map.removeLayer(layer);
-            }
+            }, 0);
           });
           
           // Get initial text if it exists (might be available immediately)
