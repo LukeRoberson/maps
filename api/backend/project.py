@@ -536,6 +536,14 @@ class ProjectService:
                         if layers:
                             for layer_row in layers:
                                 layer_dict = dict(layer_row)
+
+                                # Skip inherited layers — they are auto-generated
+                                # by _get_inherited_layers() on demand and must
+                                # not be exported, otherwise they get duplicated
+                                # on import when the backend recreates them.
+                                if layer_dict.get('parent_layer_id') is not None:
+                                    continue
+
                                 layers_list.append(layer_dict)
 
                                 # Get annotations for this layer
@@ -665,10 +673,28 @@ class ProjectService:
 
                             boundary_map_areas.add(new_map_area_id)
 
-                    # Create boundary layers for map areas with boundaries
-                    # Handles imports from before boundary layers existed
+                    # Determine which map areas already have a boundary layer
+                    # in the export (old area ID -> bool). If a boundary layer
+                    # is present in the layers list we must NOT create a
+                    # fallback, otherwise a duplicate is produced.
+                    old_areas_with_boundary_layer = {
+                        layer['map_area_id']
+                        for layer in import_data.get('layers', [])
+                        if layer.get('layer_type') == 'boundary'
+                        and layer.get('parent_layer_id') is None
+                    }
+                    new_areas_with_boundary_layer = {
+                        map_area_id_map[old_id]
+                        for old_id in old_areas_with_boundary_layer
+                        if old_id in map_area_id_map
+                    }
+
+                    # Create fallback boundary layers only for map areas whose
+                    # boundary layer was not exported (legacy exports).
                     for map_area_id in boundary_map_areas:
-                        # Create a boundary layer for this map area
+                        if map_area_id in new_areas_with_boundary_layer:
+                            continue
+
                         boundary_layer = {
                             'map_area_id': map_area_id,
                             'name': 'Boundary',
@@ -718,6 +744,26 @@ class ProjectService:
                             )
 
                             layer_id_map[old_layer_id] = new_layer_id
+
+                # Link imported boundary layers back to their boundary records.
+                # The fallback block above handles this for legacy exports;
+                # here we handle it for current exports where the boundary
+                # layer was included in the layers list.
+                for layer in import_data.get('layers', []):
+                    if (
+                        layer.get('layer_type') == 'boundary'
+                        and layer.get('parent_layer_id') is None
+                    ):
+                        new_layer_id = layer_id_map.get(layer['id'])
+                        new_map_area_id = map_area_id_map.get(
+                            layer['map_area_id']
+                        )
+                        if new_layer_id and new_map_area_id:
+                            db_manager.update(
+                                table="boundaries",
+                                fields={'layer_id': new_layer_id},
+                                parameters={'map_area_id': new_map_area_id}
+                            )
 
                 # Import annotations
                 if 'annotations' in import_data:
