@@ -14,7 +14,6 @@ import { MapContainer, Pane, TileLayer, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import '@geoman-io/leaflet-geoman-free';
 import '@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css';
-import { toPng } from 'html-to-image';
 
 // Internal dependencies
 import { apiClient } from '@/services/api-client';
@@ -1286,128 +1285,28 @@ const MapEditor: React.FC = () => {
   };
 
   const handleExport = async (options: ExportOptions): Promise<void> => {
-    if (!mapInstance || !mapAreaId || !mapArea) return;
+    if (!mapAreaId || !mapArea) return;
 
     setIsExporting(true);
     setShowExportDialog(false);
 
     try {
-      // Store current view
-      const currentCenter = mapInstance.getCenter();
-      const currentZoom = mapInstance.getZoom();
-
-      // If using default view, temporarily move to it
-      if (options.useDefaultView && mapArea.default_center_lat && mapArea.default_center_lon && mapArea.default_zoom) {
-        mapInstance.setView(
-          [mapArea.default_center_lat, mapArea.default_center_lon],
-          mapArea.default_zoom,
-          { animate: false }
-        );
-      }
-
-      // Wait for tiles to load
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      // Get the map container element
-      const mapContainer = mapInstance.getContainer();
-
-      // Temporarily hide UI controls for cleaner export
-      const controls = mapContainer.querySelectorAll('.leaflet-control-container');
-      controls.forEach(control => {
-        (control as HTMLElement).style.display = 'none';
+      const blob = await apiClient.generateExport(parseInt(mapAreaId), {
+        zoom: options.zoom,
+        include_annotations: options.includeAnnotations,
+        include_boundary: options.includeBoundary,
       });
 
-      // Optionally hide boundaries
-      if (!options.includeBoundaries) {
-        const boundaries = mapContainer.querySelectorAll('.leaflet-interactive');
-        boundaries.forEach(boundary => {
-          const element = boundary as HTMLElement;
-          // Check if it's a boundary (polygon/polyline) not an annotation marker
-          if (element.tagName === 'path') {
-            element.style.display = 'none';
-          }
-        });
-      }
+      // Trigger browser download
+      const filename = `${mapArea.name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.png`;
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.download = filename;
+      link.href = url;
+      link.click();
+      URL.revokeObjectURL(url);
 
-      // Optionally hide annotations
-      if (!options.includeAnnotations) {
-        const markers = mapContainer.querySelectorAll('.leaflet-marker-pane, .leaflet-tooltip-pane');
-        markers.forEach(marker => {
-          (marker as HTMLElement).style.display = 'none';
-        });
-      }
-
-      // Capture the map as PNG
-      const dataUrl = await toPng(mapContainer, {
-        quality: 1.0,
-        pixelRatio: 2, // Higher quality export
-        cacheBust: true,
-      });
-
-      // Restore UI controls
-      controls.forEach(control => {
-        (control as HTMLElement).style.display = '';
-      });
-
-      // Restore boundaries if hidden
-      if (!options.includeBoundaries) {
-        const boundaries = mapContainer.querySelectorAll('.leaflet-interactive');
-        boundaries.forEach(boundary => {
-          (boundary as HTMLElement).style.display = '';
-        });
-      }
-
-      // Restore annotations if hidden
-      if (!options.includeAnnotations) {
-        const markers = mapContainer.querySelectorAll('.leaflet-marker-pane, .leaflet-tooltip-pane');
-        markers.forEach(marker => {
-          (marker as HTMLElement).style.display = '';
-        });
-      }
-
-      // Restore original view if we changed it
-      if (options.useDefaultView && mapArea.default_center_lat && mapArea.default_center_lon && mapArea.default_zoom) {
-        mapInstance.setView(currentCenter, currentZoom, { animate: false });
-      }
-
-      // Handle export based on format
-      if (options.format === 'clipboard') {
-        // Copy to clipboard
-        try {
-          const blob = await (await fetch(dataUrl)).blob();
-          await navigator.clipboard.write([
-            new ClipboardItem({ 'image/png': blob })
-          ]);
-          showToast('Map copied to clipboard!', 'success');
-        } catch (clipboardError) {
-          console.error('Clipboard error:', clipboardError);
-          showToast('Failed to copy to clipboard. Your browser may not support this feature.', 'error');
-        }
-      } else {
-        // Download as file or save to server
-        const filename = `${mapArea.name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.png`;
-        
-        // Send to server
-        try {
-          await apiClient.exportMap(parseInt(mapAreaId), dataUrl, filename);
-          
-          // Also trigger browser download
-          const link = document.createElement('a');
-          link.download = filename;
-          link.href = dataUrl;
-          link.click();
-          
-          showToast('Map exported successfully!', 'success');
-        } catch (serverError) {
-          console.error('Server export error:', serverError);
-          // Still allow local download even if server fails
-          const link = document.createElement('a');
-          link.download = filename;
-          link.href = dataUrl;
-          link.click();
-          showToast('Map downloaded (server save failed)', 'warning');
-        }
-      }
+      showToast('Map exported successfully!', 'success');
     } catch (error) {
       console.error('Export error:', error);
       showToast('Failed to export map. Please try again.', 'error');

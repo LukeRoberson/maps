@@ -3,3 +3,5 @@ Flask-CORS==4.0.0
 Flask-Session==0.8.0
 PyYAML==6.0.3
 gunicorn>=21.2.0
+Pillow>=10.0.0
+requests>=2.31.0

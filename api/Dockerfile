@@ -8,7 +8,11 @@ WORKDIR /app
 RUN apk add --no-cache \
     gcc \
     musl-dev \
-    linux-headers
+    linux-headers \
+    jpeg-dev \
+    zlib-dev \
+    libpng-dev \
+    freetype-dev
 
 # Copy requirements first for better caching
 COPY requirements.txt .

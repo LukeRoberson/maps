@@ -6,11 +6,11 @@ API endpoints for exporting maps to PNG files.
 Blueprint: exports_bp
 
 Routes:
-    export_map
-        Export a map as PNG
-        /api/exports [POST]
+    generate_export
+        Generate a server-side PNG export of a map area
+        /api/exports/generate [POST]
     download_export
-        Download an exported map file
+        Download a previously generated export file
         /api/exports/<filename> [GET]
 
 Third Party Imports
@@ -31,8 +31,9 @@ Local Imports
 
 
 # Standard Library Imports
+import io
 import logging
-from typing import (Any)
+from typing import Any
 
 # Third Party Imports
 from flask import (
@@ -67,80 +68,67 @@ logger = logging.getLogger(__name__)
 
 
 @exports_bp.route(
-    '',
+    '/generate',
     methods=['POST']
 )
-def export_map() -> Response:
+def generate_export() -> Response:
     """
-    Export a map as PNG.
+    Generate a server-side PNG export of a map area.
 
-    Args:
-        None
+    Request JSON:
+        map_area_id (int): Required. The map area to export.
+        zoom (int|null): Optional. Zoom level override (null = auto).
+        include_annotations (bool): Whether to draw annotations (default True).
+        include_boundary (bool): Whether to draw boundary outline (default True).
 
     Returns:
-        Response: JSON response with export result
+        Response: PNG file as binary download
     """
 
     try:
-        # Get data from request
         data = request.get_json()
 
-        # Validate input
         if not data:
             return make_response(
-                jsonify(
-                    {'error': 'No data provided'}
-                ),
+                jsonify({'error': 'No data provided'}),
                 400
             )
 
-        # Validate required fields
-        required_fields = [
-            'map_area_id',
-            'image_data'
-        ]
-        for field in required_fields:
-            if field not in data:
-                return make_response(
-                    jsonify(
-                        {'error': f'Missing required field: {field}'}
-                    ),
-                    400
-                )
+        map_area_id = data.get('map_area_id')
+        if not map_area_id:
+            return make_response(
+                jsonify({'error': 'Missing required field: map_area_id'}),
+                400
+            )
 
-        # Call export service
-        result = export_service.export_map(
-            map_id=data['map_area_id'],
-            image_data=data['image_data'],
-            filename=data.get('filename')
+        zoom = data.get('zoom')  # None = auto
+        include_annotations = data.get('include_annotations', True)
+        include_boundary = data.get('include_boundary', True)
+
+        png_bytes, filename = export_service.generate(
+            map_area_id=int(map_area_id),
+            zoom=int(zoom) if zoom is not None else None,
+            include_annotations=bool(include_annotations),
+            include_boundary=bool(include_boundary),
         )
 
-        # Return response
-        if result['success']:
-            return make_response(
-                jsonify(
-                    {
-                        'filename': result['filename'],
-                        'size': result['size']
-                    }
-                ),
-                201
-            )
+        return send_file(
+            io.BytesIO(png_bytes),
+            mimetype='image/png',
+            as_attachment=True,
+            download_name=filename,
+        )
 
-        # Error occurred during export
-        else:
-            return make_response(
-                jsonify(
-                    {'error': result['error']}
-                ),
-                500
-            )
-
-    except Exception as e:
+    except ValueError as e:
+        logger.warning("Export validation error: %s", e)
         return make_response(
-            jsonify(
-                {'error': str(e)}
-            ),
+            jsonify({'error': str(e)}),
+            400
+        )
+    except Exception as e:
+        logger.error("Export generation failed: %s", e, exc_info=True)
+        return make_response(
+            jsonify({'error': 'Export failed. Please try again.'}),
             500
         )
 
@@ -163,19 +151,14 @@ def download_export(
     """
 
     try:
-        # Get file path
         filepath = export_service.get_export_path(filename)
 
-        # If file not found, return 404
         if not filepath:
             return make_response(
-                jsonify(
-                    {'error': 'File not found'}
-                ),
+                jsonify({'error': 'File not found'}),
                 404
             )
 
-        # Send file as response
         return send_file(
             filepath,
             mimetype='image/png',
@@ -185,8 +168,6 @@ def download_export(
 
     except Exception as e:
         return make_response(
-            jsonify(
-                {'error': str(e)}
-            ),
+            jsonify({'error': str(e)}),
             500
         )

@@ -48,42 +48,29 @@
   line-height: 1.5;
 }
 
-.export-radio-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.option-label {
-  font-weight: 500;
-  color: var(--text-primary);
-  display: block;
-  margin-bottom: 0.5rem;
-}
-
-.radio-options {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin-left: 0.5rem;
-}
-
-.radio-label {
+.zoom-control {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  cursor: pointer;
+  margin: 0.75rem 0 0 2rem;
+}
+
+.zoom-control .btn-sm {
+  padding: 0.15rem 0.5rem;
+  font-size: 1rem;
+  min-width: 2rem;
+  text-align: center;
+}
+
+.zoom-value {
+  font-weight: 600;
+  font-size: 1rem;
+  min-width: 1.5rem;
+  text-align: center;
+}
+
+.zoom-hint {
   color: var(--text-secondary);
-  user-select: none;
-}
-
-.radio-label input[type='radio'] {
-  width: 1rem;
-  height: 1rem;
-  cursor: pointer;
-  margin: 0;
-}
-
-.radio-label span {
-  flex: 1;
+  font-size: 0.8rem;
+  margin-left: 0.5rem;
 }

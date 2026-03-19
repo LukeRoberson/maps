@@ -8,11 +8,14 @@ interface ExportDialogProps {
 }
 
 export interface ExportOptions {
-  useDefaultView: boolean;
-  includeBoundaries: boolean;
+  includeBoundary: boolean;
   includeAnnotations: boolean;
-  format: 'download' | 'clipboard';
+  zoom: number | null; // null = auto
 }
+
+const MIN_ZOOM = 14;
+const MAX_ZOOM = 19;
+const DEFAULT_ZOOM = 17;
 
 const ExportDialog: React.FC<ExportDialogProps> = ({
   mapAreaName,
@@ -20,14 +23,18 @@ const ExportDialog: React.FC<ExportDialogProps> = ({
   onCancel,
 }) => {
   const [options, setOptions] = useState<ExportOptions>({
-    useDefaultView: true,
-    includeBoundaries: true,
+    includeBoundary: true,
     includeAnnotations: true,
-    format: 'download',
+    zoom: null,
   });
+  const [useAutoZoom, setUseAutoZoom] = useState(true);
+  const [manualZoom, setManualZoom] = useState(DEFAULT_ZOOM);
 
   const handleExport = (): void => {
-    onExport(options);
+    onExport({
+      ...options,
+      zoom: useAutoZoom ? null : manualZoom,
+    });
   };
 
   return (
@@ -41,35 +48,15 @@ const ExportDialog: React.FC<ExportDialogProps> = ({
             <label className="export-checkbox-label">
               <input
                 type="checkbox"
-                checked={options.useDefaultView}
+                checked={options.includeBoundary}
                 onChange={(e) =>
-                  setOptions({ ...options, useDefaultView: e.target.checked })
+                  setOptions({ ...options, includeBoundary: e.target.checked })
                 }
               />
-              <span>Use default view (zoom and position)</span>
+              <span>Include boundary outline</span>
             </label>
             <p className="option-description">
-              When checked, exports the map at the saved default view. Uncheck
-              to export the current visible area.
-            </p>
-          </div>
-
-          <div className="export-option">
-            <label className="export-checkbox-label">
-              <input
-                type="checkbox"
-                checked={options.includeBoundaries}
-                onChange={(e) =>
-                  setOptions({
-                    ...options,
-                    includeBoundaries: e.target.checked,
-                  })
-                }
-              />
-              <span>Include boundaries</span>
-            </label>
-            <p className="option-description">
-              Include map area boundaries in the export.
+              Draw the map area boundary on the export.
             </p>
           </div>
 
@@ -88,34 +75,44 @@ const ExportDialog: React.FC<ExportDialogProps> = ({
               <span>Include annotations</span>
             </label>
             <p className="option-description">
-              Include all annotations and markers in the export.
+              Include all annotations, markers, and labels in the export.
             </p>
           </div>
 
           <div className="export-option">
-            <label className="export-radio-group">
-              <span className="option-label">Export to:</span>
-              <div className="radio-options">
-                <label className="radio-label">
-                  <input
-                    type="radio"
-                    name="format"
-                    checked={options.format === 'download'}
-                    onChange={() => setOptions({ ...options, format: 'download' })}
-                  />
-                  <span>Download as file</span>
-                </label>
-                <label className="radio-label">
-                  <input
-                    type="radio"
-                    name="format"
-                    checked={options.format === 'clipboard'}
-                    onChange={() => setOptions({ ...options, format: 'clipboard' })}
-                  />
-                  <span>Copy to clipboard</span>
-                </label>
-              </div>
+            <label className="export-checkbox-label">
+              <input
+                type="checkbox"
+                checked={useAutoZoom}
+                onChange={(e) => setUseAutoZoom(e.target.checked)}
+              />
+              <span>Auto zoom level</span>
             </label>
+            <p className="option-description">
+              Automatically choose the best zoom for readable street names.
+            </p>
+            {!useAutoZoom && (
+              <div className="zoom-control">
+                <button
+                  className="btn btn-sm btn-outline"
+                  onClick={() => setManualZoom(Math.max(MIN_ZOOM, manualZoom - 1))}
+                  disabled={manualZoom <= MIN_ZOOM}
+                >
+                  −
+                </button>
+                <span className="zoom-value">{manualZoom}</span>
+                <button
+                  className="btn btn-sm btn-outline"
+                  onClick={() => setManualZoom(Math.min(MAX_ZOOM, manualZoom + 1))}
+                  disabled={manualZoom >= MAX_ZOOM}
+                >
+                  +
+                </button>
+                <span className="zoom-hint">
+                  Higher = more detail, larger file
+                </span>
+              </div>
+            )}
           </div>
         </div>
 

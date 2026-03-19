@@ -408,24 +408,25 @@ class ApiClient {
     await this.client.delete(`/annotations/${annotationId}`);
   }
 
-  async exportMap(
+  async generateExport(
     mapAreaId: number,
-    imageData: string,
-    filename?: string
-  ): Promise<{ filename: string; size: number }> {
-    const response: AxiosResponse<{ filename: string; size: number }> =
-      await this.client.post('/exports', {
+    options: {
+      zoom?: number | null;
+      include_annotations?: boolean;
+      include_boundary?: boolean;
+    }
+  ): Promise<Blob> {
+    const response = await this.client.post(
+      '/exports/generate',
+      {
         map_area_id: mapAreaId,
-        image_data: imageData,
-        filename,
-      });
-    return response.data;
-  }
-
-  getExportDownloadUrl(
-    filename: string
-  ): string {
-    return `${API_BASE_URL}/exports/${filename}`;
+        zoom: options.zoom ?? null,
+        include_annotations: options.include_annotations ?? true,
+        include_boundary: options.include_boundary ?? true,
+      },
+      { responseType: 'blob' }
+    );
+    return response.data as Blob;
   }
 
   /**

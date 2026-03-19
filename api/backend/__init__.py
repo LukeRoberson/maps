@@ -9,6 +9,7 @@ from .boundary import BoundaryModel, BoundaryService
 from .layer import LayerModel, LayerService
 from .annotation import AnnotationModel, AnnotationService
 from .export import ExportService
+from .tile_config import TileLayerConfig, get_tile_config
 
 __all__ = [
     'Config',
@@ -23,4 +24,6 @@ __all__ = [
     'AnnotationModel',
     'AnnotationService',
     'ExportService',
+    'TileLayerConfig',
+    'get_tile_config',
 ]
