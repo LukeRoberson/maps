@@ -6,6 +6,15 @@
     * When adding an annotation
   * Console error: Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is no longer a child of this node. Perhaps it was moved in a 'blur' event handler?
   * Fine after refresh
+- [x] Annotations are not enforced into any layer
+  * Presumably they belong to the 'Boundary' layer
+  * A layer should be selected first, or annotations shouldn't be allowed
+  * Was fine in dev, not in prod
+- [x] New maps don't have a boundary layer
+  * Old maps still have them
+  * Hising the suburb boundary hides the map boundary too
+  * Can still edit the boundary
+
 - [ ] Sometimes a text annotation is completed automatically without pressing enter
   * Eg, adding a new annotation, enter a number
   * Get two characters typed
@@ -23,13 +32,7 @@
 - [ ] CSS error in console:
   * Error inlining remote css file SecurityError: Failed to read the 'cssRules' property from 'CSSStyleSheet': Cannot access rules
   * Error while reading CSS rules from https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css SecurityError: Failed to read the 'cssRules' property from 'CSSStyleSheet'
-- [x] Annotations are not enforced into any layer
-  * Presumably they belong to the 'Boundary' layer
-  * A layer should be selected first, or annotations shouldn't be allowed
-- [x] New maps don't have a boundary layer
-  * Old maps still have them
-  * Hising the suburb boundary hides the map boundary too
-  * Can still edit the boundary
+  * [!NOTE] May be fixed along with another bug
 
 
 
@@ -81,3 +84,8 @@
   - [ ] Allow read only users and admins
   - [ ] Admins can update maps
   - [ ] System to reset passwords
+- [ ] Edit panel
+  - [ ] Create a new panel on the left, under layers
+  - [ ] Make it expandable/shrinkable
+  - [ ] Add the zoom, lat, lon, in here so they can be edited manually
+  - [ ] Default map style

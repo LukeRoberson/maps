@@ -13,6 +13,9 @@ export interface TileLayerOption {
   maxZoom: number;
   subdomains?: string[];
   streetLabelOverlay?: StreetLabelOverlayOption | null;
+  /** Apply zoom offset to the base tile layer itself (for all-in-one tiles without a labels-only URL) */
+  baseZoomOffset?: number;
+  baseTileSize?: number;
 }
 
 export interface StreetLabelOverlayOption {
@@ -37,7 +40,9 @@ export const TILE_LAYER_OPTIONS: TileLayerOption[] = [
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     description: 'Standard OSM with all features including POIs, bus stops, etc.',
     maxZoom: 19,
-    subdomains: ['a', 'b', 'c']
+    subdomains: ['a', 'b', 'c'],
+    baseZoomOffset: -1,
+    baseTileSize: 512,
   },
   {
     id: 'carto-voyager',
@@ -90,7 +95,30 @@ export const TILE_LAYER_OPTIONS: TileLayerOption[] = [
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Tiles style by <a href="https://www.hotosm.org/" target="_blank">Humanitarian OpenStreetMap Team</a>',
     description: 'Cleaner style optimized for humanitarian mapping',
     maxZoom: 19,
-    subdomains: ['a', 'b']
+    subdomains: ['a', 'b'],
+    baseZoomOffset: -1,
+    baseTileSize: 512,
+  },
+  {
+    id: 'wikimedia',
+    name: 'Wikimedia',
+    url: 'https://maps.wikimedia.org/osm-intl/{z}/{x}/{y}.png',
+    attribution: '<a href="https://wikimediafoundation.org/wiki/Maps_Terms_of_Use">Wikimedia</a>',
+    description: 'Clean, high-contrast style with bold road labels on a light background.',
+    maxZoom: 19,
+    baseZoomOffset: -1,
+    baseTileSize: 512,
+  },
+  {
+    id: 'cyclosm',
+    name: 'CyclOSM',
+    url: 'https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png',
+    attribution: '<a href="https://github.com/cyclosm/cyclosm-cartocss-style/releases" title="CyclOSM - Open Bicycle render">CyclOSM</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    description: 'OSM variant with clear street/block contrast and cycling infrastructure.',
+    maxZoom: 20,
+    subdomains: ['a', 'b', 'c'],
+    baseZoomOffset: -1,
+    baseTileSize: 512,
   }
 ];
 

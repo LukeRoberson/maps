@@ -1698,7 +1698,9 @@ const MapEditor: React.FC = () => {
             attribution={currentTileLayer.attribution}
             url={currentTileLayer.url}
             maxZoom={currentTileLayer.maxZoom}
-            subdomains={currentTileLayer.subdomains}
+            subdomains={currentTileLayer.subdomains ?? 'abc'}
+            zoomOffset={currentTileLayer.baseZoomOffset ?? 0}
+            tileSize={currentTileLayer.baseTileSize ?? 256}
           />
           {currentStreetLabelOverlay && (
             <Pane name="street-labels-pane" style={{ zIndex: 350, pointerEvents: 'none' }}>
@@ -1709,7 +1711,7 @@ const MapEditor: React.FC = () => {
                 url={currentStreetLabelOverlay.url}
                 maxZoom={currentStreetLabelOverlay.maxZoom}
                 minZoom={1}
-                subdomains={currentStreetLabelOverlay.subdomains}
+                subdomains={currentStreetLabelOverlay.subdomains ?? 'abc'}
                 zoomOffset={currentStreetLabelOverlay.zoomOffset ?? 0}
                 tileSize={currentStreetLabelOverlay.tileSize ?? 256}
               />
