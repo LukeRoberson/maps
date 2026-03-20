@@ -65,7 +65,8 @@ from routes import (
     boundaries_bp,
     layers_bp,
     annotations_bp,
-    exports_bp
+    exports_bp,
+    tiles_bp,
 )
 
 
@@ -205,6 +206,7 @@ app.register_blueprint(boundaries_bp)
 app.register_blueprint(layers_bp)
 app.register_blueprint(annotations_bp)
 app.register_blueprint(exports_bp)
+app.register_blueprint(tiles_bp)
 
 
 @app.route('/health')

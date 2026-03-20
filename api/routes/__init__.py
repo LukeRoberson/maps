@@ -8,6 +8,7 @@ from .boundaries import boundaries_bp
 from .layers import layers_bp
 from .annotations import annotations_bp
 from .exports import exports_bp
+from .tiles import tiles_bp
 
 __all__ = [
     'projects_bp',
@@ -15,5 +16,6 @@ __all__ = [
     'boundaries_bp',
     'layers_bp',
     'annotations_bp',
-    'exports_bp'
+    'exports_bp',
+    'tiles_bp',
 ]
