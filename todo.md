@@ -94,3 +94,4 @@
   - [ ] Can we get street length?
   - [ ] Can we get the number of houses per block?
   - [ ] Some free-tier map styles that were previously discounted (need API key)
+  - [ ] PNG exports seem to be going to an exports folder within the project

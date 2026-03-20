@@ -371,6 +371,7 @@ def _draw_annotations(
     tile_size: int,
     origin_px: float,
     origin_py: float,
+    export_scale: float = 2.0,
 ) -> None:
     """Render annotations onto the image in-place."""
     draw = ImageDraw.Draw(image)
@@ -423,8 +424,8 @@ def _draw_annotations(
                 lon_val = coord[1] if isinstance(coord[1], (int, float)) else coord[0][1]
                 px, py = _coord_to_px(lat_val, lon_val, zoom, tile_size, origin_px, origin_py)
                 font_size = int(style.get('fontSize', 20))
-                # Scale to match on-screen visual weight: 3x retina-aware factor
-                scaled_size = max(24, font_size * tile_size // TILE_PX * 3)
+                # Scale to match on-screen visual weight relative to canvas resolution
+                scaled_size = max(24, int(font_size * export_scale * 3))
                 font = _load_font(scaled_size)
                 text = ann.content or ''
                 if text:
@@ -441,11 +442,11 @@ def _draw_annotations(
                 lat_val = coord[0] if isinstance(coord[0], (int, float)) else coord[0][0]
                 lon_val = coord[1] if isinstance(coord[1], (int, float)) else coord[0][1]
                 px, py = _coord_to_px(lat_val, lon_val, zoom, tile_size, origin_px, origin_py)
-                r = max(10, tile_size // 20)
+                r = max(10, int(TILE_PX // 20 * export_scale * 2))
                 draw.ellipse([px - r, py - r, px + r, py + r], fill=color, outline='white', width=3)
                 # Label text beside the marker
                 if ann.content:
-                    label_size = max(20, tile_size // 8)
+                    label_size = max(20, int(TILE_PX // 8 * export_scale * 2))
                     font = _load_font(label_size)
                     for dx in range(-2, 3):
                         for dy in range(-2, 3):
@@ -672,10 +673,16 @@ class ExportService:
                     anns = annotation_service.read(layer_id=layer.id)
                     all_annotations.extend(anns)
             if all_annotations:
+                # Ratio of export pixel density to on-screen pixel density.
+                # On screen: 256px tiles at logical zoom.
+                # Export: tile_size tiles at fetch_zoom = logical_zoom + zoom_offset.
+                # ratio = (tile_size / TILE_PX) * 2^zoom_offset
+                export_scale = (tile_size / TILE_PX) * (2 ** zoom_offset)
                 _draw_annotations(
                     canvas, all_annotations,
                     fetch_zoom, tile_size,
                     origin_px, origin_py,
+                    export_scale=export_scale,
                 )
 
         # --- Boundary fade mask ---
