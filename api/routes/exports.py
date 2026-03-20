@@ -104,12 +104,14 @@ def generate_export() -> Response:
         zoom = data.get('zoom')  # None = auto
         include_annotations = data.get('include_annotations', True)
         include_boundary = data.get('include_boundary', True)
+        tile_layer = data.get('tile_layer')  # None = use map area's saved value
 
         png_bytes, filename = export_service.generate(
             map_area_id=int(map_area_id),
             zoom=int(zoom) if zoom is not None else None,
             include_annotations=bool(include_annotations),
             include_boundary=bool(include_boundary),
+            tile_layer=str(tile_layer) if tile_layer is not None else None,
         )
 
         return send_file(

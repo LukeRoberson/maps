@@ -12,7 +12,8 @@ RUN apk add --no-cache \
     jpeg-dev \
     zlib-dev \
     libpng-dev \
-    freetype-dev
+    freetype-dev \
+    font-dejavu
 
 # Copy requirements first for better caching
 COPY requirements.txt .

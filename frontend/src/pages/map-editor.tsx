@@ -1295,6 +1295,7 @@ const MapEditor: React.FC = () => {
         zoom: options.zoom,
         include_annotations: options.includeAnnotations,
         include_boundary: options.includeBoundary,
+        tile_layer: currentTileLayerId,
       });
 
       // Trigger browser download

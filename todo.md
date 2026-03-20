@@ -38,13 +38,11 @@
 
 # Immediate Concerns
 
-- [ ] Map styles: Can we get more contrast between the block and the road?
+- [x] Map styles: Can we get more contrast between the block and the road?
   * OSM has good contrast, but tiny street names
 - [ ] Map styles: Can we get darker text?
 - [ ] Export to PNG
   * Investigate a different export method
-  * Eg, one zoom level for the export area, another zoom level for the size of the streets
-  * Or, set zoom level for export, then zoom out and draw a box to export that area
 
 
 
@@ -62,8 +60,10 @@
   - [ ] At some zoom levels the street names can be a bit blurred
 - [ ] Region View
   - [ ] Show each suburb as a layer, so we can show and hide them
+  - [ ] Show/hide individual maps
 - [ ] Suburb view
   - [ ] Show individual maps as layers, so we can show/hide them
+  - [ ] When hovering over a map, change the mask shading so the borders are clearly visisble
 
 - [ ] Settings
   - [ ] Add a settings page (based on config.yaml)
@@ -89,3 +89,7 @@
   - [ ] Make it expandable/shrinkable
   - [ ] Add the zoom, lat, lon, in here so they can be edited manually
   - [ ] Default map style
+- [ ] Investigate:
+  - [ ] Can we get the area of a map in meters^2?
+  - [ ] Can we get street length?
+  - [ ] Can we get the number of houses per block?

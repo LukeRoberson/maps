@@ -274,6 +274,30 @@ def _parse_color(style: Dict[str, Any], key: str = 'color', default: str = '#338
     return style.get(key, default) or default
 
 
+_FONT_CANDIDATES = [
+    "arial.ttf",
+    "C:/Windows/Fonts/arial.ttf",
+    "/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf",   # Alpine (font-dejavu)
+    "/usr/share/fonts/dejavu/DejaVuSans.ttf",
+    "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",  # Debian/Ubuntu
+    "/usr/share/fonts/TTF/DejaVuSans.ttf",              # Arch
+]
+
+
+def _load_font(size: int) -> ImageFont.FreeTypeFont:
+    """Load a TrueType font at *size* px, falling back gracefully."""
+    for path in _FONT_CANDIDATES:
+        try:
+            return ImageFont.truetype(path, size)
+        except OSError:
+            continue
+    # Pillow >= 10 supports size= on the built-in vector font
+    try:
+        return ImageFont.load_default(size=size)  # type: ignore[call-arg]
+    except TypeError:
+        return ImageFont.load_default()
+
+
 def _draw_annotations(
     image: Image.Image,
     annotations: List[AnnotationModel],
@@ -333,20 +357,14 @@ def _draw_annotations(
                 lon_val = coord[1] if isinstance(coord[1], (int, float)) else coord[0][1]
                 px, py = _coord_to_px(lat_val, lon_val, zoom, tile_size, origin_px, origin_py)
                 font_size = int(style.get('fontSize', 20))
-                # Scale font size proportionally with zoom
-                scaled_size = max(12, font_size * tile_size // TILE_PX)
-                try:
-                    font = ImageFont.truetype("arial.ttf", scaled_size)
-                except OSError:
-                    try:
-                        font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", scaled_size)
-                    except OSError:
-                        font = ImageFont.load_default()
+                # Scale to match on-screen visual weight: 3x retina-aware factor
+                scaled_size = max(24, font_size * tile_size // TILE_PX * 3)
+                font = _load_font(scaled_size)
                 text = ann.content or ''
                 if text:
-                    # Draw text with outline for readability
-                    for dx in (-1, 0, 1):
-                        for dy in (-1, 0, 1):
+                    # Thicker outline (±2 px) for readability on busy backgrounds
+                    for dx in range(-2, 3):
+                        for dy in range(-2, 3):
                             if dx or dy:
                                 draw.text((px + dx, py + dy), text, fill='white', font=font)
                     draw.text((px, py), text, fill=color, font=font)
@@ -357,22 +375,17 @@ def _draw_annotations(
                 lat_val = coord[0] if isinstance(coord[0], (int, float)) else coord[0][0]
                 lon_val = coord[1] if isinstance(coord[1], (int, float)) else coord[0][1]
                 px, py = _coord_to_px(lat_val, lon_val, zoom, tile_size, origin_px, origin_py)
-                r = max(6, tile_size // 40)
-                draw.ellipse([px - r, py - r, px + r, py + r], fill=color, outline='white', width=2)
-                # Tooltip text
+                r = max(10, tile_size // 20)
+                draw.ellipse([px - r, py - r, px + r, py + r], fill=color, outline='white', width=3)
+                # Label text beside the marker
                 if ann.content:
-                    try:
-                        font = ImageFont.truetype("arial.ttf", max(12, tile_size // 20))
-                    except OSError:
-                        try:
-                            font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", max(12, tile_size // 20))
-                        except OSError:
-                            font = ImageFont.load_default()
-                    for dx in (-1, 0, 1):
-                        for dy in (-1, 0, 1):
+                    label_size = max(20, tile_size // 8)
+                    font = _load_font(label_size)
+                    for dx in range(-2, 3):
+                        for dy in range(-2, 3):
                             if dx or dy:
-                                draw.text((px + r + 4 + dx, py - r + dy), ann.content, fill='white', font=font)
-                    draw.text((px + r + 4, py - r), ann.content, fill=color, font=font)
+                                draw.text((px + r + 6 + dx, py - r + dy), ann.content, fill='white', font=font)
+                    draw.text((px + r + 6, py - r), ann.content, fill=color, font=font)
 
 
 def _hex_to_rgb(hex_color: str) -> Tuple[int, int, int]:
@@ -480,6 +493,7 @@ class ExportService:
         zoom: Optional[int] = None,
         include_annotations: bool = True,
         include_boundary: bool = True,
+        tile_layer: Optional[str] = None,
     ) -> Tuple[bytes, str]:
         """
         Generate a PNG export for a map area.
@@ -507,7 +521,8 @@ class ExportService:
         coords = boundary.coordinates  # [[lat, lon], ...]
 
         # --- Tile config ---
-        tile_cfg = get_tile_config(map_area.tile_layer)
+        # Use explicitly passed tile_layer, fall back to map area's saved value
+        tile_cfg = get_tile_config(tile_layer or map_area.tile_layer)
         retina = tile_cfg.retina
         tile_size = TILE_PX * 2 if retina else TILE_PX
         max_tile_zoom = tile_cfg.max_zoom

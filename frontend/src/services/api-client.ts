@@ -414,6 +414,7 @@ class ApiClient {
       zoom?: number | null;
       include_annotations?: boolean;
       include_boundary?: boolean;
+      tile_layer?: string;
     }
   ): Promise<Blob> {
     const response = await this.client.post(
@@ -423,6 +424,7 @@ class ApiClient {
         zoom: options.zoom ?? null,
         include_annotations: options.include_annotations ?? true,
         include_boundary: options.include_boundary ?? true,
+        tile_layer: options.tile_layer ?? null,
       },
       { responseType: 'blob' }
     );
