@@ -19,6 +19,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
 import requests
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from flask import current_app
 from PIL import Image, ImageDraw, ImageFont
 
@@ -38,8 +39,8 @@ MAX_IMAGE_PX = 8000
 BBOX_PADDING = 0.05
 # HTTP timeout for tile fetches
 TILE_FETCH_TIMEOUT = 10
-# Minimum delay between tile fetches to be polite to tile servers
-TILE_FETCH_DELAY = 0.05
+# Number of concurrent tile-fetch threads
+TILE_FETCH_WORKERS = 8
 
 
 # ---------------------------------------------------------------------------
@@ -126,12 +127,11 @@ def _build_tile_url(
     )
 
 
-def _fetch_tile(url: str) -> Optional[Image.Image]:
+def _fetch_tile(url: str, session: Optional[requests.Session] = None) -> Optional[Image.Image]:
     """Download a single tile, return as Pillow Image or None."""
     try:
-        resp = requests.get(url, timeout=TILE_FETCH_TIMEOUT, headers={
-            'User-Agent': 'PrintableMaps/1.0 (export)'
-        })
+        getter = session if session is not None else requests
+        resp = getter.get(url, timeout=TILE_FETCH_TIMEOUT)
         if resp.status_code == 200:
             return Image.open(io.BytesIO(resp.content)).convert('RGBA')
     except Exception as exc:
@@ -147,28 +147,45 @@ def _fetch_and_stitch(
     zoom: int,
     retina: bool = True,
 ) -> Image.Image:
-    """Fetch a grid of tiles and stitch into a single image."""
+    """Fetch a grid of tiles concurrently and stitch into a single image."""
     tile_size = TILE_PX * 2 if retina else TILE_PX
     cols = x_max - x_min + 1
     rows = y_max - y_min + 1
     canvas = Image.new('RGBA', (cols * tile_size, rows * tile_size), (255, 255, 255, 255))
 
-    for ty in range(y_min, y_max + 1):
-        for tx in range(x_min, x_max + 1):
-            url = _build_tile_url(url_template, tx, ty, zoom, subdomains, retina)
-            tile_img = _fetch_tile(url)
-            if tile_img is None:
-                # Retry once
-                time.sleep(0.2)
-                tile_img = _fetch_tile(url)
-            if tile_img:
-                # Resize if tile server returns non-standard size
-                if tile_img.size != (tile_size, tile_size):
-                    tile_img = tile_img.resize((tile_size, tile_size), Image.LANCZOS)
+    session = requests.Session()
+    adapter = requests.adapters.HTTPAdapter(
+        pool_connections=TILE_FETCH_WORKERS,
+        pool_maxsize=TILE_FETCH_WORKERS,
+    )
+    session.mount('http://', adapter)
+    session.mount('https://', adapter)
+    session.headers['User-Agent'] = 'PrintableMaps/1.0 (export)'
+
+    def fetch_one(tx: int, ty: int) -> Tuple[int, int, Optional[Image.Image]]:
+        url = _build_tile_url(url_template, tx, ty, zoom, subdomains, retina)
+        img = _fetch_tile(url, session)
+        if img is None:
+            time.sleep(0.2)
+            img = _fetch_tile(url, session)
+        if img is not None and img.size != (tile_size, tile_size):
+            img = img.resize((tile_size, tile_size), Image.LANCZOS)
+        return tx, ty, img
+
+    tiles = [
+        (tx, ty)
+        for ty in range(y_min, y_max + 1)
+        for tx in range(x_min, x_max + 1)
+    ]
+
+    with ThreadPoolExecutor(max_workers=TILE_FETCH_WORKERS) as executor:
+        futures = {executor.submit(fetch_one, tx, ty): (tx, ty) for tx, ty in tiles}
+        for future in as_completed(futures):
+            tx, ty, tile_img = future.result()
+            if tile_img is not None:
                 px = (tx - x_min) * tile_size
                 py = (ty - y_min) * tile_size
                 canvas.paste(tile_img, (px, py))
-            time.sleep(TILE_FETCH_DELAY)
 
     return canvas
 
@@ -616,7 +633,7 @@ class ExportService:
 
         # --- Encode PNG ---
         buf = io.BytesIO()
-        final.save(buf, format='PNG', optimize=True)
+        final.save(buf, format='PNG', compress_level=6)
         png_bytes = buf.getvalue()
 
         # --- Filename ---

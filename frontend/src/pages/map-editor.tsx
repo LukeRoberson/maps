@@ -86,6 +86,15 @@ const AnnotationRenderer: React.FC<AnnotationRendererProps> = ({
       let layer: L.Layer | null = null;
       const isInActiveLayer = annotation.layer_id === activeLayerId;
 
+      // Derive the effective style: use the annotation's stored style for non-color
+      // properties (weight, opacity, etc.) but always override color with the live
+      // layer color so that layer color changes are reflected immediately.
+      const annotationLayer = layers.find(l => l.id === annotation.layer_id);
+      const layerColor = (annotationLayer?.config as any)?.color as string | undefined;
+      const effectiveStyle = layerColor
+        ? { ...annotation.style, color: layerColor, fillColor: layerColor }
+        : (annotation.style || {});
+
       if (annotation.annotation_type === 'marker') {
         const [lat, lng] = annotation.coordinates as [number, number];
         layer = L.marker([lat, lng]);
@@ -98,10 +107,10 @@ const AnnotationRenderer: React.FC<AnnotationRendererProps> = ({
         }
       } else if (annotation.annotation_type === 'line') {
         const coords = annotation.coordinates as [number, number][];
-        layer = L.polyline(coords, annotation.style || {});
+        layer = L.polyline(coords, effectiveStyle);
       } else if (annotation.annotation_type === 'polygon') {
         const coords = annotation.coordinates as [number, number][];
-        layer = L.polygon(coords, annotation.style || {});
+        layer = L.polygon(coords, effectiveStyle);
         
         if (annotation.content) {
           (layer as L.Polygon).bindTooltip(annotation.content, {
@@ -1943,6 +1952,16 @@ const MapEditor: React.FC = () => {
                 Save
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {isExporting && (
+        <div className="dialog-overlay export-progress-overlay">
+          <div className="export-progress-card">
+            <div className="export-spinner" />
+            <p className="export-progress-message">Generating export…</p>
+            <p className="export-progress-hint">Fetching map tiles and compositing image</p>
           </div>
         </div>
       )}

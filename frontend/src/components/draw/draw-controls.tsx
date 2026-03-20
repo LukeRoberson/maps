@@ -348,21 +348,17 @@ export const DrawControls: React.FC<DrawControlsProps> = ({
                 content && 
                 content.trim()
               ) {
-                // Get layer color from active layer config
-                const activeLayer = layers?.find(l => l.id === activeLayerId);
-                const layerColor = (activeLayer?.config as LayerConfig)?.color || '#2ecc71';
-                
-                // Build style object with type-safe property access
+                // Build style object - omit color/fillColor so the layer
+                // color is always used at render time (allows live color updates).
                 const style: AnnotationStyle = {};
                 
                 if (hasPathOptions(layer)) {
-                  style.color = layer.options.color || layerColor;
-                  style.fillColor = layer.options.fillColor;
-                  style.fillOpacity = layer.options.fillOpacity;
-                  style.weight = layer.options.weight;
-                } else {
-                  // Marker layers - use default color
-                  style.color = layerColor;
+                  if (layer.options.fillOpacity !== undefined) {
+                    style.fillOpacity = layer.options.fillOpacity;
+                  }
+                  if (layer.options.weight !== undefined) {
+                    style.weight = layer.options.weight;
+                  }
                 }
 
                 style.fontSize = 20;
@@ -436,34 +432,18 @@ export const DrawControls: React.FC<DrawControlsProps> = ({
           }
         }
         
-        // Get layer color from active layer config
-        const activeLayer = layers?.find(l => l.id === activeLayerId);
-        const layerConfig = activeLayer?.config as LayerConfig | undefined;
-        const layerColor = layerConfig?.color || '#2ecc71';
-        
-        // Build style object with type-safe property access
+        // Build style object - omit color/fillColor so the layer color is
+        // always used at render time (allows live color updates without
+        // re-saving individual annotations).
         const style: AnnotationStyle = {};
         
         if (hasPathOptions(layer)) {
-          // Layer has path options (color, fillColor, etc.)
-          style.color = layer.options.color || layerColor;
-          
-          if (layer.options.fillColor) {
-            style.fillColor = layer.options.fillColor;
-          } else if (annotationType === 'polygon') {
-            style.fillColor = layerColor;
-          }
-          
           if (layer.options.fillOpacity !== undefined) {
             style.fillOpacity = layer.options.fillOpacity;
           }
-          
           if (layer.options.weight !== undefined) {
             style.weight = layer.options.weight;
           }
-        } else {
-          // Marker layer - use default color
-          style.color = layerColor;
         }
         
         // Save annotation to backend
