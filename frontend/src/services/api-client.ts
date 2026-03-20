@@ -415,6 +415,7 @@ class ApiClient {
       include_annotations?: boolean;
       include_boundary?: boolean;
       tile_layer?: string;
+      line_width_multiplier?: number;
     }
   ): Promise<Blob> {
     const response = await this.client.post(
@@ -425,6 +426,7 @@ class ApiClient {
         include_annotations: options.include_annotations ?? true,
         include_boundary: options.include_boundary ?? true,
         tile_layer: options.tile_layer ?? null,
+        line_width_multiplier: options.line_width_multiplier ?? 1,
       },
       { responseType: 'blob' }
     );

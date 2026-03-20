@@ -94,14 +94,6 @@ TILE_LAYERS: Dict[str, TileLayerConfig] = {
         zoom_offset=-1,
     ),
 
-    'cyclosm': TileLayerConfig(
-        tile_id='cyclosm',
-        url='https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png',
-        subdomains=['a', 'b', 'c'],
-        max_zoom=20,
-        retina=False,
-        zoom_offset=-1,
-    ),
 }
 
 DEFAULT_TILE_LAYER_ID = 'carto-voyager'

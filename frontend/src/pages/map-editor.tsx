@@ -91,9 +91,12 @@ const AnnotationRenderer: React.FC<AnnotationRendererProps> = ({
       // layer color so that layer color changes are reflected immediately.
       const annotationLayer = layers.find(l => l.id === annotation.layer_id);
       const layerColor = (annotationLayer?.config as any)?.color as string | undefined;
-      const effectiveStyle = layerColor
-        ? { ...annotation.style, color: layerColor, fillColor: layerColor }
-        : (annotation.style || {});
+      const layerThickness = (annotationLayer?.config as any)?.line_thickness as number | undefined;
+      const effectiveStyle = {
+        ...(annotation.style || {}),
+        ...(layerColor ? { color: layerColor, fillColor: layerColor } : {}),
+        ...(layerThickness != null ? { weight: layerThickness } : {}),
+      };
 
       if (annotation.annotation_type === 'marker') {
         const [lat, lng] = annotation.coordinates as [number, number];
@@ -576,8 +579,9 @@ const MapEditor: React.FC = () => {
   );
 
   const currentBoundaryPathOptions = React.useMemo(() => {
-    // Get boundary layer color if available
+    // Get boundary layer color and thickness if available
     let color = '#e74c3c'; // Default red
+    let lineThickness = 3;
     const isIndividualMap = mapArea?.area_type === 'individual';
 
     if (boundary?.layer_id) {
@@ -585,11 +589,14 @@ const MapEditor: React.FC = () => {
       if (boundaryLayer?.config?.color) {
         color = boundaryLayer.config.color as string;
       }
+      if (boundaryLayer?.config?.line_thickness) {
+        lineThickness = boundaryLayer.config.line_thickness as number;
+      }
     }
 
     return {
       color: color,
-      weight: 3,
+      weight: lineThickness,
       fillColor: color,
       fill: !isIndividualMap,
       fillOpacity: isIndividualMap ? 0 : 0.1,
@@ -1305,6 +1312,7 @@ const MapEditor: React.FC = () => {
         include_annotations: options.includeAnnotations,
         include_boundary: options.includeBoundary,
         tile_layer: currentTileLayerId,
+        line_width_multiplier: options.lineWidthMultiplier,
       });
 
       // Trigger browser download

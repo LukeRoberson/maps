@@ -35,6 +35,8 @@ export const LayerManager: React.FC<LayerManagerProps> = ({
   const [editingLayerId, setEditingLayerId] = useState<number | null>(null);
   const [editingName, setEditingName] = useState<string>('');
   const [editingColor, setEditingColor] = useState<string>('#2ecc71');
+  const [editingThickness, setEditingThickness] = useState<number>(3);
+  const [newLayerThickness, setNewLayerThickness] = useState<number>(3);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   // Available color options for layers
@@ -48,6 +50,8 @@ export const LayerManager: React.FC<LayerManagerProps> = ({
     { value: '#e91e63', label: 'Pink' },
     { value: '#ff5722', label: 'Deep Orange' },
   ];
+
+  const thicknessOptions = [1, 2, 3, 4, 5, 6, 8, 10];
 
   useEffect(
     () => {
@@ -105,7 +109,7 @@ export const LayerManager: React.FC<LayerManagerProps> = ({
         visible: true,
         z_index: layers.length,
         is_editable: true,
-        config: { color: newLayerColor },
+        config: { color: newLayerColor, line_thickness: newLayerThickness },
       });
 
       showToast?.(`Layer "${newLayerName}" created`, 'success');
@@ -130,6 +134,7 @@ export const LayerManager: React.FC<LayerManagerProps> = ({
     setEditingLayerId(layer.id!);
     setEditingName(layer.name);
     setEditingColor((layer.config as any)?.color || '#2ecc71');
+    setEditingThickness((layer.config as any)?.line_thickness || 3);
   };
 
   const handleSaveEdit = async (
@@ -145,7 +150,7 @@ export const LayerManager: React.FC<LayerManagerProps> = ({
 
     try {
       const updates: Partial<Layer> = {
-        config: { color: editingColor },
+        config: { color: editingColor, line_thickness: editingThickness },
       };
       
       // Only update name for annotation layers
@@ -171,6 +176,7 @@ export const LayerManager: React.FC<LayerManagerProps> = ({
     setEditingLayerId(null);
     setEditingName('');
     setEditingColor('#2ecc71');
+    setEditingThickness(3);
   };
 
   const handleDeleteLayer = async (
@@ -268,6 +274,16 @@ export const LayerManager: React.FC<LayerManagerProps> = ({
                                 </option>
                               ))}
                             </select>
+                            <select
+                              value={editingThickness}
+                              onChange={(e) => setEditingThickness(Number(e.target.value))}
+                              className="layer-thickness-select"
+                              title="Select line thickness"
+                            >
+                              {thicknessOptions.map((t) => (
+                                <option key={t} value={t}>{t}px</option>
+                              ))}
+                            </select>
                             <div className="layer-edit-actions">
                               <button
                                 onClick={() => handleSaveEdit(layer.id!)}
@@ -306,9 +322,9 @@ export const LayerManager: React.FC<LayerManagerProps> = ({
                               <button
                                 onClick={() => handleStartEdit(layer)}
                                 className="btn-edit"
-                                title="Edit color"
+                                title="Edit style"
                               >
-                                🎨
+                                ✎
                               </button>
                             </div>
                           </>
@@ -385,6 +401,16 @@ export const LayerManager: React.FC<LayerManagerProps> = ({
                                 <option key={option.value} value={option.value}>
                                   {option.label}
                                 </option>
+                              ))}
+                            </select>
+                            <select
+                              value={editingThickness}
+                              onChange={(e) => setEditingThickness(Number(e.target.value))}
+                              className="layer-thickness-select"
+                              title="Select line thickness"
+                            >
+                              {thicknessOptions.map((t) => (
+                                <option key={t} value={t}>{t}px</option>
                               ))}
                             </select>
                             <div className="layer-edit-actions">
@@ -499,6 +525,7 @@ export const LayerManager: React.FC<LayerManagerProps> = ({
                         setIsCreating(false);
                         setNewLayerName('');
                         setNewLayerColor('#2ecc71');
+                        setNewLayerThickness(3);
                       }
                     }}
                     placeholder="Enter layer name..."
@@ -517,6 +544,16 @@ export const LayerManager: React.FC<LayerManagerProps> = ({
                       </option>
                     ))}
                   </select>
+                  <select
+                    value={newLayerThickness}
+                    onChange={(e) => setNewLayerThickness(Number(e.target.value))}
+                    className="layer-thickness-select"
+                    title="Select line thickness"
+                  >
+                    {thicknessOptions.map((t) => (
+                      <option key={t} value={t}>{t}px</option>
+                    ))}
+                  </select>
                   <div className="layer-create-actions">
                     <button
                       onClick={handleCreateLayer}
@@ -530,6 +567,7 @@ export const LayerManager: React.FC<LayerManagerProps> = ({
                         setIsCreating(false);
                         setNewLayerName('');
                         setNewLayerColor('#2ecc71');
+                        setNewLayerThickness(3);
                       }}
                       className="btn-cancel"
                       title="Cancel"

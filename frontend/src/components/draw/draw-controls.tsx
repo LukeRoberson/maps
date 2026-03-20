@@ -52,6 +52,7 @@ interface PMCreateEvent extends LeafletEvent {
  */
 interface LayerConfig {
   color?: string;
+  line_thickness?: number;
 }
 
 
@@ -165,8 +166,8 @@ export const DrawControls: React.FC<DrawControlsProps> = ({
     // Listen for draw mode enable events
     map.on('pm:drawstart', handleDrawStart);
 
-    // Configure drawing styles based on mode and layer color
     let color: string;
+    let lineThickness: number = 3;
     if (mode === 'boundary' || mode === 'suburb' || mode === 'individual') {
       color = '#3498db';
     } else if (mode === 'annotation' && activeLayerId) {
@@ -174,6 +175,7 @@ export const DrawControls: React.FC<DrawControlsProps> = ({
       const activeLayer = layers?.find(l => l.id === activeLayerId);
       const layerConfig = activeLayer?.config as LayerConfig | undefined;
       color = layerConfig?.color || '#2ecc71';
+      lineThickness = layerConfig?.line_thickness || 3;
     } else {
       color = '#2ecc71';
     }
@@ -183,7 +185,7 @@ export const DrawControls: React.FC<DrawControlsProps> = ({
         color,
         fillColor: color,
         fillOpacity: 0.2,
-        weight: 3,
+        weight: lineThickness,
       },
     });
 

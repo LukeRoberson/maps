@@ -1,20 +1,5 @@
 # Bugs
 
-- [x] Sometimes the entire browser window goes entirely white
-  * Noticed when editing a map
-    * /projects/6/maps/194
-    * When adding an annotation
-  * Console error: Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is no longer a child of this node. Perhaps it was moved in a 'blur' event handler?
-  * Fine after refresh
-- [x] Annotations are not enforced into any layer
-  * Presumably they belong to the 'Boundary' layer
-  * A layer should be selected first, or annotations shouldn't be allowed
-  * Was fine in dev, not in prod
-- [x] New maps don't have a boundary layer
-  * Old maps still have them
-  * Hising the suburb boundary hides the map boundary too
-  * Can still edit the boundary
-
 - [ ] Sometimes a text annotation is completed automatically without pressing enter
   * Eg, adding a new annotation, enter a number
   * Get two characters typed
@@ -32,7 +17,6 @@
 - [ ] CSS error in console:
   * Error inlining remote css file SecurityError: Failed to read the 'cssRules' property from 'CSSStyleSheet': Cannot access rules
   * Error while reading CSS rules from https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css SecurityError: Failed to read the 'cssRules' property from 'CSSStyleSheet'
-  * [!NOTE] May be fixed along with another bug
 
 
 
@@ -40,9 +24,11 @@
 
 - [x] Map styles: Can we get more contrast between the block and the road?
   * OSM has good contrast, but tiny street names
-- [ ] Map styles: Can we get darker text?
-- [ ] Export to PNG
+- [x] Map styles: Can we get darker text?
+- [x] Export to PNG
   * Investigate a different export method
+- [ ] Thicker border and annotation lines for export
+  * Maybe set in layer properties?
 
 
 

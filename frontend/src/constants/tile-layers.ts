@@ -109,17 +109,6 @@ export const TILE_LAYER_OPTIONS: TileLayerOption[] = [
     baseZoomOffset: -1,
     baseTileSize: 512,
   },
-  {
-    id: 'cyclosm',
-    name: 'CyclOSM',
-    url: 'https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png',
-    attribution: '<a href="https://github.com/cyclosm/cyclosm-cartocss-style/releases" title="CyclOSM - Open Bicycle render">CyclOSM</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    description: 'OSM variant with clear street/block contrast and cycling infrastructure.',
-    maxZoom: 20,
-    subdomains: ['a', 'b', 'c'],
-    baseZoomOffset: -1,
-    baseTileSize: 512,
-  }
 ];
 
 /**

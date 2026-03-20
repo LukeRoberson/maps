@@ -162,7 +162,7 @@ def create_layer() -> Union[Response, Tuple[Response, int]]:
         config = {}
         if 'config' in data and isinstance(data['config'], dict):
             # Only allow specific whitelisted fields
-            allowed_config_fields = {'color'}
+            allowed_config_fields = {'color', 'line_thickness'}
             for key in data['config']:
                 if key in allowed_config_fields:
                     # Validate color field format
@@ -172,6 +172,10 @@ def create_layer() -> Union[Response, Tuple[Response, int]]:
                            len(color_value) <= 20 and \
                            color_value.startswith('#'):
                             config[key] = color_value
+                    elif key == 'line_thickness':
+                        t = data['config'][key]
+                        if isinstance(t, (int, float)) and 1 <= t <= 20:
+                            config[key] = float(t)
 
         # Create LayerModel instance
         layer = LayerModel(
@@ -296,7 +300,7 @@ def update_layer(
                 )
             # Only allow specific whitelisted fields
             sanitized_config = {}
-            allowed_config_fields = {'color'}
+            allowed_config_fields = {'color', 'line_thickness'}
             for key in data['config']:
                 if key in allowed_config_fields:
                     # Validate color field format
@@ -313,6 +317,22 @@ def update_layer(
                                         'error': (
                                             'color must be a hex '
                                             'color string'
+                                        )
+                                    }
+                                ),
+                                400
+                            )
+                    elif key == 'line_thickness':
+                        t = data['config'][key]
+                        if isinstance(t, (int, float)) and 1 <= t <= 20:
+                            sanitized_config[key] = float(t)
+                        else:
+                            return make_response(
+                                jsonify(
+                                    {
+                                        'error': (
+                                            'line_thickness must be a '
+                                            'number between 1 and 20'
                                         )
                                     }
                                 ),

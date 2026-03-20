@@ -11,11 +11,19 @@ export interface ExportOptions {
   includeBoundary: boolean;
   includeAnnotations: boolean;
   zoom: number | null; // null = auto
+  lineWidthMultiplier: number;
 }
 
 const MIN_ZOOM = 14;
 const MAX_ZOOM = 19;
 const DEFAULT_ZOOM = 17;
+const LINE_WIDTH_OPTIONS = [
+  { value: 0.5, label: '0.5× (thin)' },
+  { value: 1, label: '1× (normal)' },
+  { value: 1.5, label: '1.5×' },
+  { value: 2, label: '2× (thick)' },
+  { value: 3, label: '3× (very thick)' },
+];
 
 const ExportDialog: React.FC<ExportDialogProps> = ({
   mapAreaName,
@@ -26,6 +34,7 @@ const ExportDialog: React.FC<ExportDialogProps> = ({
     includeBoundary: true,
     includeAnnotations: true,
     zoom: null,
+    lineWidthMultiplier: 1,
   });
   const [useAutoZoom, setUseAutoZoom] = useState(true);
   const [manualZoom, setManualZoom] = useState(DEFAULT_ZOOM);
@@ -113,6 +122,27 @@ const ExportDialog: React.FC<ExportDialogProps> = ({
                 </span>
               </div>
             )}
+          </div>
+
+          <div className="export-option">
+            <label className="export-select-label" htmlFor="line-width-select">
+              Line width
+            </label>
+            <p className="option-description">
+              Scale annotation and boundary line widths in the exported PNG.
+            </p>
+            <select
+              id="line-width-select"
+              className="export-select"
+              value={options.lineWidthMultiplier}
+              onChange={(e) =>
+                setOptions({ ...options, lineWidthMultiplier: Number(e.target.value) })
+              }
+            >
+              {LINE_WIDTH_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </select>
           </div>
         </div>
 

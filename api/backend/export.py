@@ -372,6 +372,7 @@ def _draw_annotations(
     origin_px: float,
     origin_py: float,
     export_scale: float = 2.0,
+    text_scale: float = 2.0,
 ) -> None:
     """Render annotations onto the image in-place."""
     draw = ImageDraw.Draw(image)
@@ -379,7 +380,7 @@ def _draw_annotations(
     for ann in annotations:
         style = ann.style or {}
         color = _parse_color(style)
-        weight = int(style.get('weight', 3))
+        weight = max(1, int(round(style.get('weight', 3) * export_scale)))
         opacity = float(style.get('opacity', 1.0))
         fill_color = _parse_color(style, 'fillColor', color)
         fill_opacity = float(style.get('fillOpacity', 0.2))
@@ -391,12 +392,19 @@ def _draw_annotations(
                     _coord_to_px(c[0], c[1], zoom, tile_size, origin_px, origin_py)
                     for c in coords
                 ]
-                # Draw line with width
+                # Draw line segments
                 for i in range(len(points) - 1):
                     draw.line(
                         [points[i], points[i + 1]],
                         fill=color,
                         width=max(1, weight),
+                    )
+                # Round caps/joins at each vertex
+                r = max(1, weight // 2)
+                for pt in points:
+                    x, y = int(round(pt[0])), int(round(pt[1]))
+                    draw.ellipse(
+                        [x - r, y - r, x + r, y + r], fill=color
                     )
 
         elif ann.annotation_type == 'polygon':
@@ -415,7 +423,7 @@ def _draw_annotations(
                 image.paste(Image.alpha_composite(image, overlay), (0, 0))
                 draw = ImageDraw.Draw(image)  # Refresh draw context
                 # Outline
-                draw.polygon(points, outline=color)
+                draw.polygon(points, outline=color, width=weight)
 
         elif ann.annotation_type == 'text':
             coord = ann.coordinates  # [lat, lon]
@@ -425,7 +433,7 @@ def _draw_annotations(
                 px, py = _coord_to_px(lat_val, lon_val, zoom, tile_size, origin_px, origin_py)
                 font_size = int(style.get('fontSize', 20))
                 # Scale to match on-screen visual weight relative to canvas resolution
-                scaled_size = max(24, int(font_size * export_scale * 3))
+                scaled_size = max(24, int(font_size * text_scale * 3))
                 font = _load_font(scaled_size)
                 text = ann.content or ''
                 if text:
@@ -442,11 +450,11 @@ def _draw_annotations(
                 lat_val = coord[0] if isinstance(coord[0], (int, float)) else coord[0][0]
                 lon_val = coord[1] if isinstance(coord[1], (int, float)) else coord[0][1]
                 px, py = _coord_to_px(lat_val, lon_val, zoom, tile_size, origin_px, origin_py)
-                r = max(10, int(TILE_PX // 20 * export_scale * 2))
+                r = max(10, int(TILE_PX // 20 * text_scale * 2))
                 draw.ellipse([px - r, py - r, px + r, py + r], fill=color, outline='white', width=3)
                 # Label text beside the marker
                 if ann.content:
-                    label_size = max(20, int(TILE_PX // 8 * export_scale * 2))
+                    label_size = max(20, int(TILE_PX // 8 * text_scale * 2))
                     font = _load_font(label_size)
                     for dx in range(-2, 3):
                         for dy in range(-2, 3):
@@ -492,6 +500,11 @@ def _draw_boundary_outline(
         points.append(points[0])
         for i in range(len(points) - 1):
             draw.line([points[i], points[i + 1]], fill=color, width=width)
+        # Round joins at each vertex
+        r = max(1, width // 2)
+        for pt in points:
+            x, y = int(round(pt[0])), int(round(pt[1]))
+            draw.ellipse([x - r, y - r, x + r, y + r], fill=color)
 
 
 def _apply_boundary_fade(
@@ -561,6 +574,7 @@ class ExportService:
         include_annotations: bool = True,
         include_boundary: bool = True,
         tile_layer: Optional[str] = None,
+        line_width_multiplier: float = 1.0,
     ) -> Tuple[bytes, str]:
         """
         Generate a PNG export for a map area.
@@ -663,26 +677,45 @@ class ExportService:
         origin_py = ty_min * tile_size
 
         # --- Draw annotations ---
+        layer_service = LayerService()
+        all_layers = layer_service.read(map_id=map_area_id)
         if include_annotations:
-            layer_service = LayerService()
             annotation_service = AnnotationService()
-            all_layers = layer_service.read(map_id=map_area_id)
+            # Build per-layer line_thickness overrides from layer config
+            layer_thickness: Dict[int, int] = {}
+            for layer in all_layers:
+                if layer.id:
+                    t = (layer.config or {}).get('line_thickness')
+                    if isinstance(t, (int, float)):
+                        layer_thickness[layer.id] = int(t)
             all_annotations: List[AnnotationModel] = []
             for layer in all_layers:
                 if layer.visible and layer.layer_type in ('annotation', 'custom'):
                     anns = annotation_service.read(layer_id=layer.id)
+                    # Apply layer-level line_thickness as weight on each annotation
+                    if layer.id in layer_thickness:
+                        for ann in anns:
+                            ann.style = {
+                                **(ann.style or {}),
+                                'weight': layer_thickness[layer.id],
+                            }
                     all_annotations.extend(anns)
             if all_annotations:
-                # Ratio of export pixel density to on-screen pixel density.
+                # Ratio of export pixel density to on-screen pixel density,
+                # further scaled by the user-requested line_width_multiplier.
                 # On screen: 256px tiles at logical zoom.
                 # Export: tile_size tiles at fetch_zoom = logical_zoom + zoom_offset.
                 # ratio = (tile_size / TILE_PX) * 2^zoom_offset
-                export_scale = (tile_size / TILE_PX) * (2 ** zoom_offset)
+                base_scale = (
+                    (tile_size / TILE_PX) * (2 ** zoom_offset)
+                )
+                export_scale = base_scale * line_width_multiplier
                 _draw_annotations(
                     canvas, all_annotations,
                     fetch_zoom, tile_size,
                     origin_px, origin_py,
                     export_scale=export_scale,
+                    text_scale=base_scale,
                 )
 
         # --- Boundary fade mask ---
@@ -693,9 +726,26 @@ class ExportService:
 
         # --- Boundary outline ---
         if include_boundary:
+            # Apply line_thickness from editable boundary layer config,
+            # scaled to export canvas resolution and line_width_multiplier.
+            export_scale = (tile_size / TILE_PX) * (2 ** zoom_offset)
+            boundary_width = 3
+            for layer in all_layers:
+                if layer.layer_type == 'boundary' and layer.is_editable:
+                    t = (layer.config or {}).get('line_thickness')
+                    if isinstance(t, (int, float)):
+                        boundary_width = int(t)
+                    break
+            scaled_boundary_width = max(
+                1,
+                int(round(
+                    boundary_width * export_scale * line_width_multiplier
+                ))
+            )
             _draw_boundary_outline(
                 canvas, coords,
                 fetch_zoom, tile_size, origin_px, origin_py,
+                width=scaled_boundary_width,
             )
 
         # --- Crop to bounding box ---

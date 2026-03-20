@@ -105,6 +105,13 @@ def generate_export() -> Response:
         include_annotations = data.get('include_annotations', True)
         include_boundary = data.get('include_boundary', True)
         tile_layer = data.get('tile_layer')  # None = use map area's saved value
+        raw_multiplier = data.get('line_width_multiplier', 1.0)
+        try:
+            line_width_multiplier = float(raw_multiplier)
+            if not (0.1 <= line_width_multiplier <= 10):
+                line_width_multiplier = 1.0
+        except (TypeError, ValueError):
+            line_width_multiplier = 1.0
 
         png_bytes, filename = export_service.generate(
             map_area_id=int(map_area_id),
@@ -112,6 +119,7 @@ def generate_export() -> Response:
             include_annotations=bool(include_annotations),
             include_boundary=bool(include_boundary),
             tile_layer=str(tile_layer) if tile_layer is not None else None,
+            line_width_multiplier=line_width_multiplier,
         )
 
         return send_file(
