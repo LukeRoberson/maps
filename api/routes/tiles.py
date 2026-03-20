@@ -23,7 +23,7 @@ _TILE_FETCH_TIMEOUT = 10
 _TILE_CACHE_MAX_AGE = 86400
 
 
-@tiles_bp.route('/api/tiles/wikimedia/<int:z>/<int:x>/<int:y>.png')
+@tiles_bp.route('/api/tiles/wikimedia/<int:z>/<int:x>/<int:y>')
 def proxy_wikimedia_tile(z: int, x: int, y: int) -> Response:
     """
     Proxy a single Wikimedia map tile.

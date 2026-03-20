@@ -102,7 +102,7 @@ export const TILE_LAYER_OPTIONS: TileLayerOption[] = [
   {
     id: 'wikimedia',
     name: 'Wikimedia',
-    url: '/api/tiles/wikimedia/{z}/{x}/{y}.png',
+    url: '/api/tiles/wikimedia/{z}/{x}/{y}',
     attribution: '<a href="https://wikimediafoundation.org/wiki/Maps_Terms_of_Use">Wikimedia</a>',
     description: 'Clean, high-contrast style with bold road labels on a light background.',
     maxZoom: 19,
