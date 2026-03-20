@@ -14,6 +14,7 @@ import io
 import logging
 import math
 import os
+import threading
 import time
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
@@ -127,15 +128,57 @@ def _build_tile_url(
     )
 
 
-def _fetch_tile(url: str, session: Optional[requests.Session] = None) -> Optional[Image.Image]:
-    """Download a single tile, return as Pillow Image or None."""
-    try:
-        getter = session if session is not None else requests
-        resp = getter.get(url, timeout=TILE_FETCH_TIMEOUT)
-        if resp.status_code == 200:
-            return Image.open(io.BytesIO(resp.content)).convert('RGBA')
-    except Exception as exc:
-        logger.warning("Tile fetch failed %s: %s", url, exc)
+# Max retries when a tile server returns 429 (Too Many Requests)
+TILE_RETRY_MAX = 4
+# Base delay (seconds) for exponential back-off on 429
+TILE_RETRY_BASE_DELAY = 1.0
+
+
+def _fetch_tile(
+    url: str,
+    session: Optional[requests.Session] = None,
+    throttle: Optional[threading.Semaphore] = None,
+) -> Optional[Image.Image]:
+    """Download a single tile, return as Pillow Image or None.
+
+    Handles 429 (rate-limit) responses with exponential back-off.
+    If *throttle* is provided, it is acquired/released around each
+    HTTP request to limit overall concurrency.
+    """
+    getter = session if session is not None else requests
+    for attempt in range(TILE_RETRY_MAX + 1):
+        try:
+            if throttle is not None:
+                throttle.acquire()
+            try:
+                resp = getter.get(url, timeout=TILE_FETCH_TIMEOUT)
+            finally:
+                if throttle is not None:
+                    throttle.release()
+
+            if resp.status_code == 200:
+                return Image.open(io.BytesIO(resp.content)).convert('RGBA')
+
+            if resp.status_code == 429:
+                retry_after = float(
+                    resp.headers.get('Retry-After', TILE_RETRY_BASE_DELAY * (2 ** attempt))
+                )
+                logger.debug("429 for %s – retrying in %.1fs (attempt %d)", url, retry_after, attempt + 1)
+                time.sleep(retry_after)
+                continue
+
+            # Other non-200 status – no point retrying
+            logger.debug("Tile %s returned status %d", url, resp.status_code)
+            return None
+
+        except Exception as exc:
+            logger.warning("Tile fetch failed %s: %s", url, exc)
+            if attempt < TILE_RETRY_MAX:
+                time.sleep(TILE_RETRY_BASE_DELAY)
+                continue
+            return None
+
+    logger.warning("Tile %s failed after %d retries", url, TILE_RETRY_MAX)
     return None
 
 
@@ -146,9 +189,11 @@ def _fetch_and_stitch(
     y_min: int, y_max: int,
     zoom: int,
     retina: bool = True,
+    tile_size: Optional[int] = None,
 ) -> Image.Image:
     """Fetch a grid of tiles concurrently and stitch into a single image."""
-    tile_size = TILE_PX * 2 if retina else TILE_PX
+    if tile_size is None:
+        tile_size = TILE_PX * 2 if retina else TILE_PX
     cols = x_max - x_min + 1
     rows = y_max - y_min + 1
     canvas = Image.new('RGBA', (cols * tile_size, rows * tile_size), (255, 255, 255, 255))
@@ -161,13 +206,17 @@ def _fetch_and_stitch(
     session.mount('http://', adapter)
     session.mount('https://', adapter)
     session.headers['User-Agent'] = 'PrintableMaps/1.0 (export)'
+    # Some tile servers (e.g. Wikimedia) require a Referer header for
+    # higher-zoom tile requests; without it they return 403.
+    session.headers['Referer'] = 'https://localhost/'
+
+    # Throttle limits how many HTTP requests are in-flight at once.
+    # Keeps aggressive tile servers (e.g. Wikimedia) from returning 429.
+    throttle = threading.Semaphore(TILE_FETCH_WORKERS)
 
     def fetch_one(tx: int, ty: int) -> Tuple[int, int, Optional[Image.Image]]:
         url = _build_tile_url(url_template, tx, ty, zoom, subdomains, retina)
-        img = _fetch_tile(url, session)
-        if img is None:
-            time.sleep(0.2)
-            img = _fetch_tile(url, session)
+        img = _fetch_tile(url, session, throttle)
         if img is not None and img.size != (tile_size, tile_size):
             img = img.resize((tile_size, tile_size), Image.LANCZOS)
         return tx, ty, img
@@ -541,20 +590,41 @@ class ExportService:
         # Use explicitly passed tile_layer, fall back to map area's saved value
         tile_cfg = get_tile_config(tile_layer or map_area.tile_layer)
         retina = tile_cfg.retina
-        tile_size = TILE_PX * 2 if retina else TILE_PX
+        zoom_offset = tile_cfg.zoom_offset
         max_tile_zoom = tile_cfg.max_zoom
+
+        # Effective tile size on the canvas.  Retina providers deliver
+        # 512 px tiles natively.  Non-retina providers that use a
+        # zoom_offset (e.g. Wikimedia, baseZoomOffset: -1 in the
+        # frontend) deliver 256 px tiles at zoom-1 which are then
+        # scaled up to 512 px, giving effectively the same result.
+        if retina:
+            tile_size = TILE_PX * 2
+        elif zoom_offset < 0:
+            tile_size = TILE_PX * (2 ** (-zoom_offset))
+        else:
+            tile_size = TILE_PX
 
         # --- Bounding box & zoom ---
         bbox = _compute_bbox(coords)
         if zoom is None:
-            zoom = _auto_zoom(bbox, MAX_IMAGE_PX, tile_size, max_tile_zoom)
+            zoom = _auto_zoom(
+                bbox, MAX_IMAGE_PX, tile_size, max_tile_zoom,
+            )
         zoom = max(1, min(zoom, max_tile_zoom))
+
+        # Actual zoom level used to request tiles from the server.
+        fetch_zoom = max(1, zoom + zoom_offset)
 
         min_lat, min_lon, max_lat, max_lon = bbox
 
-        # Tile range
-        tx_min, ty_min = _lat_lon_to_tile(max_lat, min_lon, zoom)
-        tx_max, ty_max = _lat_lon_to_tile(min_lat, max_lon, zoom)
+        # Tile range (at the *fetch* zoom)
+        tx_min, ty_min = _lat_lon_to_tile(
+            max_lat, min_lon, fetch_zoom,
+        )
+        tx_max, ty_max = _lat_lon_to_tile(
+            min_lat, max_lon, fetch_zoom,
+        )
         # Ensure min <= max
         if tx_min > tx_max:
             tx_min, tx_max = tx_max, tx_min
@@ -562,15 +632,17 @@ class ExportService:
             ty_min, ty_max = ty_max, ty_min
 
         logger.info(
-            "Export map_area=%d zoom=%d tiles=(%d-%d, %d-%d) retina=%s",
-            map_area_id, zoom, tx_min, tx_max, ty_min, ty_max, retina,
+            "Export map_area=%d zoom=%d fetch_zoom=%d "
+            "tiles=(%d-%d, %d-%d) retina=%s",
+            map_area_id, zoom, fetch_zoom,
+            tx_min, tx_max, ty_min, ty_max, retina,
         )
 
         # --- Fetch & stitch base tiles ---
         canvas = _fetch_and_stitch(
             tile_cfg.url, tile_cfg.subdomains,
             tx_min, tx_max, ty_min, ty_max,
-            zoom, retina,
+            fetch_zoom, retina, tile_size=tile_size,
         )
 
         # --- Label overlay ---
@@ -580,7 +652,7 @@ class ExportService:
                 tile_cfg.label_overlay_url,
                 tile_cfg.label_overlay_subdomains,
                 tx_min, ty_min, tx_max, ty_max,
-                zoom,
+                fetch_zoom,
                 tile_cfg.label_overlay_zoom_offset,
                 retina,
             )
@@ -602,23 +674,32 @@ class ExportService:
             if all_annotations:
                 _draw_annotations(
                     canvas, all_annotations,
-                    zoom, tile_size, origin_px, origin_py,
+                    fetch_zoom, tile_size,
+                    origin_px, origin_py,
                 )
 
         # --- Boundary fade mask ---
         canvas = _apply_boundary_fade(
-            canvas, coords, zoom, tile_size, origin_px, origin_py,
+            canvas, coords,
+            fetch_zoom, tile_size, origin_px, origin_py,
         )
 
         # --- Boundary outline ---
         if include_boundary:
             _draw_boundary_outline(
-                canvas, coords, zoom, tile_size, origin_px, origin_py,
+                canvas, coords,
+                fetch_zoom, tile_size, origin_px, origin_py,
             )
 
         # --- Crop to bounding box ---
-        tl_px, tl_py = _coord_to_px(max_lat, min_lon, zoom, tile_size, origin_px, origin_py)
-        br_px, br_py = _coord_to_px(min_lat, max_lon, zoom, tile_size, origin_px, origin_py)
+        tl_px, tl_py = _coord_to_px(
+            max_lat, min_lon,
+            fetch_zoom, tile_size, origin_px, origin_py,
+        )
+        br_px, br_py = _coord_to_px(
+            min_lat, max_lon,
+            fetch_zoom, tile_size, origin_px, origin_py,
+        )
         crop_left = max(0, min(tl_px, br_px))
         crop_top = max(0, min(tl_py, br_py))
         crop_right = min(canvas.width, max(tl_px, br_px))

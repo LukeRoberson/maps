@@ -21,6 +21,7 @@ class TileLayerConfig:
         subdomains: List[str],
         max_zoom: int,
         retina: bool = True,
+        zoom_offset: int = 0,
         label_overlay_url: Optional[str] = None,
         label_overlay_subdomains: Optional[List[str]] = None,
         label_overlay_zoom_offset: int = 0,
@@ -30,6 +31,7 @@ class TileLayerConfig:
         self.subdomains = subdomains
         self.max_zoom = max_zoom
         self.retina = retina
+        self.zoom_offset = zoom_offset
         self.label_overlay_url = label_overlay_url
         self.label_overlay_subdomains = label_overlay_subdomains or subdomains
         self.label_overlay_zoom_offset = label_overlay_zoom_offset
@@ -70,7 +72,8 @@ TILE_LAYERS: Dict[str, TileLayerConfig] = {
         url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
         subdomains=['a', 'b', 'c'],
         max_zoom=19,
-        retina=False,  # OSM standard doesn't support @2x
+        retina=False,
+        zoom_offset=-1,
     ),
 
     'osm-hot': TileLayerConfig(
@@ -79,6 +82,7 @@ TILE_LAYERS: Dict[str, TileLayerConfig] = {
         subdomains=['a', 'b'],
         max_zoom=19,
         retina=False,
+        zoom_offset=-1,
     ),
 
     'wikimedia': TileLayerConfig(
@@ -87,6 +91,7 @@ TILE_LAYERS: Dict[str, TileLayerConfig] = {
         subdomains=[],
         max_zoom=19,
         retina=False,
+        zoom_offset=-1,
     ),
 
     'cyclosm': TileLayerConfig(
@@ -95,6 +100,7 @@ TILE_LAYERS: Dict[str, TileLayerConfig] = {
         subdomains=['a', 'b', 'c'],
         max_zoom=20,
         retina=False,
+        zoom_offset=-1,
     ),
 }
 

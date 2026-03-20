@@ -93,3 +93,4 @@
   - [ ] Can we get the area of a map in meters^2?
   - [ ] Can we get street length?
   - [ ] Can we get the number of houses per block?
+  - [ ] Some free-tier map styles that were previously discounted (need API key)
