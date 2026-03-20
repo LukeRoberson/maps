@@ -429,6 +429,7 @@ const MapEditor: React.FC = () => {
   const [annotationLayers, setAnnotationLayers] = useState<Map<number, L.Layer>>(new Map());
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [exportProgress, setExportProgress] = useState(0);
   const [editingTextAnnotation, setEditingTextAnnotation] = useState<Annotation | null>(null);
   const [editingTextContent, setEditingTextContent] = useState('');
   const [editingFontSize, setEditingFontSize] = useState<number>(20);
@@ -690,6 +691,19 @@ const MapEditor: React.FC = () => {
       return () => clearTimeout(timer);
     }
   }, [isMapExpanded, mapInstance]);
+
+  // Animate export progress bar asymptotically toward 95% while exporting
+  useEffect(() => {
+    if (!isExporting) {
+      setExportProgress(0);
+      return;
+    }
+    setExportProgress(0);
+    const interval = setInterval(() => {
+      setExportProgress(prev => prev + (95 - prev) * 0.011);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [isExporting]);
 
   const loadLayers = async (areaType?: string): Promise<void> => {
     if (!mapAreaId) return;
@@ -1967,8 +1981,13 @@ const MapEditor: React.FC = () => {
       {isExporting && (
         <div className="dialog-overlay export-progress-overlay">
           <div className="export-progress-card">
-            <div className="export-spinner" />
             <p className="export-progress-message">Generating export…</p>
+            <div className="export-progress-bar-track">
+              <div
+                className="export-progress-bar-fill"
+                style={{ width: `${exportProgress}%` }}
+              />
+            </div>
             <p className="export-progress-hint">Fetching map tiles and compositing image</p>
           </div>
         </div>

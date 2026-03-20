@@ -10,11 +10,11 @@
   * I update the layer colour to purple
   * The existing line stays green
   * All new lines are correct
-- [ ] Cannot export to clipboard
+- [x] Cannot export to clipboard
   * "Failed to copy to clipboard, your browser may not support this feature"
   * Failed to load resource: the server responded with a status of 413 (Request Entity Too Large)
   * installHook.js: Clipboard error: TypeError: Cannot read properties of undefined (reading 'write')
-- [ ] CSS error in console:
+- [x] CSS error in console:
   * Error inlining remote css file SecurityError: Failed to read the 'cssRules' property from 'CSSStyleSheet': Cannot access rules
   * Error while reading CSS rules from https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css SecurityError: Failed to read the 'cssRules' property from 'CSSStyleSheet'
 
@@ -27,8 +27,10 @@
 - [x] Map styles: Can we get darker text?
 - [x] Export to PNG
   * Investigate a different export method
-- [ ] Thicker border and annotation lines for export
-  * Maybe set in layer properties?
+- [x] Thicker border and annotation lines for export
+- [x] Exports can take a long time
+  * Will cache the tiles; If not cached, it takes time to download
+  * Show a progress bar in this case, and a useful message
 
 
 
