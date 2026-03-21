@@ -1106,7 +1106,7 @@ const MapEditor: React.FC = () => {
     setMode('annotation');
   };
 
-  const handleAnnotationCreated = async (
+  const handleAnnotationCreated = useCallback(async (
     annotation: Annotation
   ): Promise<void> => {
     try {
@@ -1125,7 +1125,7 @@ const MapEditor: React.FC = () => {
       }
       showToast(errorMessage, 'error');
     }
-  };
+  }, [showToast]);
 
   const handleAnnotationClick = (annotation: Annotation): void => {
     const layer = layers.find(l => l.id === annotation.layer_id);

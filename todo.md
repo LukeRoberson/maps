@@ -10,7 +10,7 @@
   * I update the layer colour to purple
   * The existing line stays green
   * All new lines are correct
-- [ ] Wikimedia OSM not loading correctly in prod
+- [x] Wikimedia OSM not loading correctly in prod
   * Works fine in dev
   * Annotations are still displaying
   * Export to PNG works fine

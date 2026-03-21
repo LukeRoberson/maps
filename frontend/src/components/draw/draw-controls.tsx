@@ -374,6 +374,10 @@ export const DrawControls: React.FC<DrawControlsProps> = ({
                 };
                 
                 onAnnotationCreated(annotationData as Annotation);
+
+                // Remove the temporary Geoman text layer – the saved
+                // annotation will be rendered by the annotation renderer.
+                map.removeLayer(layer);
                 
                 if (showToast) {
                   showToast('Text annotation created and saved!', 'success');
