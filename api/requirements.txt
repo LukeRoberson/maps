@@ -1,6 +1,7 @@
 Flask==3.0.0
 Flask-CORS==4.0.0
 Flask-Session==0.8.0
+flask-swagger-ui>=4.11.1
 PyYAML==6.0.3
 gunicorn>=21.2.0
 Pillow>=10.0.0

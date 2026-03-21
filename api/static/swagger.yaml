@@ -1,0 +1,647 @@
+openapi: 3.0.3
+
+info:
+  title: Printable Maps API
+  version: 1.0.0
+  description: |
+    API for managing map projects, areas, boundaries, layers, annotations, and tile-based exports.
+
+    This documentation is a scaffold — one endpoint per resource group is fully documented as a template.
+    Look for `# TODO` comments indicating where to add remaining endpoints.
+
+servers:
+  - url: /
+    description: Current server
+
+tags:
+  - name: Health
+    description: Health check and configuration
+  - name: Projects
+    description: Manage map projects
+  - name: Map Areas
+    description: Manage map areas within projects (regions, suburbs, individuals)
+  - name: Boundaries
+    description: Manage polygon boundaries for map areas
+  - name: Layers
+    description: Manage layers within map areas
+  - name: Annotations
+    description: Manage annotations (markers, lines, polygons, text) within layers
+  - name: Exports
+    description: Generate and download PNG map exports
+  - name: Tiles
+    description: Proxy tile server for map rendering
+
+paths:
+  # ──────────────────────────────────────────────
+  # Health / Config
+  # ──────────────────────────────────────────────
+  /health:
+    get:
+      tags: [Health]
+      summary: Health check
+      responses:
+        '200':
+          description: API is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: healthy
+
+  /api/config:
+    get:
+      tags: [Health]
+      summary: Get default configuration
+      responses:
+        '200':
+          description: Default map configuration
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  default_map:
+                    type: object
+                    properties:
+                      center_lat:
+                        type: number
+                        example: -37.8136
+                      center_lon:
+                        type: number
+                        example: 144.9631
+                      zoom_level:
+                        type: number
+                        example: 13
+
+  # ──────────────────────────────────────────────
+  # Projects
+  # ──────────────────────────────────────────────
+  /api/projects:
+    get:
+      tags: [Projects]
+      summary: List all projects
+      responses:
+        '200':
+          description: Array of projects
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  projects:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Project'
+    # TODO: Add POST /api/projects
+    # post:
+    #   tags: [Projects]
+    #   summary: Create a project
+    #   requestBody:
+    #     required: true
+    #     content:
+    #       application/json:
+    #         schema:
+    #           type: object
+    #           required: [name]
+    #           properties:
+    #             name: { type: string }
+    #             description: { type: string }
+    #             center_lat: { type: number }
+    #             center_lon: { type: number }
+    #             zoom_level: { type: number }
+    #   responses:
+    #     '201':
+    #       description: Created project
+    #       content:
+    #         application/json:
+    #           schema:
+    #             $ref: '#/components/schemas/Project'
+
+  # TODO: Add GET /api/projects/{project_id}
+  # TODO: Add PUT /api/projects/{project_id}
+  # TODO: Add DELETE /api/projects/{project_id}
+  # TODO: Add GET /api/projects/{project_id}/export
+
+  # ──────────────────────────────────────────────
+  # Map Areas
+  # ──────────────────────────────────────────────
+  /api/map-areas:
+    post:
+      tags: [Map Areas]
+      summary: Create a map area
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - project_id
+                - name
+                - area_type
+              properties:
+                project_id:
+                  type: integer
+                  description: Parent project ID
+                name:
+                  type: string
+                  description: Area name
+                area_type:
+                  type: string
+                  enum: [region, suburb, individual]
+                  description: Type of map area
+                parent_id:
+                  type: integer
+                  description: Parent map area ID (for hierarchy)
+                boundary_id:
+                  type: integer
+                  description: Associated boundary ID
+                default_center_lat:
+                  type: number
+                  description: Default latitude
+                default_center_lon:
+                  type: number
+                  description: Default longitude
+                default_zoom:
+                  type: number
+                  description: Default zoom level
+                tile_layer:
+                  type: string
+                  description: Preferred tile layer ID
+      responses:
+        '201':
+          description: Created map area
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MapArea'
+        '400':
+          description: Missing required fields
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    # TODO: Add GET /api/map-areas (query params: project_id, parent_id)
+
+  # TODO: Add GET /api/map-areas/hierarchy (query param: project_id)
+  # TODO: Add GET /api/map-areas/{map_area_id}
+  # TODO: Add PUT /api/map-areas/{map_area_id}
+  # TODO: Add DELETE /api/map-areas/{map_area_id}
+
+  # ──────────────────────────────────────────────
+  # Boundaries
+  # ──────────────────────────────────────────────
+  /api/boundaries/map-area/{map_area_id}:
+    get:
+      tags: [Boundaries]
+      summary: Get boundary for a map area
+      parameters:
+        - name: map_area_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Map area ID
+      responses:
+        '200':
+          description: Boundary object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Boundary'
+        '404':
+          description: No boundary found for this map area
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # TODO: Add POST /api/boundaries (body: map_area_id, coordinates)
+  # TODO: Add PUT /api/boundaries/{boundary_id}
+  # TODO: Add DELETE /api/boundaries/{boundary_id}
+
+  # ──────────────────────────────────────────────
+  # Layers
+  # ──────────────────────────────────────────────
+  /api/layers:
+    get:
+      tags: [Layers]
+      summary: List layers for a map area
+      parameters:
+        - name: map_area_id
+          in: query
+          required: true
+          schema:
+            type: integer
+          description: Map area ID
+      responses:
+        '200':
+          description: Array of layers
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  layers:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Layer'
+        '400':
+          description: Missing map_area_id parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    # TODO: Add POST /api/layers
+
+  # TODO: Add GET /api/layers/{layer_id}
+  # TODO: Add PUT /api/layers/{layer_id}
+  # TODO: Add DELETE /api/layers/{layer_id}
+
+  # ──────────────────────────────────────────────
+  # Annotations
+  # ──────────────────────────────────────────────
+  /api/annotations:
+    post:
+      tags: [Annotations]
+      summary: Create an annotation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - layer_id
+                - annotation_type
+                - coordinates
+              properties:
+                layer_id:
+                  type: integer
+                  description: Associated layer ID
+                annotation_type:
+                  type: string
+                  enum: [marker, line, polygon, text]
+                  description: Type of annotation
+                coordinates:
+                  description: Coordinate data (structure depends on annotation type)
+                  oneOf:
+                    - type: array
+                      items:
+                        type: number
+                      description: "[lat, lon] for markers"
+                    - type: array
+                      items:
+                        type: array
+                        items:
+                          type: number
+                      description: "[[lat, lon], ...] for lines and polygons"
+                style:
+                  $ref: '#/components/schemas/AnnotationStyle'
+                content:
+                  type: string
+                  description: Text content (for text annotations)
+      responses:
+        '201':
+          description: Created annotation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Annotation'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    # TODO: Add GET /api/annotations (query param: layer_id)
+
+  # TODO: Add GET /api/annotations/{annotation_id}
+  # TODO: Add PUT /api/annotations/{annotation_id}
+  # TODO: Add DELETE /api/annotations/{annotation_id}
+
+  # ──────────────────────────────────────────────
+  # Exports
+  # ──────────────────────────────────────────────
+  /api/exports/generate:
+    post:
+      tags: [Exports]
+      summary: Generate a PNG map export
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - map_area_id
+              properties:
+                map_area_id:
+                  type: integer
+                  description: Map area to export
+                zoom:
+                  type: integer
+                  nullable: true
+                  description: Zoom override (null = auto-detect)
+                include_annotations:
+                  type: boolean
+                  default: true
+                  description: Whether to draw annotations
+                include_boundary:
+                  type: boolean
+                  default: true
+                  description: Whether to draw the boundary outline
+                tile_layer:
+                  type: string
+                  nullable: true
+                  description: Tile layer ID (null = use map area's saved value)
+                line_width_multiplier:
+                  type: number
+                  minimum: 0.1
+                  maximum: 10
+                  default: 1.0
+                  description: Multiplier for line widths in the export
+      responses:
+        '200':
+          description: PNG image file
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: Missing or invalid parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # TODO: Add GET /api/exports/{filename}
+
+  # ──────────────────────────────────────────────
+  # Tiles
+  # ──────────────────────────────────────────────
+  /api/tiles/wikimedia/{z}/{x}/{y}:
+    get:
+      tags: [Tiles]
+      summary: Proxy a Wikimedia map tile
+      description: |
+        Fetches a tile from Wikimedia's tile server and returns it.
+        Bypasses browser Referer restrictions. Tiles are cached for 24 hours.
+      parameters:
+        - name: z
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 0
+            maximum: 19
+          description: Zoom level (0–19)
+        - name: x
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 0
+          description: Tile X coordinate (0 ≤ x < 2^z)
+        - name: y
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 0
+          description: Tile Y coordinate (0 ≤ y < 2^z)
+      responses:
+        '200':
+          description: PNG tile image
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                example: public, max-age=86400
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: Invalid zoom level or tile coordinates
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '502':
+          description: Failed to fetch tile from upstream
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    Project:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        center_lat:
+          type: number
+        center_lon:
+          type: number
+        zoom_level:
+          type: number
+          default: 13
+        tile_layer:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    MapArea:
+      type: object
+      properties:
+        id:
+          type: integer
+        project_id:
+          type: integer
+        parent_id:
+          type: integer
+          nullable: true
+        name:
+          type: string
+        area_type:
+          type: string
+          enum: [region, suburb, individual]
+        boundary_id:
+          type: integer
+          nullable: true
+        default_center_lat:
+          type: number
+          nullable: true
+        default_center_lon:
+          type: number
+          nullable: true
+        default_zoom:
+          type: number
+          nullable: true
+        tile_layer:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Boundary:
+      type: object
+      properties:
+        id:
+          type: integer
+        map_area_id:
+          type: integer
+        layer_id:
+          type: integer
+          nullable: true
+        coordinates:
+          type: array
+          items:
+            type: array
+            items:
+              type: number
+            minItems: 2
+            maxItems: 2
+          minItems: 3
+          description: Array of [lat, lon] pairs (minimum 3)
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Layer:
+      type: object
+      properties:
+        id:
+          type: integer
+        map_area_id:
+          type: integer
+        parent_layer_id:
+          type: integer
+          nullable: true
+        name:
+          type: string
+        layer_type:
+          type: string
+          enum: [annotation, boundary, custom]
+        visible:
+          type: boolean
+          default: true
+        z_index:
+          type: integer
+          default: 0
+        is_editable:
+          type: boolean
+          default: true
+        config:
+          type: object
+          nullable: true
+          properties:
+            color:
+              type: string
+              description: Hex color string (max 20 chars)
+            line_thickness:
+              type: number
+              minimum: 1
+              maximum: 20
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Annotation:
+      type: object
+      properties:
+        id:
+          type: integer
+        layer_id:
+          type: integer
+        annotation_type:
+          type: string
+          enum: [marker, line, polygon, text]
+        coordinates: {}
+        style:
+          $ref: '#/components/schemas/AnnotationStyle'
+        content:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    AnnotationStyle:
+      type: object
+      description: Styling properties for annotations. All fields are optional.
+      properties:
+        color:
+          type: string
+          description: "Hex color for stroke (e.g. #ff0000), max 20 chars"
+        fillColor:
+          type: string
+          description: "Hex color for fill (e.g. #00ff00), max 20 chars"
+        fillOpacity:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Fill opacity (0–1)
+        weight:
+          type: number
+          minimum: 0
+          maximum: 50
+          description: Line weight in pixels
+        opacity:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Line opacity (0–1)
+        dashArray:
+          type: string
+          maxLength: 50
+          description: "Dash pattern (e.g. '5 10 5')"
+        lineCap:
+          type: string
+          enum: [butt, round, square]
+        lineJoin:
+          type: string
+          enum: [miter, round, bevel]
+        fontSize:
+          type: integer
+          minimum: 6
+          maximum: 96
+          description: Font size in pixels (for text annotations)
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message

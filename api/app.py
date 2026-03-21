@@ -50,6 +50,7 @@ from flask import (
     jsonify,
 )
 from flask_session import Session
+from flask_swagger_ui import get_swaggerui_blueprint
 import os
 import logging
 
@@ -207,6 +208,14 @@ app.register_blueprint(layers_bp)
 app.register_blueprint(annotations_bp)
 app.register_blueprint(exports_bp)
 app.register_blueprint(tiles_bp)
+
+# Register Swagger UI for API documentation
+swagger_ui_blueprint = get_swaggerui_blueprint(
+    '/api/docs',
+    '/static/swagger.yaml',
+    config={'app_name': APP_NAME}
+)
+app.register_blueprint(swagger_ui_blueprint)
 
 
 @app.route('/health')
