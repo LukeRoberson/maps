@@ -51,6 +51,13 @@ from backend import (
     AnnotationModel,
     AnnotationService
 )
+from backend.constants import (
+    ANNOTATION_MAX_WEIGHT,
+    ANNOTATION_MIN_FONT_SIZE,
+    ANNOTATION_MAX_FONT_SIZE,
+    MAX_COLOR_STRING_LENGTH,
+    MAX_DASH_ARRAY_LENGTH,
+)
 
 
 def validate_style(
@@ -94,7 +101,7 @@ def validate_style(
         # Validate color fields (hex format)
         if key in ('color', 'fillColor'):
             if not isinstance(value, str) or \
-               len(value) > 20 or \
+               len(value) > MAX_COLOR_STRING_LENGTH or \
                not value.startswith('#'):
                 raise ValueError(
                     f'{key} must be a hex color string'
@@ -115,17 +122,17 @@ def validate_style(
         elif key == 'weight':
             if not isinstance(value, (int, float)) or \
                value < 0 or \
-               value > 50:
+               value > ANNOTATION_MAX_WEIGHT:
                 raise ValueError(
-                    'weight must be a number between 0 and 50'
+                    f'weight must be a number between 0 and {ANNOTATION_MAX_WEIGHT}'
                 )
             sanitized[key] = float(value)
 
         # Validate dashArray (string, max 50 chars)
         elif key == 'dashArray':
-            if not isinstance(value, str) or len(value) > 50:
+            if not isinstance(value, str) or len(value) > MAX_DASH_ARRAY_LENGTH:
                 raise ValueError(
-                    'dashArray must be a string (max 50 chars)'
+                    f'dashArray must be a string (max {MAX_DASH_ARRAY_LENGTH} chars)'
                 )
             sanitized[key] = value
 
@@ -147,10 +154,10 @@ def validate_style(
         # Validate fontSize (integer, 6-96)
         elif key == 'fontSize':
             if not isinstance(value, (int, float)) or \
-               int(value) < 6 or \
-               int(value) > 96:
+               int(value) < ANNOTATION_MIN_FONT_SIZE or \
+               int(value) > ANNOTATION_MAX_FONT_SIZE:
                 raise ValueError(
-                    'fontSize must be a number between 6 and 96'
+                    f'fontSize must be a number between {ANNOTATION_MIN_FONT_SIZE} and {ANNOTATION_MAX_FONT_SIZE}'
                 )
             sanitized[key] = int(value)
 

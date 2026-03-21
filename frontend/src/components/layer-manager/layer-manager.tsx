@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { apiClient } from '@/services/api-client';
 import type { Layer } from '@/components/layer/types';
+import {
+  DEFAULT_ANNOTATION_COLOR,
+  DEFAULT_LINE_THICKNESS,
+  COLOR_OPTIONS,
+  THICKNESS_OPTIONS,
+} from '@/constants/drawing';
 import './layer-manager.css';
 
 interface LayerManagerProps {
@@ -31,27 +37,16 @@ export const LayerManager: React.FC<LayerManagerProps> = ({
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const [isCreating, setIsCreating] = useState<boolean>(false);
   const [newLayerName, setNewLayerName] = useState<string>('');
-  const [newLayerColor, setNewLayerColor] = useState<string>('#2ecc71');
+  const [newLayerColor, setNewLayerColor] = useState<string>(DEFAULT_ANNOTATION_COLOR);
   const [editingLayerId, setEditingLayerId] = useState<number | null>(null);
   const [editingName, setEditingName] = useState<string>('');
-  const [editingColor, setEditingColor] = useState<string>('#2ecc71');
-  const [editingThickness, setEditingThickness] = useState<number>(3);
-  const [newLayerThickness, setNewLayerThickness] = useState<number>(3);
+  const [editingColor, setEditingColor] = useState<string>(DEFAULT_ANNOTATION_COLOR);
+  const [editingThickness, setEditingThickness] = useState<number>(DEFAULT_LINE_THICKNESS);
+  const [newLayerThickness, setNewLayerThickness] = useState<number>(DEFAULT_LINE_THICKNESS);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // Available color options for layers
-  const colorOptions = [
-    { value: '#2ecc71', label: 'Green' },
-    { value: '#3498db', label: 'Blue' },
-    { value: '#e74c3c', label: 'Red' },
-    { value: '#f39c12', label: 'Orange' },
-    { value: '#9b59b6', label: 'Purple' },
-    { value: '#1abc9c', label: 'Turquoise' },
-    { value: '#e91e63', label: 'Pink' },
-    { value: '#ff5722', label: 'Deep Orange' },
-  ];
-
-  const thicknessOptions = [1, 2, 3, 4, 5, 6, 8, 10];
+  const colorOptions = COLOR_OPTIONS;
+  const thicknessOptions = THICKNESS_OPTIONS;
 
   useEffect(
     () => {
@@ -81,7 +76,7 @@ export const LayerManager: React.FC<LayerManagerProps> = ({
           visible: existingPeerMapsLayer?.visible ?? true,
           z_index: 0,
           is_editable: false,
-          config: { color: '#2ecc71' }, // Green to match individual map boundaries
+          config: { color: DEFAULT_ANNOTATION_COLOR },
         };
         layersToSet = [...loadedLayers, peerMapsLayer];
       }
@@ -114,7 +109,7 @@ export const LayerManager: React.FC<LayerManagerProps> = ({
 
       showToast?.(`Layer "${newLayerName}" created`, 'success');
       setNewLayerName('');
-      setNewLayerColor('#2ecc71');
+      setNewLayerColor(DEFAULT_ANNOTATION_COLOR);
       setIsCreating(false);
       await loadLayers();
       onLayersChange?.();
@@ -133,8 +128,8 @@ export const LayerManager: React.FC<LayerManagerProps> = ({
     }
     setEditingLayerId(layer.id!);
     setEditingName(layer.name);
-    setEditingColor((layer.config as any)?.color || '#2ecc71');
-    setEditingThickness((layer.config as any)?.line_thickness || 3);
+    setEditingColor((layer.config as any)?.color || DEFAULT_ANNOTATION_COLOR);
+    setEditingThickness((layer.config as any)?.line_thickness || DEFAULT_LINE_THICKNESS);
   };
 
   const handleSaveEdit = async (
@@ -163,7 +158,7 @@ export const LayerManager: React.FC<LayerManagerProps> = ({
       showToast?.('Layer updated', 'success');
       setEditingLayerId(null);
       setEditingName('');
-      setEditingColor('#2ecc71');
+      setEditingColor(DEFAULT_ANNOTATION_COLOR);
       await loadLayers();
       onLayersChange?.();
     } catch (error) {
@@ -175,8 +170,8 @@ export const LayerManager: React.FC<LayerManagerProps> = ({
   const handleCancelEdit = (): void => {
     setEditingLayerId(null);
     setEditingName('');
-    setEditingColor('#2ecc71');
-    setEditingThickness(3);
+    setEditingColor(DEFAULT_ANNOTATION_COLOR);
+    setEditingThickness(DEFAULT_LINE_THICKNESS);
   };
 
   const handleDeleteLayer = async (

@@ -57,6 +57,11 @@ from backend import (
     LayerModel,
     LayerService
 )
+from backend.constants import (
+    MAX_COLOR_STRING_LENGTH,
+    LAYER_MIN_LINE_THICKNESS,
+    LAYER_MAX_LINE_THICKNESS,
+)
 
 
 # Blueprint
@@ -169,12 +174,12 @@ def create_layer() -> Union[Response, Tuple[Response, int]]:
                     if key == 'color':
                         color_value = data['config'][key]
                         if isinstance(color_value, str) and \
-                           len(color_value) <= 20 and \
+                           len(color_value) <= MAX_COLOR_STRING_LENGTH and \
                            color_value.startswith('#'):
                             config[key] = color_value
                     elif key == 'line_thickness':
                         t = data['config'][key]
-                        if isinstance(t, (int, float)) and 1 <= t <= 20:
+                        if isinstance(t, (int, float)) and LAYER_MIN_LINE_THICKNESS <= t <= LAYER_MAX_LINE_THICKNESS:
                             config[key] = float(t)
 
         # Create LayerModel instance

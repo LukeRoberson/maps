@@ -43,6 +43,7 @@ import logging
 from flask import current_app
 
 # Local imports
+from backend.constants import BOUNDARY_MIN_COORDINATES
 from database import (
     DatabaseContext,
     DatabaseManager
@@ -100,7 +101,7 @@ class BoundaryModel:
         """
 
         # Validate coordinates exist, and have at least 3 points
-        if not coordinates or len(coordinates) < 3:
+        if not coordinates or len(coordinates) < BOUNDARY_MIN_COORDINATES:
             raise ValueError(
                 "Boundary must have at least 3 coordinate pairs"
             )

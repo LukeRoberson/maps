@@ -52,6 +52,7 @@ from backend import (
     LayerModel,
     LayerService
 )
+from backend.constants import DEFAULT_BOUNDARY_LAYER_COLOR
 
 
 # Blueprint
@@ -174,7 +175,7 @@ def create_boundary() -> Response:
                 visible=True,
                 z_index=0,
                 is_editable=True,
-                config={'color': '#e74c3c'}  # Red color for boundaries
+                config={'color': DEFAULT_BOUNDARY_LAYER_COLOR}
             )
             boundary_layer = layer_service.create(boundary_layer)
 

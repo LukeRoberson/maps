@@ -1,4 +1,10 @@
 import React, { useState } from 'react';
+import {
+  EXPORT_MIN_ZOOM,
+  EXPORT_MAX_ZOOM,
+  EXPORT_DEFAULT_ZOOM,
+  EXPORT_LINE_WIDTH_OPTIONS,
+} from '@/constants/drawing';
 import './export-dialog.css';
 
 interface ExportDialogProps {
@@ -14,16 +20,10 @@ export interface ExportOptions {
   lineWidthMultiplier: number;
 }
 
-const MIN_ZOOM = 14;
-const MAX_ZOOM = 19;
-const DEFAULT_ZOOM = 17;
-const LINE_WIDTH_OPTIONS = [
-  { value: 0.5, label: '0.5× (thin)' },
-  { value: 1, label: '1× (normal)' },
-  { value: 1.5, label: '1.5×' },
-  { value: 2, label: '2× (thick)' },
-  { value: 3, label: '3× (very thick)' },
-];
+const MIN_ZOOM = EXPORT_MIN_ZOOM;
+const MAX_ZOOM = EXPORT_MAX_ZOOM;
+const DEFAULT_ZOOM = EXPORT_DEFAULT_ZOOM;
+const LINE_WIDTH_OPTIONS = EXPORT_LINE_WIDTH_OPTIONS;
 
 const ExportDialog: React.FC<ExportDialogProps> = ({
   mapAreaName,

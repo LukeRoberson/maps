@@ -29,19 +29,17 @@ from backend.boundary import BoundaryService
 from backend.layer import LayerService
 from backend.map import MapService
 from backend.tile_config import TileLayerConfig, get_tile_config
+from backend.constants import (
+    TILE_PX,
+    MAX_IMAGE_PX,
+    BBOX_PADDING,
+    EXPORT_TILE_FETCH_TIMEOUT as TILE_FETCH_TIMEOUT,
+    EXPORT_TILE_FETCH_WORKERS as TILE_FETCH_WORKERS,
+    EXPORT_TILE_RETRY_MAX as TILE_RETRY_MAX,
+    EXPORT_TILE_RETRY_BASE_DELAY as TILE_RETRY_BASE_DELAY,
+)
 
 logger = logging.getLogger(__name__)
-
-# Tile size in pixels (standard Web Mercator tiles)
-TILE_PX = 256
-# Maximum image dimension (pixels per axis) to avoid enormous exports
-MAX_IMAGE_PX = 8000
-# Padding fraction added around the boundary bounding box
-BBOX_PADDING = 0.05
-# HTTP timeout for tile fetches
-TILE_FETCH_TIMEOUT = 10
-# Number of concurrent tile-fetch threads
-TILE_FETCH_WORKERS = 8
 
 
 # ---------------------------------------------------------------------------
@@ -126,12 +124,6 @@ def _build_tile_url(
         .replace('{y}', str(y))
         .replace('{r}', r)
     )
-
-
-# Max retries when a tile server returns 429 (Too Many Requests)
-TILE_RETRY_MAX = 4
-# Base delay (seconds) for exponential back-off on 429
-TILE_RETRY_BASE_DELAY = 1.0
 
 
 def _fetch_tile(

@@ -27,7 +27,14 @@ export interface StreetLabelOverlayOption {
   tileSize?: number;
 }
 
+/** Default map overlay style */
 const DEFAULT_TILE_LAYER_ID = 'carto-voyager';
+/** Zoom increment per scroll/click step (e.g. 0.5 = half-zoom levels, 1 = whole levels) */
+export const ZOOM_DELTA = 0.5;
+/** Snaps the displayed zoom to the nearest multiple of this value (e.g. 0.5 → 5, 5.5, 6 …) */
+export const ZOOM_SNAP = 0.5;
+/** Pixels of mouse-wheel scroll needed to trigger one full zoom-level change (higher = slower zoom) */
+export const WHEEL_PX_PER_ZOOM_LEVEL = 120;
 
 /**
  * Available tile layer providers with different styles and detail levels

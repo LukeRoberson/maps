@@ -40,6 +40,7 @@ from typing import (
 from flask import current_app
 
 # Local imports
+from backend.constants import DEFAULT_PROJECT_ZOOM
 from database import (
     DatabaseContext,
     DatabaseManager
@@ -80,7 +81,7 @@ class ProjectModel:
         description: str,
         center_lat: float,
         center_lon: float,
-        zoom_level: float = 13,
+        zoom_level: float = DEFAULT_PROJECT_ZOOM,
         tile_layer: Optional[str] = None,
         id: Optional[int] = None,
         created_at: Optional[datetime] = None,

@@ -13,14 +13,21 @@ import logging
 import requests
 from flask import Blueprint, Response
 
+from backend.constants import (
+    TILE_PROXY_FETCH_TIMEOUT,
+    TILE_PROXY_CACHE_MAX_AGE,
+    TILE_PROXY_MIN_ZOOM,
+    TILE_PROXY_MAX_ZOOM,
+)
+
 logger = logging.getLogger(__name__)
 
 tiles_bp = Blueprint('tiles', __name__)
 
 _WIKIMEDIA_TILE_URL = 'https://maps.wikimedia.org/osm-intl/{z}/{x}/{y}.png'
-_TILE_FETCH_TIMEOUT = 10
+_TILE_FETCH_TIMEOUT = TILE_PROXY_FETCH_TIMEOUT
 # Tiles change infrequently; cache for 24 hours in the browser
-_TILE_CACHE_MAX_AGE = 86400
+_TILE_CACHE_MAX_AGE = TILE_PROXY_CACHE_MAX_AGE
 
 
 @tiles_bp.route('/api/tiles/wikimedia/<int:z>/<int:x>/<int:y>')
@@ -36,7 +43,7 @@ def proxy_wikimedia_tile(z: int, x: int, y: int) -> Response:
     Returns:
         Response: PNG tile image forwarded from Wikimedia, or an error response.
     """
-    if not (0 <= z <= 19):
+    if not (TILE_PROXY_MIN_ZOOM <= z <= TILE_PROXY_MAX_ZOOM):
         return Response('Invalid zoom level', status=400)
 
     max_tile = 2 ** z

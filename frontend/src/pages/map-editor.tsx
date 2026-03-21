@@ -19,7 +19,8 @@ import '@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css';
 import { apiClient } from '@/services/api-client';
 import { LayerManager } from '@/components/layer-manager';
 import { ExportDialog, ExportOptions } from '@/components/export-dialog';
-import { TILE_LAYER_OPTIONS, getStreetLabelOverlay, getTileLayer } from '@/constants/tile-layers';
+import { TILE_LAYER_OPTIONS, ZOOM_DELTA, ZOOM_SNAP, WHEEL_PX_PER_ZOOM_LEVEL, getStreetLabelOverlay, getTileLayer } from '@/constants/tile-layers';
+import { DEFAULT_TEXT_FONT_SIZE, BOUNDARY_FADE_OPACITY, BOUNDARY_FADE_COLOR, SNAP_DISTANCE } from '@/constants/drawing';
 import { isWithinBoundary } from '@/utils/geometry';
 import { DrawControls } from '@/components/draw/draw-controls';
 
@@ -124,7 +125,7 @@ const AnnotationRenderer: React.FC<AnnotationRendererProps> = ({
         }
       } else if (annotation.annotation_type === 'text') {
         const [lat, lng] = annotation.coordinates as [number, number];
-        const fontSize = (annotation.style as any)?.fontSize || 20;
+        const fontSize = (annotation.style as any)?.fontSize || DEFAULT_TEXT_FONT_SIZE;
         layer = L.marker([lat, lng], {
           icon: L.divIcon({
             className: 'text-annotation',
@@ -144,7 +145,7 @@ const AnnotationRenderer: React.FC<AnnotationRendererProps> = ({
             (layer as any).pm?.enable({
               allowSelfIntersection: false,
               snappable: true,
-              snapDistance: 20,
+              snapDistance: SNAP_DISTANCE,
             });
           }
 
@@ -263,8 +264,8 @@ const BoundaryFadeOverlay: React.FC<BoundaryFadeOverlayProps> = ({ boundary }) =
       [worldBounds, boundary.coordinates],
       {
         color: 'transparent',
-        fillColor: '#ffffff',
-        fillOpacity: 0.65,
+        fillColor: BOUNDARY_FADE_COLOR,
+        fillOpacity: BOUNDARY_FADE_OPACITY,
         interactive: false,
         pane: 'overlayPane',
         pmIgnore: true, // Tell Geoman to ignore this layer completely
@@ -1618,9 +1619,9 @@ const MapEditor: React.FC = () => {
             mapArea.default_center_lon ?? project.center_lon,
           ]}
           zoom={mapArea.default_zoom ?? project.zoom_level}
-          zoomDelta={0.5}
-          zoomSnap={0.5}
-          wheelPxPerZoomLevel={120}
+          zoomDelta={ZOOM_DELTA}
+          zoomSnap={ZOOM_SNAP}
+          wheelPxPerZoomLevel={WHEEL_PX_PER_ZOOM_LEVEL}
           style={{ height: '100%', width: '100%' }}
         >
           <MapViewController onMapReady={setMapInstance} />

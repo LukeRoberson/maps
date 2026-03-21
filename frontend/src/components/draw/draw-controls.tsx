@@ -5,6 +5,13 @@ import type { LeafletEvent, LeafletEventHandlerFn } from 'leaflet';
 
 import type { Annotation } from '@/components/annotation/types';
 import type { DrawControlsProps } from './types';
+import {
+  DEFAULT_BOUNDARY_COLOR,
+  DEFAULT_ANNOTATION_COLOR,
+  DEFAULT_LINE_THICKNESS,
+  DEFAULT_FILL_OPACITY,
+  SNAP_DISTANCE,
+} from '@/constants/drawing';
 
 
 
@@ -167,24 +174,24 @@ export const DrawControls: React.FC<DrawControlsProps> = ({
     map.on('pm:drawstart', handleDrawStart);
 
     let color: string;
-    let lineThickness: number = 3;
+    let lineThickness: number = DEFAULT_LINE_THICKNESS;
     if (mode === 'boundary' || mode === 'suburb' || mode === 'individual') {
-      color = '#3498db';
+      color = DEFAULT_BOUNDARY_COLOR;
     } else if (mode === 'annotation' && activeLayerId) {
       // Get color from active layer with type-safe access
       const activeLayer = layers?.find(l => l.id === activeLayerId);
       const layerConfig = activeLayer?.config as LayerConfig | undefined;
-      color = layerConfig?.color || '#2ecc71';
-      lineThickness = layerConfig?.line_thickness || 3;
+      color = layerConfig?.color || DEFAULT_ANNOTATION_COLOR;
+      lineThickness = layerConfig?.line_thickness || DEFAULT_LINE_THICKNESS;
     } else {
-      color = '#2ecc71';
+      color = DEFAULT_ANNOTATION_COLOR;
     }
 
     map.pm.setGlobalOptions({
       pathOptions: {
         color,
         fillColor: color,
-        fillOpacity: 0.2,
+        fillOpacity: DEFAULT_FILL_OPACITY,
         weight: lineThickness,
       },
     });
@@ -219,10 +226,10 @@ export const DrawControls: React.FC<DrawControlsProps> = ({
     // Only create the polygon once per boundary edit session
     if (mode === 'boundary' && existingBoundary && !boundaryLoadedRef.current) {
       const polygon = L.polygon(existingBoundary.coordinates, {
-        color: '#3498db',
-        weight: 3,
-        fillColor: '#3498db',
-        fillOpacity: 0.2,
+        color: DEFAULT_BOUNDARY_COLOR,
+        weight: DEFAULT_LINE_THICKNESS,
+        fillColor: DEFAULT_BOUNDARY_COLOR,
+        fillOpacity: DEFAULT_FILL_OPACITY,
         smoothFactor: 1,
       }).addTo(map);
       
@@ -235,7 +242,7 @@ export const DrawControls: React.FC<DrawControlsProps> = ({
         allowSelfIntersection: false,
         preventMarkerRemoval: false,
         snappable: true,
-        snapDistance: 20,
+        snapDistance: SNAP_DISTANCE,
       });
       
       // Listen to vertex drag events for real-time updates
