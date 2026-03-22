@@ -179,7 +179,14 @@ def create_layer() -> Union[Response, Tuple[Response, int]]:
                             config[key] = color_value
                     elif key == 'line_thickness':
                         t = data['config'][key]
-                        if isinstance(t, (int, float)) and LAYER_MIN_LINE_THICKNESS <= t <= LAYER_MAX_LINE_THICKNESS:
+                        if (
+                            isinstance(t, (int, float)) and
+                            (
+                                LAYER_MIN_LINE_THICKNESS
+                                <= t
+                                <= LAYER_MAX_LINE_THICKNESS
+                            )
+                        ):
                             config[key] = float(t)
 
         # Create LayerModel instance

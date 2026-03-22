@@ -10,6 +10,19 @@ For the most part, the API follows a CRUD-like approach, to create, read, update
 </br></br>
 
 
+
+## Swagger UI
+
+Swagger UI is used for online API documentation.
+
+`swagger.yaml` is located in `api/static`.
+
+Browse to `localhost:5000/api/docs` to access the documentation.
+
+</br></br>
+
+
+
 ## Endpoint Summary
 
 | Endpoint                   | Method | Description                    |

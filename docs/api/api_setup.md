@@ -62,6 +62,36 @@ python -m backend.app
 
 
 ---
+# Testing API Endpoints
+
+Endpoint tests use `pytest` with Flask's test client.
+
+Install dependencies first:
+```bash
+pip install -r requirements.txt
+```
+
+Run all API endpoint tests:
+```bash
+pytest -q
+```
+
+Run smoke tests only:
+```bash
+pytest -q tests/test_smoke.py
+```
+
+Run coverage report:
+```bash
+pytest --cov=. --cov-report=term-missing
+```
+
+These tests target HTTP endpoint behavior only.
+
+</br></br>
+
+
+---
 # Database
 
 The backend process accesses a database through SQLite. The DB file is `database/maps.db`.

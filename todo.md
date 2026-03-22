@@ -13,7 +13,7 @@
   * All new lines are correct
 
 
-# Future
+# Future Features
 
 - [ ] Possibility to add more information to the map
   * Number of houses on the block
@@ -41,8 +41,6 @@
     * Need to tag with a version
     * When future updates are required, check schema, update, migrate data, etc
 - [ ] Testing and Docs
-  - [ ] Postman collection
-  - [ ] Automated API tests with pytest
   - [ ] Frontend testing plan
 - [ ] Simple Auth
   - [ ] Allow read only users and admins
@@ -53,6 +51,14 @@
   - [ ] Make it expandable/shrinkable
   - [ ] Add the zoom, lat, lon, in here so they can be edited manually
   - [ ] Default map style
+
+
+# API
+  - [ ] Postman collection
+  - [ ] Automated API tests with pytest
+  - [ ] Swagger Documentation
+  - [ ] General Cleanup
+    - [ ] Consolidate project import and export into one endpoint with different methods
 
 
 # Investigate

@@ -1,4 +1,4 @@
-openapi: 3.0.3
+openapi: 3.0.4
 
 info:
   title: Printable Maps API
@@ -34,6 +34,7 @@ tags:
 paths:
   # ──────────────────────────────────────────────
   # Health / Config
+  # app.py
   # ──────────────────────────────────────────────
   /health:
     get:
@@ -41,7 +42,8 @@ paths:
       summary: Health check
       responses:
         '200':
-          description: API is healthy
+          summary: Check API health
+          description: Responds if the API is up. Does not check full database connectivity or tile server access.
           content:
             application/json:
               schema:
@@ -55,6 +57,8 @@ paths:
     get:
       tags: [Health]
       summary: Get default configuration
+      description: |
+        Returns default map configuration values (e.g. default center and zoom) that the frontend can use when initializing a new project or map area.
       responses:
         '200':
           description: Default map configuration
@@ -78,11 +82,13 @@ paths:
 
   # ──────────────────────────────────────────────
   # Projects
+  # projects.py
   # ──────────────────────────────────────────────
   /api/projects:
     get:
       tags: [Projects]
       summary: List all projects
+      description: Returns an array of all map projects with their basic details. Does not include map areas or other nested data.
       responses:
         '200':
           description: Array of projects
@@ -95,35 +101,274 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/Project'
-    # TODO: Add POST /api/projects
-    # post:
-    #   tags: [Projects]
-    #   summary: Create a project
-    #   requestBody:
-    #     required: true
-    #     content:
-    #       application/json:
-    #         schema:
-    #           type: object
-    #           required: [name]
-    #           properties:
-    #             name: { type: string }
-    #             description: { type: string }
-    #             center_lat: { type: number }
-    #             center_lon: { type: number }
-    #             zoom_level: { type: number }
-    #   responses:
-    #     '201':
-    #       description: Created project
-    #       content:
-    #         application/json:
-    #           schema:
-    #             $ref: '#/components/schemas/Project'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
-  # TODO: Add GET /api/projects/{project_id}
-  # TODO: Add PUT /api/projects/{project_id}
-  # TODO: Add DELETE /api/projects/{project_id}
-  # TODO: Add GET /api/projects/{project_id}/export
+    post:
+      tags: [Projects]
+      summary: Create a project
+      description: Create a new map project with the specified name and optional details. Returns the created project object.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                  description: Project name
+                description:
+                  type: string
+                  description: Project description
+                  nullable: true
+                center_lat:
+                  type: number
+                  Summary: Default latitude
+                  description: |
+                    Default centre latitude for maps in this project.
+                    Defaults to the project latitude if not specified.
+                  nullable: true
+                center_lon:
+                  type: number
+                  Summary: Default longitude
+                  description: |
+                    Default centre longitude for maps in this project.
+                    Defaults to the project longitude if not specified.
+                  nullable: true
+                zoom_level:
+                  type: integer
+                  Summary: Default zoom level
+                  description: |
+                    Default map zoom level
+                    Defaults to the project zoom level if not specified.
+                  nullable: true
+      responses:
+        '201':
+          description: Created project
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/projects/{project_id}:
+    get:
+      tags: [Projects]
+      summary: Get project details
+      description: |
+        Retrieve detailed information about a specific project.
+      parameters:
+        - name: project_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Unique ID of the project to retrieve
+      responses:
+        '200':
+          description: Project details with nested map areas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    
+    put:
+      tags: [Projects]
+      summary: Update a project
+      description: |
+        Update the details of an existing project. Only fields included in the request body will be updated; others will remain unchanged.
+      parameters:
+        - name: project_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Unique ID of the project to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Project name
+                  nullable: true
+                description:
+                  type: string
+                  description: Project description
+                  nullable: true
+                center_lat:
+                  type: number
+                  description: Default latitude for maps in this project
+                  nullable: true
+                center_lon:
+                  type: number
+                  description: Default longitude for maps in this project
+                  nullable: true
+                zoom_level:
+                  type: integer
+                  description: Default zoom level for maps in this project
+                  nullable: true
+      responses:
+        '200':
+          description: Updated project details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags: [Projects]
+      summary: Delete a project
+      description: |
+        Permanently delete a project and all associated map areas, boundaries, layers, and annotations. This action cannot be undone.
+      parameters:
+        - name: project_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Unique ID of the project to delete
+      responses:
+        '204':
+          description: Project deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Project deleted successfully
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/projects/{project_id}/export:
+    get:
+      tags: [Projects]
+      summary: Export project data
+      description: |
+        Export all data for a project (including map areas, boundaries, layers, and annotations) in a structured JSON format.
+        This can be used for backup or to transfer data between instances, or perform backups.
+      parameters:
+        - name: project_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Unique ID of the project to export
+      responses:
+        '200':
+          description: Exported project data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  version:
+                    type: string
+                    example: '1.0'
+                    description: Export format version
+                  export_date:
+                    type: string
+                    format: date-time
+                    example: '2026-03-22T23:39:55.902527+00:00'
+                    description: Timestamp of when the export was generated
+                  project:
+                    $ref: '#/components/schemas/Project'
+                  map_areas:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MapArea'
+                  boundaries:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Boundary'
+                  layers:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Layer'
+                  annotations:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Annotation'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/projects/import:
+     post:
+      tags: [Projects]
+      summary: Import project data
+      description: |
+        Import project data from a JSON export file.
+        The JSON structure should match the format produced by the GET /api/projects/{project_id}/export endpoint.
+        This will create a new project with the imported data. If a project with the same name already exists, a unique suffix will be added to the name to avoid conflicts.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                version:
+                  type: string
+                  example: '1.0'
+                  description: Version of the export schema (for future compatibility)
+                export_date:
+                  type: string
+                  format: date-time
+                  example: '2026-03-22T23:39:55.902527+00:00'
+                  description: Timestamp of when the export was generated
+                project:
+                  $ref: '#/components/schemas/Project'
+                map_areas:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/MapArea'
+                boundaries:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Boundary'
+                layers:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Layer'
+                annotations:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Annotation'
+      responses:
+        '201':
+          description: Project imported successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   # ──────────────────────────────────────────────
   # Map Areas
@@ -447,27 +692,36 @@ components:
       properties:
         id:
           type: integer
+          description: Unique project ID
         name:
           type: string
+          description: Project name
         description:
           type: string
           nullable: true
+          description: Project description
         center_lat:
           type: number
+          description: Default map center latitude
         center_lon:
           type: number
+          description: Default map center longitude
         zoom_level:
           type: number
           default: 13
+          description: Default map zoom level
         tile_layer:
           type: string
           nullable: true
+          description: Default tile layer ID
         created_at:
           type: string
           format: date-time
+          description: Timestamp of project creation
         updated_at:
           type: string
           format: date-time
+          description: Timestamp of last project update
 
     MapArea:
       type: object
@@ -645,3 +899,23 @@ components:
         error:
           type: string
           description: Error message
+
+  responses:
+    NotFound:
+      description: 404 Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    BadRequest:
+      description: 400 Invalid request parameters
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    InternalServerError:
+      description: 500 Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'

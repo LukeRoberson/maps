@@ -48,6 +48,7 @@ from flask import (
 import json
 import io
 from datetime import datetime
+import logging
 
 # Local Imports
 from backend import (
@@ -56,6 +57,9 @@ from backend import (
 )
 from backend.config import Config
 
+
+# Logging
+logger = logging.getLogger(__name__)
 
 # Blueprint
 projects_bp = Blueprint(
@@ -86,6 +90,7 @@ def list_projects() -> Response:
         projects = project_service.read()
 
         # Convert to a list of dictionaries, and return as JSON response
+        logger.debug(f"Listing {len(projects)} projects")
         return make_response(
             jsonify(
                 {
@@ -96,6 +101,7 @@ def list_projects() -> Response:
         )
 
     except Exception as e:
+        logger.error(f"Error listing projects: {str(e)}")
         return make_response(
             jsonify(
                 {
@@ -136,6 +142,7 @@ def create_project() -> Response:
 
         # The request body must contain project information
         if not data:
+            logger.warning("No data provided in create_project request")
             return make_response(
                 jsonify(
                     {'error': 'No data provided'}
@@ -147,6 +154,7 @@ def create_project() -> Response:
         required_fields = ['name']
         for field in required_fields:
             if field not in data:
+                logger.warning(f"Missing required field: {field}")
                 return make_response(
                     jsonify(
                         {'error': f'Missing required field: {field}'}
@@ -172,6 +180,7 @@ def create_project() -> Response:
 
         # Create the project via the service
         created_project = project_service.create(project)
+        logger.debug(f"Created project: {created_project.to_dict()}")
         return make_response(
             jsonify(
                 created_project.to_dict()
@@ -181,6 +190,7 @@ def create_project() -> Response:
 
     # Invalid values provided
     except ValueError as e:
+        logger.warning(f"Invalid data provided: {str(e)}")
         return make_response(
             jsonify(
                 {'error': f'Invalid data: {str(e)}'}
@@ -190,6 +200,7 @@ def create_project() -> Response:
 
     # Server side error
     except Exception as e:
+        logger.error(f"Error creating project: {str(e)}")
         return make_response(
             jsonify(
                 {'error': str(e)}
@@ -206,7 +217,7 @@ def get_project(
     project_id: int
 ) -> Response:
     """
-    Get a project by ID.
+    Get a specific project by ID.
 
     Args:
         project_id (int): Project ID
@@ -222,6 +233,7 @@ def get_project(
 
         # If there is no result, return 404
         if not project:
+            logger.warning(f"Project with ID {project_id} not found")
             return make_response(
                 jsonify(
                     {'error': 'Project not found'}
@@ -230,6 +242,7 @@ def get_project(
             )
 
         # Return the project details as JSON
+        logger.debug(f"Fetched project {project_id}: {project.to_dict()}")
         return make_response(
             jsonify(
                 project.to_dict()
@@ -238,6 +251,7 @@ def get_project(
         )
 
     except Exception as e:
+        logger.error(f"Error fetching project {project_id}: {str(e)}")
         return make_response(
             jsonify(
                 {'error': str(e)}
@@ -257,6 +271,15 @@ def update_project(
 
     Args:
         project_id (int): Project ID
+
+    JSON body can contain any of the following fields to update:
+        {
+            "name": "Updated Project Name",
+            "description": "Updated description",
+            "center_lat": 37.7749,
+            "center_lon": -122.4194,
+            "zoom_level": 13
+        }
 
     Returns:
         Response: JSON response with updated project
@@ -331,6 +354,9 @@ def delete_project(
 
         # If no project found to delete, return 404
         if not success:
+            logger.warning(
+                f"Project with ID {project_id} not found for deletion"
+            )
             return make_response(
                 jsonify(
                     {'error': 'Project not found'}
@@ -339,6 +365,7 @@ def delete_project(
             )
 
         # Return a success message
+        logger.debug(f"Deleted project with ID {project_id}")
         return make_response(
             jsonify(
                 {'message': 'Project deleted successfully'}
@@ -347,6 +374,7 @@ def delete_project(
         )
 
     except Exception as e:
+        logger.error(f"Error deleting project {project_id}: {str(e)}")
         return make_response(
             jsonify(
                 {'error': str(e)}
@@ -388,6 +416,7 @@ def export_project(
         json_bytes = json_str.encode('utf-8')
 
         # Return as downloadable file
+        logger.debug(f"Exporting project {project_id} as {filename}")
         return send_file(
             io.BytesIO(json_bytes),
             mimetype='application/json',
@@ -396,13 +425,16 @@ def export_project(
         )
 
     except ValueError as e:
+        logger.warning(f"Project {project_id} not found for export: {str(e)}")
         return make_response(
             jsonify(
                 {'error': str(e)}
             ),
             404
         )
+
     except Exception as e:
+        logger.error(f"Error exporting project {project_id}: {str(e)}")
         return make_response(
             jsonify(
                 {'error': str(e)}
@@ -431,6 +463,7 @@ def import_project() -> Response:
         import_data = request.get_json()
 
         if not import_data:
+            logger.warning("No data provided in import_project request")
             return make_response(
                 jsonify(
                     {'error': 'No data provided'}
@@ -444,8 +477,13 @@ def import_project() -> Response:
 
         # Get the newly created project
         new_project = project_service.read(new_project_id)
+        logger.debug(f"Import: Created project with new ID {new_project_id}")
 
         if not new_project:
+            logger.error(
+                f"Failed to retrieve newly imported project with ID "
+                f"{new_project_id}"
+            )
             return make_response(
                 jsonify(
                     {'error': 'Failed to retrieve newly imported project'}
@@ -454,6 +492,7 @@ def import_project() -> Response:
             )
 
         # Return the new project
+        logger.debug(f"Project imported successfully: {new_project.to_dict()}")
         return make_response(
             jsonify(
                 {
@@ -465,13 +504,16 @@ def import_project() -> Response:
         )
 
     except ValueError as e:
+        logger.warning(f"Import project failed: {str(e)}")
         return make_response(
             jsonify(
                 {'error': str(e)}
             ),
             400
         )
+
     except Exception as e:
+        logger.error(f"Error importing project: {str(e)}")
         return make_response(
             jsonify(
                 {'error': str(e)}

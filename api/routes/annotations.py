@@ -124,15 +124,20 @@ def validate_style(
                value < 0 or \
                value > ANNOTATION_MAX_WEIGHT:
                 raise ValueError(
-                    f'weight must be a number between 0 and {ANNOTATION_MAX_WEIGHT}'
+                    f'weight must be a number between 0 '
+                    f'and {ANNOTATION_MAX_WEIGHT}'
                 )
             sanitized[key] = float(value)
 
         # Validate dashArray (string, max 50 chars)
         elif key == 'dashArray':
-            if not isinstance(value, str) or len(value) > MAX_DASH_ARRAY_LENGTH:
+            if (
+                not isinstance(value, str)
+                or len(value) > MAX_DASH_ARRAY_LENGTH
+            ):
                 raise ValueError(
-                    f'dashArray must be a string (max {MAX_DASH_ARRAY_LENGTH} chars)'
+                    f'dashArray must be a string '
+                    f'(max {MAX_DASH_ARRAY_LENGTH} chars)'
                 )
             sanitized[key] = value
 
@@ -157,7 +162,9 @@ def validate_style(
                int(value) < ANNOTATION_MIN_FONT_SIZE or \
                int(value) > ANNOTATION_MAX_FONT_SIZE:
                 raise ValueError(
-                    f'fontSize must be a number between {ANNOTATION_MIN_FONT_SIZE} and {ANNOTATION_MAX_FONT_SIZE}'
+                    f'fontSize must be a number between '
+                    f'{ANNOTATION_MIN_FONT_SIZE} and '
+                    f'{ANNOTATION_MAX_FONT_SIZE}'
                 )
             sanitized[key] = int(value)
 

@@ -21,14 +21,13 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import requests
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from flask import current_app
 from PIL import Image, ImageDraw, ImageFont
 
 from backend.annotation import AnnotationModel, AnnotationService
 from backend.boundary import BoundaryService
 from backend.layer import LayerService
 from backend.map import MapService
-from backend.tile_config import TileLayerConfig, get_tile_config
+from backend.tile_config import get_tile_config
 from backend.constants import (
     TILE_PX,
     MAX_IMAGE_PX,

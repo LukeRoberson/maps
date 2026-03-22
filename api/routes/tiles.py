@@ -3,9 +3,10 @@ Route: /api/tiles/wikimedia
 
 Proxy for Wikimedia map tiles.
 
-Wikimedia's tile servers restrict tile access based on the browser Referer header,
-blocking requests from non-Wikimedia, non-localhost origins. This proxy fetches
-tiles server-side so the browser Referer restriction does not apply.
+Wikimedia's tile servers restrict tile access based on the browser
+Referer header, blocking requests from non-Wikimedia, non-localhost origins.
+This proxy fetches tiles server-side so the browser Referer restriction
+does not apply.
 """
 
 import logging
@@ -41,7 +42,8 @@ def proxy_wikimedia_tile(z: int, x: int, y: int) -> Response:
         y: Tile Y coordinate
 
     Returns:
-        Response: PNG tile image forwarded from Wikimedia, or an error response.
+        Response: PNG tile image forwarded from Wikimedia,
+            or an error response.
     """
     if not (TILE_PROXY_MIN_ZOOM <= z <= TILE_PROXY_MAX_ZOOM):
         return Response('Invalid zoom level', status=400)
@@ -62,7 +64,10 @@ def proxy_wikimedia_tile(z: int, x: int, y: int) -> Response:
             timeout=_TILE_FETCH_TIMEOUT,
         )
     except requests.RequestException as exc:
-        logger.error('Wikimedia tile fetch failed (%d/%d/%d): %s', z, x, y, exc)
+        logger.error(
+            'Wikimedia tile fetch failed (%d/%d/%d): %s', z, x, y, exc,
+            exc_info=True
+        )
         return Response('Tile fetch failed', status=502)
 
     if upstream.status_code != 200:

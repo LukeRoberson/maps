@@ -76,10 +76,14 @@ def generate_export() -> Response:
     Generate a server-side PNG export of a map area.
 
     Request JSON:
-        map_area_id (int): Required. The map area to export.
-        zoom (int|null): Optional. Zoom level override (null = auto).
-        include_annotations (bool): Whether to draw annotations (default True).
-        include_boundary (bool): Whether to draw boundary outline (default True).
+        map_area_id (int): Required.
+            The map area to export.
+        zoom (int|null): Optional.
+            Zoom level override (null = auto).
+        include_annotations (bool): Optional.
+            Whether to draw annotations (default True).
+        include_boundary (bool): Optional.
+            Whether to draw boundary outline (default True).
 
     Returns:
         Response: PNG file as binary download
@@ -104,7 +108,7 @@ def generate_export() -> Response:
         zoom = data.get('zoom')  # None = auto
         include_annotations = data.get('include_annotations', True)
         include_boundary = data.get('include_boundary', True)
-        tile_layer = data.get('tile_layer')  # None = use map area's saved value
+        tile_layer = data.get('tile_layer')  # None: use map area's saved value
         raw_multiplier = data.get('line_width_multiplier', 1.0)
         try:
             line_width_multiplier = float(raw_multiplier)
