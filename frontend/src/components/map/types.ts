@@ -141,6 +141,7 @@ export interface MapViewControllerProps {
  * @summary Props for ReadOnlyPolygon component.
  * @property {[number, number][]} positions - Array of latitude and longitude pairs defining the polygon.
  * @property {L.PathOptions} pathOptions - Leaflet path options for styling the polygon.
+ * @property {L.PathOptions} [hoverPathOptions] - Optional Leaflet path options applied while the cursor hovers over the polygon.
  * @property {string} [tooltipContent] - Optional tooltip content to display on hover.
  * @property {() => void} [onClick] - Optional click handler for the polygon.
  * @property {(message: string, type: ToastType) => void} [showToast] - Function to show toast notifications.
@@ -148,6 +149,7 @@ export interface MapViewControllerProps {
 export interface ReadOnlyPolygonProps {
   positions: [number, number][];
   pathOptions: L.PathOptions;
+  hoverPathOptions?: L.PathOptions;
   tooltipContent?: string;
   onClick?: () => void;
   showToast?: (message: string, type: ToastType) => void;

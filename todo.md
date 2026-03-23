@@ -19,16 +19,17 @@
   * Number of houses on the block
   * Specific POIs
 - [ ] Annotation:
+  - [x] Option to adjust line thickness
   - [ ] Can we add a POI marker at a given address?
     * Automatically add POIs as markers
-  - [x] Option to adjust line thickness
   - [ ] Way to create an 'exclusion' zone, eg where schools or parks take up space on the map
 - [ ] Region View
-  - [ ] Show each suburb as a layer, so we can show and hide them
+  - [x] Show each suburb as a layer, so we can show and hide them
   - [ ] Show/hide individual maps
 - [ ] Suburb view
-  - [ ] Show individual maps as layers, so we can show/hide them
-  - [ ] When hovering over a map, change the mask shading so the borders are clearly visible
+  - [x] Show individual maps as layers, so we can show/hide them
+  - [x] When hovering over a map, change the mask shading so the borders are clearly visible
+  - [ ] Show peer maps for neighbouring suburbs
 
 - [ ] Settings
   - [ ] Add a settings page (based on config.yaml and constants in the frontend)

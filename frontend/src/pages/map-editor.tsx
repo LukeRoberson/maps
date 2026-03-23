@@ -18,6 +18,8 @@ import '@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css';
 // Internal dependencies
 import { apiClient } from '@/services/api-client';
 import { LayerManager } from '@/components/layer-manager';
+import { SuburbList } from '@/components/suburb-list';
+import { IndividualList } from '@/components/individual-list';
 import { ExportDialog, ExportOptions } from '@/components/export-dialog';
 import { TILE_LAYER_OPTIONS, ZOOM_DELTA, ZOOM_SNAP, WHEEL_PX_PER_ZOOM_LEVEL, getStreetLabelOverlay, getTileLayer } from '@/constants/tile-layers';
 import { DEFAULT_TEXT_FONT_SIZE, BOUNDARY_FADE_OPACITY, BOUNDARY_FADE_COLOR, SNAP_DISTANCE } from '@/constants/drawing';
@@ -308,7 +310,8 @@ const BoundaryFadeOverlay: React.FC<BoundaryFadeOverlayProps> = ({ boundary }) =
 // Component to render a read-only polygon that cannot be deleted
 const ReadOnlyPolygon: React.FC<ReadOnlyPolygonProps> = ({ 
   positions, 
-  pathOptions, 
+  pathOptions,
+  hoverPathOptions,
   tooltipContent,
   onClick,
   showToast
@@ -323,6 +326,11 @@ const ReadOnlyPolygon: React.FC<ReadOnlyPolygonProps> = ({
     });
     polygon.addTo(map);
     polygonRef.current = polygon;
+
+    if (hoverPathOptions) {
+      polygon.on('mouseover', () => polygon.setStyle(hoverPathOptions));
+      polygon.on('mouseout', () => polygon.setStyle(pathOptions));
+    }
 
     // Mark this layer as non-editable for Geoman
     if (polygon.pm) {
@@ -364,7 +372,7 @@ const ReadOnlyPolygon: React.FC<ReadOnlyPolygonProps> = ({
         polygonRef.current = null;
       }
     };
-  }, [map, positions, pathOptions, tooltipContent, onClick]);
+  }, [map, positions, pathOptions, hoverPathOptions, tooltipContent, onClick]);
 
   return null;
 };
@@ -412,6 +420,12 @@ const MapEditor: React.FC = () => {
   const [individuals, setIndividuals] = useState<MapArea[]>([]);
   const [individualBoundaries, setIndividualBoundaries] = useState<Record<number, Boundary>>({});
   const [hideEmptySuburbs, setHideEmptySuburbs] = useState(false);
+  const [hiddenSuburbIds, setHiddenSuburbIds] = useState<Set<number>>(new Set());
+  const [hiddenIndividualIds, setHiddenIndividualIds] = useState<Set<number>>(new Set());
+  const [regionViewMode, setRegionViewMode] = useState<'suburb' | 'individual'>('suburb');
+  const [regionIndividuals, setRegionIndividuals] = useState<MapArea[]>([]);
+  const [regionIndividualBoundaries, setRegionIndividualBoundaries] = useState<Record<number, Boundary>>({});
+  const [hiddenRegionIndividualIds, setHiddenRegionIndividualIds] = useState<Set<number>>(new Set());
   const [mode, setMode] = useState<'boundary' | 'annotation' | 'suburb' | 'individual'>('annotation');
   const [loading, setLoading] = useState(true);
   const [suburbName, setSuburbName] = useState('');
@@ -612,16 +626,51 @@ const MapEditor: React.FC = () => {
     fillOpacity: 0.15,
   }), []);
 
+  const handleToggleSuburb = React.useCallback((suburbId: number, currentlyVisible: boolean) => {
+    setHiddenSuburbIds(prev => {
+      const next = new Set(prev);
+      if (currentlyVisible) {
+        next.add(suburbId);
+      } else {
+        next.delete(suburbId);
+      }
+      return next;
+    });
+  }, []);
+
+  const handleToggleIndividual = React.useCallback((individualId: number, currentlyVisible: boolean) => {
+    setHiddenIndividualIds(prev => {
+      const next = new Set(prev);
+      if (currentlyVisible) {
+        next.add(individualId);
+      } else {
+        next.delete(individualId);
+      }
+      return next;
+    });
+  }, []);
+
+  const handleToggleRegionIndividual = React.useCallback((individualId: number, currentlyVisible: boolean) => {
+    setHiddenRegionIndividualIds(prev => {
+      const next = new Set(prev);
+      if (currentlyVisible) {
+        next.add(individualId);
+      } else {
+        next.delete(individualId);
+      }
+      return next;
+    });
+  }, []);
+
   const visibleSuburbBoundaryEntries = React.useMemo(() => {
     const entries = Object.entries(suburbBoundaries);
-    if (!hideEmptySuburbs) {
-      return entries;
-    }
-
-    return entries.filter(([suburbId]) =>
-      suburbIdsWithChildren.has(parseInt(suburbId, 10))
-    );
-  }, [suburbBoundaries, hideEmptySuburbs, suburbIdsWithChildren]);
+    return entries.filter(([suburbId]) => {
+      const id = parseInt(suburbId, 10);
+      if (hideEmptySuburbs && !suburbIdsWithChildren.has(id)) return false;
+      if (hiddenSuburbIds.has(id)) return false;
+      return true;
+    });
+  }, [suburbBoundaries, hideEmptySuburbs, suburbIdsWithChildren, hiddenSuburbIds]);
 
   const peerMapsLayerVisible = React.useMemo(() => {
     const peerMapsLayer = layers.find(l => l.id === -1);
@@ -869,6 +918,8 @@ const MapEditor: React.FC = () => {
         // Region view should only display suburb-level children.
         setIndividuals([]);
         setIndividualBoundaries({});
+        setRegionIndividuals([]);
+        setRegionIndividualBoundaries({});
 
         // Load suburbs for region maps
         try {
@@ -881,6 +932,7 @@ const MapEditor: React.FC = () => {
           ]);
 
           setSuburbs(suburbsData);
+          const suburbIdSet = new Set(suburbsData.map(s => s.id!));
           setSuburbIdsWithChildren(
             new Set(
               hierarchyData.individuals
@@ -906,6 +958,25 @@ const MapEditor: React.FC = () => {
             })
           );
           setSuburbBoundaries(boundaries);
+
+          // Load all individual maps belonging to this region's suburbs
+          const regionIndividualsData = hierarchyData.individuals.filter(
+            i => i.parent_id != null && suburbIdSet.has(i.parent_id)
+          );
+          setRegionIndividuals(regionIndividualsData);
+
+          const indBoundaries: Record<number, Boundary> = {};
+          await Promise.all(
+            regionIndividualsData.map(async (individual) => {
+              try {
+                const b = await apiClient.getBoundaryByMapArea(individual.id!);
+                if (b) indBoundaries[individual.id!] = b;
+              } catch {
+                // no boundary
+              }
+            })
+          );
+          setRegionIndividualBoundaries(indBoundaries);
         } catch (error) {
           console.error('Failed to load suburbs:', error);
           setSuburbs([]);
@@ -1505,6 +1576,22 @@ const MapEditor: React.FC = () => {
                 </button>
               )}
               {mapArea.area_type === 'region' && (
+                <div className="region-view-toggle">
+                  <button
+                    className={`region-view-toggle-btn${regionViewMode === 'suburb' ? ' active' : ''}`}
+                    onClick={() => setRegionViewMode('suburb')}
+                  >
+                    Suburbs
+                  </button>
+                  <button
+                    className={`region-view-toggle-btn${regionViewMode === 'individual' ? ' active' : ''}`}
+                    onClick={() => setRegionViewMode('individual')}
+                  >
+                    Individual Maps
+                  </button>
+                </div>
+              )}
+              {mapArea.area_type === 'region' && regionViewMode === 'suburb' && (
                 <div className="suburb-filter-control">
                   <span className="suburb-filter-label">Hide Empty Suburbs</span>
                   <label className="suburb-filter-switch" title="Hide suburbs that have no child maps">
@@ -1606,6 +1693,31 @@ const MapEditor: React.FC = () => {
                 // Update synthetic layer visibility in map-editor's layers state
                 setLayers(prev => prev.map(l => l.id === layerId ? { ...l, visible } : l));
               }}
+            />
+          )}
+          {mapArea?.area_type === 'region' && regionViewMode === 'suburb' && (
+            <SuburbList
+              suburbs={suburbs}
+              suburbBoundaries={suburbBoundaries}
+              hiddenSuburbIds={hiddenSuburbIds}
+              onToggleSuburb={handleToggleSuburb}
+            />
+          )}
+          {mapArea?.area_type === 'region' && regionViewMode === 'individual' && (
+            <IndividualList
+              individuals={regionIndividuals}
+              individualBoundaries={regionIndividualBoundaries}
+              hiddenIndividualIds={hiddenRegionIndividualIds}
+              onToggleIndividual={handleToggleRegionIndividual}
+            />
+          )}
+          {mapArea?.area_type === 'suburb' && (
+            <IndividualList
+              individuals={individuals}
+              individualBoundaries={individualBoundaries}
+              hiddenIndividualIds={hiddenIndividualIds}
+              currentMapAreaId={mapArea?.id}
+              onToggleIndividual={handleToggleIndividual}
             />
           )}
         </div>
@@ -1715,7 +1827,7 @@ const MapEditor: React.FC = () => {
               />
             );
           })()}
-          {visibleSuburbBoundaryEntries.map(([suburbId, suburbBoundary]) => {
+          {mapArea.area_type === 'region' && regionViewMode === 'suburb' && visibleSuburbBoundaryEntries.map(([suburbId, suburbBoundary]) => {
             const parsedSuburbId = parseInt(suburbId, 10);
             const suburb = suburbs.find(s => s.id === parsedSuburbId);
             return (
@@ -1723,12 +1835,56 @@ const MapEditor: React.FC = () => {
                 key={suburbId}
                 positions={suburbBoundary.coordinates}
                 pathOptions={suburbBoundaryPathOptions}
+                hoverPathOptions={{ color: '#1a5276', weight: 3, fillColor: '#1a5276', fillOpacity: 0.35 }}
                 tooltipContent={suburb?.name || 'Unnamed Suburb'}
                 onClick={mode === 'annotation' || mode === 'boundary' ? () => {
                   handleOpenMapPrompt(
                     parsedSuburbId,
                     suburb?.name || 'Unnamed Suburb',
                     'suburb'
+                  );
+                } : undefined}
+                showToast={showToast}
+              />
+            );
+          })}
+          {mapArea.area_type !== 'region' && visibleSuburbBoundaryEntries.map(([suburbId, suburbBoundary]) => {
+            const parsedSuburbId = parseInt(suburbId, 10);
+            const suburb = suburbs.find(s => s.id === parsedSuburbId);
+            return (
+              <ReadOnlyPolygon
+                key={suburbId}
+                positions={suburbBoundary.coordinates}
+                pathOptions={suburbBoundaryPathOptions}
+                hoverPathOptions={{ color: '#1a5276', weight: 3, fillColor: '#1a5276', fillOpacity: 0.35 }}
+                tooltipContent={suburb?.name || 'Unnamed Suburb'}
+                onClick={mode === 'annotation' || mode === 'boundary' ? () => {
+                  handleOpenMapPrompt(
+                    parsedSuburbId,
+                    suburb?.name || 'Unnamed Suburb',
+                    'suburb'
+                  );
+                } : undefined}
+                showToast={showToast}
+              />
+            );
+          })}
+          {mapArea.area_type === 'region' && regionViewMode === 'individual' && Object.entries(regionIndividualBoundaries).map(([individualId, individualBoundary]) => {
+            const parsedId = parseInt(individualId, 10);
+            if (hiddenRegionIndividualIds.has(parsedId)) return null;
+            const individual = regionIndividuals.find(i => i.id === parsedId);
+            return (
+              <ReadOnlyPolygon
+                key={`region-ind-${individualId}`}
+                positions={individualBoundary.coordinates}
+                pathOptions={individualBoundaryPathOptions}
+                hoverPathOptions={{ color: '#1a7a44', weight: 3, fillColor: '#1a7a44', fillOpacity: 0.35 }}
+                tooltipContent={individual?.name || 'Unnamed Map'}
+                onClick={mode === 'annotation' || mode === 'boundary' ? () => {
+                  handleOpenMapPrompt(
+                    parsedId,
+                    individual?.name || 'Unnamed Map',
+                    'individual'
                   );
                 } : undefined}
                 showToast={showToast}
@@ -1743,6 +1899,10 @@ const MapEditor: React.FC = () => {
               return null;
             }
 
+            if (hiddenIndividualIds.has(parsedIndividualId)) {
+              return null;
+            }
+
             const individual = individuals.find(i => i.id === parsedIndividualId);
 
             return (
@@ -1750,6 +1910,7 @@ const MapEditor: React.FC = () => {
                 key={individualId}
                 positions={individualBoundary.coordinates}
                 pathOptions={individualBoundaryPathOptions}
+                hoverPathOptions={{ color: '#1a7a44', weight: 3, fillColor: '#1a7a44', fillOpacity: 0.35 }}
                 tooltipContent={individual?.name || 'Unnamed Map'}
                 onClick={mode === 'annotation' || mode === 'boundary' || mode === 'suburb' ? () => {
                   handleOpenMapPrompt(
