@@ -1,12 +1,24 @@
-from pathlib import Path
-from typing import Any, Dict, Callable
+"""
+Module: conftest.py
 
+Fixtures for testing.
+    Provides reusable fixtures for valid and invalid values.
+"""
+
+
+# Standard library imports
+from pathlib import Path
+from typing import Any, Callable, Dict
 import pytest
 from flask import Flask, jsonify
 
+# Local imports
 from backend.config import Config
 from backend.export import ExportService
-from database import DatabaseContext, DatabaseManager
+from database import (
+    DatabaseContext,
+    DatabaseManager
+)
 from routes import (
     annotations_bp,
     boundaries_bp,
@@ -20,7 +32,62 @@ import routes.exports as exports_routes
 
 
 @pytest.fixture
-def app(tmp_path: Path) -> Flask:
+def valid_new_project() -> dict:
+    """
+    Valid JSON object for creating a new project.
+    """
+
+    project = {
+        "name": "Test Project",
+        "description": "A project created during testing.",
+        "center_lat": 37.7749,
+        "center_lon": -122.4194,
+        "zoom_level": 12
+    }
+
+    return project
+
+
+@pytest.fixture
+def invalid_new_project() -> dict:
+    """
+    Invalid JSON object for creating a new project.
+    Missing required fields and has invalid types.
+    """
+
+    project = {
+        "name": 123,  # Should be a string
+        "description": None,  # Should be a string
+        "center_lat": "not a float",  # Should be a float
+        "center_lon": "not a float",  # Should be a float
+        "zoom_level": "not an int"  # Should be an int
+    }
+
+    return project
+
+
+@pytest.fixture
+def valid_project_id() -> int:
+    """
+    A valid project ID that exists in the database.
+    """
+
+    return 8
+
+
+@pytest.fixture
+def invalid_project_id() -> int:
+    """
+    An invalid project ID that does not exist in the database.
+    """
+
+    return 9999
+
+
+@pytest.fixture
+def app(
+    tmp_path: Path
+) -> Flask:
     db_path = tmp_path / "test.db"
     export_path = tmp_path / "exports"
     export_path.mkdir(parents=True, exist_ok=True)

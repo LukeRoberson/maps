@@ -55,10 +55,39 @@
 
 # API
   - [ ] Postman collection
+    - [x] App Health and config
+    - [x] Projects
+    - [ ] Map Area
+    - [ ] Boundary
+    - [ ] Layer
+    - [ ] Annotation
+    - [ ] Annotation Style
   - [ ] Automated API tests with pytest
+    - [x] App Health and config
+    - [x] Projects
+    - [ ] Map Area
+    - [ ] Boundary
+    - [ ] Layer
+    - [ ] Annotation
+    - [ ] Annotation Style
   - [ ] Swagger Documentation
+    - [x] App Health and config
+    - [x] Projects
+    - [ ] Map Area
+    - [ ] Boundary
+    - [ ] Layer
+    - [ ] Annotation
+    - [ ] Annotation Style
   - [ ] General Cleanup
     - [ ] Consolidate project import and export into one endpoint with different methods
+    - [ ] Default bearing is still in the project export
+    - [ ] JSON export has default zoom as either an int or a float; Just float would be better
+  - [ ] Improve tests
+    - [ ] Project lifecycle workflow
+        1. Create a new project
+        2. Update the project
+        3. Delete the project
+    - [ ] Test importing projects
 
 
 # Investigate

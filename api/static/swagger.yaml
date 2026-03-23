@@ -153,6 +153,8 @@ paths:
                 $ref: '#/components/schemas/Project'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
         '500':
           $ref: '#/components/responses/InternalServerError'
 
@@ -750,9 +752,6 @@ components:
         default_zoom:
           type: number
           nullable: true
-        tile_layer:
-          type: string
-          nullable: true
         created_at:
           type: string
           format: date-time
@@ -803,16 +802,16 @@ components:
           type: string
           enum: [annotation, boundary, custom]
         visible:
-          type: boolean
-          default: true
+          type: int
+          default: 1
         z_index:
           type: integer
           default: 0
         is_editable:
-          type: boolean
-          default: true
+          type: int
+          default: 1
         config:
-          type: object
+          type: string
           nullable: true
           properties:
             color:
@@ -899,6 +898,7 @@ components:
         error:
           type: string
           description: Error message
+          example: No data provided
 
   responses:
     NotFound:
@@ -909,6 +909,12 @@ components:
             $ref: '#/components/schemas/Error'
     BadRequest:
       description: 400 Invalid request parameters
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    UnsupportedMediaType:
+      description: 415 Unsupported media type
       content:
         application/json:
           schema:
