@@ -179,6 +179,17 @@ class DatabaseManager:
             logging.error(f"Error initializing database schema: {e}")
             raise
 
+        # Run column migrations for existing databases
+        migrations = [
+            "ALTER TABLE map_areas ADD COLUMN tile_layer TEXT",
+        ]
+        for migration in migrations:
+            try:
+                self.db.cursor.execute(migration)
+                self.db.conn.commit()
+            except Exception:
+                pass  # Column already exists
+
         logging.info("Database initialized successfully.")
 
     def create(

@@ -1,0 +1,93 @@
+.map-settings-panel {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.map-settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  user-select: none;
+  background: #f8f9fa;
+  border-bottom: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.map-settings-header:hover {
+  background: #e9ecef;
+}
+
+.map-settings-panel:has(.map-settings-content) .map-settings-header {
+  border-radius: 4px 4px 0 0;
+}
+
+.map-settings-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.map-settings-content {
+  padding: 0.75rem 1rem;
+}
+
+.map-settings-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-bottom: 0.75rem;
+}
+
+.map-settings-field .map-settings-label {
+  font-size: 0.875rem;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.map-settings-select {
+  width: 100%;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.875rem;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  background: white;
+  color: #212529;
+  cursor: pointer;
+}
+
+.map-settings-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.map-settings-row:last-child {
+  border-bottom: none;
+}
+
+.map-settings-actions {
+  padding-top: 0.6rem;
+}
+
+.map-settings-actions .btn {
+  width: 100%;
+}
+
+.map-settings-label {
+  font-size: 0.875rem;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.map-settings-value {
+  font-size: 0.875rem;
+  font-family: monospace;
+  color: #212529;
+}

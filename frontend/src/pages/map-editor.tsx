@@ -18,6 +18,7 @@ import '@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css';
 // Internal dependencies
 import { apiClient } from '@/services/api-client';
 import { LayerManager } from '@/components/layer-manager';
+import { MapSettingsPanel } from '@/components/map-settings';
 import { SuburbList } from '@/components/suburb-list';
 import { IndividualList } from '@/components/individual-list';
 import { ExportDialog, ExportOptions } from '@/components/export-dialog';
@@ -1623,13 +1624,6 @@ const MapEditor: React.FC = () => {
               </button>
               <button
                 className="btn btn-secondary"
-                onClick={handleSetDefaultView}
-                title="Set current map view as default for this map"
-              >
-                Set Default View
-              </button>
-              <button
-                className="btn btn-secondary"
                 onClick={handleRecenterToDefault}
                 title="Recenter map to the default view"
                 disabled={!mapArea.default_center_lat && !project?.center_lat}
@@ -1681,6 +1675,14 @@ const MapEditor: React.FC = () => {
       <div className={`editor-content ${isMapExpanded ? 'editor-content-expanded' : ''}`}>
         {/* Sidebar for layer management */}
         <div className={`editor-sidebar ${isMapExpanded ? 'editor-sidebar-hidden' : ''}`}>
+          <MapSettingsPanel
+            defaultLat={mapArea?.default_center_lat ?? project?.center_lat ?? null}
+            defaultLng={mapArea?.default_center_lon ?? project?.center_lon ?? null}
+            defaultZoom={mapArea?.default_zoom ?? project?.zoom_level ?? null}
+            onSetDefaultView={handleSetDefaultView}
+            currentTileLayerId={currentTileLayerId}
+            onTileLayerChange={handleTileLayerChange}
+          />
           {mapAreaId && (
             <LayerManager 
               mapAreaId={parseInt(mapAreaId)}

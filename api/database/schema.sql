@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS map_areas (
     default_center_lat REAL,
     default_center_lon REAL,
     default_zoom REAL,
+    tile_layer TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,

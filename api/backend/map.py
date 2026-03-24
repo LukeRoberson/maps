@@ -217,6 +217,7 @@ class MapModel:
             default_center_lat=data.get('default_center_lat'),
             default_center_lon=data.get('default_center_lon'),
             default_zoom=data.get('default_zoom'),
+            tile_layer=data.get('tile_layer'),
             created_at=created_at,
             updated_at=updated_at
         )
@@ -278,6 +279,7 @@ class MapService:
             default_center_lat=row['default_center_lat'],
             default_center_lon=row['default_center_lon'],
             default_zoom=row['default_zoom'],
+            tile_layer=row['tile_layer'],
             created_at=datetime.fromisoformat(row['created_at']),
             updated_at=datetime.fromisoformat(row['updated_at'])
         )
@@ -309,7 +311,8 @@ class MapService:
                         "boundary_id": map_area.boundary_id,
                         "default_center_lat": map_area.default_center_lat,
                         "default_center_lon": map_area.default_center_lon,
-                        "default_zoom": map_area.default_zoom
+                        "default_zoom": map_area.default_zoom,
+                        "tile_layer": map_area.tile_layer
                     }
                 )
 
@@ -486,7 +489,8 @@ class MapService:
             'boundary_id',
             'default_center_lat',
             'default_center_lon',
-            'default_zoom'
+            'default_zoom',
+            'tile_layer'
         ]
 
         # Build a dictionary of fields/values to update
