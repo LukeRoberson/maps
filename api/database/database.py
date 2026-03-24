@@ -141,6 +141,24 @@ class DatabaseManager:
 
         self.db = db
 
+    def _migrate_add_column(
+        self,
+        table: str,
+        column: str,
+        column_type: str
+    ) -> None:
+        """Add a column to a table if it does not already exist."""
+        self.db.cursor.execute(f"PRAGMA table_info({table})")
+        existing = {row['name'] for row in self.db.cursor.fetchall()}
+        if column not in existing:
+            self.db.cursor.execute(
+                f"ALTER TABLE {table} ADD COLUMN {column} {column_type}"
+            )
+            self.db.conn.commit()
+            logging.info(
+                f"Migration applied: added '{column}' to '{table}'"
+            )
+
     def initialise(
         self,
         schema_file: str = "database/schema.sql"
@@ -179,16 +197,10 @@ class DatabaseManager:
             logging.error(f"Error initializing database schema: {e}")
             raise
 
-        # Run column migrations for existing databases
-        migrations = [
-            "ALTER TABLE map_areas ADD COLUMN tile_layer TEXT",
-        ]
-        for migration in migrations:
-            try:
-                self.db.cursor.execute(migration)
-                self.db.conn.commit()
-            except Exception:
-                pass  # Column already exists
+        # Run column migrations for existing databases.
+        # Use PRAGMA table_info to check column existence rather than
+        # catching exceptions, so real errors are never silently swallowed.
+        self._migrate_add_column('map_areas', 'tile_layer', 'TEXT')
 
         logging.info("Database initialized successfully.")
 
