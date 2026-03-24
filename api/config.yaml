@@ -4,7 +4,7 @@ default_map:
   default_zoom: 5
 
 database:
-  folder: ../database
+  folder: ../data
   filename: maps.db
 
 export_dir: ../exports

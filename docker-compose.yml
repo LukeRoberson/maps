@@ -8,7 +8,7 @@ services:
     ports:
       - "${API_PORT:-5000}:5000"
     volumes:
-      - database-data:/app/database
+      - database-data:/app/data
       - export-data:/app/exports
     environment:
       - SECRET_KEY=${SECRET_KEY:-change-this-secret-key-in-production}
