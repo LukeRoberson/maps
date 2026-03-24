@@ -269,19 +269,20 @@ class MapService:
             MapModel: Map model instance
         """
 
+        row_dict = dict(row)
         return MapModel(
-            id=row['id'],
-            project_id=row['project_id'],
-            parent_id=row['parent_id'],
-            name=row['name'],
-            area_type=row['area_type'],
-            boundary_id=row['boundary_id'],
-            default_center_lat=row['default_center_lat'],
-            default_center_lon=row['default_center_lon'],
-            default_zoom=row['default_zoom'],
-            tile_layer=row['tile_layer'],
-            created_at=datetime.fromisoformat(row['created_at']),
-            updated_at=datetime.fromisoformat(row['updated_at'])
+            id=row_dict['id'],
+            project_id=row_dict['project_id'],
+            parent_id=row_dict['parent_id'],
+            name=row_dict['name'],
+            area_type=row_dict['area_type'],
+            boundary_id=row_dict['boundary_id'],
+            default_center_lat=row_dict['default_center_lat'],
+            default_center_lon=row_dict['default_center_lon'],
+            default_zoom=row_dict['default_zoom'],
+            tile_layer=row_dict.get('tile_layer'),
+            created_at=datetime.fromisoformat(row_dict['created_at']),
+            updated_at=datetime.fromisoformat(row_dict['updated_at'])
         )
 
     def create(

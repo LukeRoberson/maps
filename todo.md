@@ -23,9 +23,9 @@
   - [ ] Can we add a POI marker at a given address?
     * Automatically add POIs as markers
   - [ ] Way to create an 'exclusion' zone, eg where schools or parks take up space on the map
-- [ ] Region View
+- [x] Region View
   - [x] Show each suburb as a layer, so we can show and hide them
-  - [ ] Show/hide individual maps
+  - [x] Show/hide individual maps
 - [ ] Suburb view
   - [x] Show individual maps as layers, so we can show/hide them
   - [x] When hovering over a map, change the mask shading so the borders are clearly visible
