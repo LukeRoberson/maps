@@ -450,6 +450,7 @@ const MapEditor: React.FC = () => {
   const [editingTextContent, setEditingTextContent] = useState('');
   const [editingFontSize, setEditingFontSize] = useState<number>(20);
   const [showTileLayerSelector, setShowTileLayerSelector] = useState(false);
+  const [activeTileLayerId, setActiveTileLayerId] = useState<string | null>(null);
   const [openMapTarget, setOpenMapTarget] = useState<OpenMapTarget | null>(null);
   const [isMapExpanded, setIsMapExpanded] = useState(false);
   const lastCenteredMapId = useRef<string | null>(null);
@@ -511,12 +512,21 @@ const MapEditor: React.FC = () => {
     return inside;
   };
 
-  // Get current tile and label overlay configuration
-  const currentTileLayerId = mapArea?.tile_layer || project?.tile_layer;
+  // Get current tile and label overlay configuration.
+  // activeTileLayerId is the session-only style (toolbar);
+  // mapArea.tile_layer is the persisted default (settings pane).
+  const defaultTileLayerId = mapArea?.tile_layer || project?.tile_layer;
+  const currentTileLayerId = activeTileLayerId ?? defaultTileLayerId;
   const currentTileLayer = getTileLayer(currentTileLayerId);
   const currentStreetLabelOverlay = getStreetLabelOverlay(currentTileLayerId);
 
-  // Handle tile layer change
+  // Session-only style change — no API call, just updates the live view.
+  const handleSessionTileLayerChange = (layerId: string): void => {
+    setActiveTileLayerId(layerId);
+    setShowTileLayerSelector(false);
+  };
+
+  // Persisted style change — saves to DB and resets the session override.
   const handleTileLayerChange = async (layerId: string): Promise<void> => {
     if (!mapArea) return;
     
@@ -526,11 +536,11 @@ const MapEditor: React.FC = () => {
       });
       
       setMapArea({ ...mapArea, tile_layer: layerId });
-      setShowTileLayerSelector(false);
-      showToast('Map style updated', 'success');
+      setActiveTileLayerId(null); // let the saved value take effect
+      showToast('Map style saved', 'success');
     } catch (error) {
       console.error('Failed to update tile layer:', error);
-      showToast('Failed to update map style', 'error');
+      showToast('Failed to save map style', 'error');
     }
   };
 
@@ -1680,7 +1690,7 @@ const MapEditor: React.FC = () => {
             defaultLng={mapArea?.default_center_lon ?? project?.center_lon ?? null}
             defaultZoom={mapArea?.default_zoom ?? project?.zoom_level ?? null}
             onSetDefaultView={handleSetDefaultView}
-            currentTileLayerId={currentTileLayerId}
+            currentTileLayerId={defaultTileLayerId}
             onTileLayerChange={handleTileLayerChange}
           />
           {mapAreaId && (
@@ -1776,6 +1786,7 @@ const MapEditor: React.FC = () => {
           {parentBoundary &&
             mapArea.area_type === 'individual' &&
             mode !== 'individual' &&
+            !boundary &&
             (() => {
               const inheritedBoundaryLayer = findInheritedBoundaryLayer(
                 parentBoundary,
@@ -1972,7 +1983,7 @@ const MapEditor: React.FC = () => {
                   className={`tile-layer-option ${
                     currentTileLayer.id === layer.id ? 'active' : ''
                   }`}
-                  onClick={() => handleTileLayerChange(layer.id)}
+                  onClick={() => handleSessionTileLayerChange(layer.id)}
                 >
                   <div className="tile-layer-name">
                     {layer.name}
