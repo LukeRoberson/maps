@@ -1,5 +1,5 @@
 /**
- * @file project.ts
+ * @file types.ts
  * 
  * @summary Type definitions for projects.
  * 

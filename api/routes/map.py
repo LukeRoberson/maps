@@ -9,9 +9,6 @@ routes:
     list_map_areas
         List all map areas
         /api/map_areas [GET]
-    get_hierarchy
-        Get hierarchical structure of map areas
-        /api/map_areas/hierarchy [GET]
     create_map_area
         Create a new map area
         /api/map_areas [POST]
@@ -75,6 +72,10 @@ def list_map_areas() -> Response:
     Args:
         None
 
+    Parameters:
+        project_id (int, required): Project ID to filter map areas
+        parent_id (int, optional): Parent map area ID to filter by
+
     Returns:
         Response: JSON response with map area list
     """
@@ -112,57 +113,6 @@ def list_map_areas() -> Response:
                 {
                     'map_areas': [ma.to_dict() for ma in maps]
                 }
-            ),
-            200
-        )
-
-    except Exception as e:
-        return make_response(
-            jsonify(
-                {'error': str(e)}
-            ),
-            500
-        )
-
-
-@map_areas_bp.route(
-    '/hierarchy',
-    methods=['GET']
-)
-def get_hierarchy() -> Response:
-    """
-    Get hierarchical structure of map areas.
-
-    Args:
-        None
-
-    Returns:
-        Response: JSON response with hierarchy
-    """
-
-    try:
-        map_area_service = MapService()
-
-        # Get query parameters
-        project_id = request.args.get(
-            'project_id',
-            type=int
-        )
-
-        # Validate required parameter
-        if not project_id:
-            return make_response(
-                jsonify(
-                    {'error': 'project_id parameter required'}
-                ),
-                400
-            )
-
-        # Get hierarchy
-        hierarchy = map_area_service.read_hierarchy(project_id)
-        return make_response(
-            jsonify(
-                hierarchy
             ),
             200
         )
@@ -227,11 +177,9 @@ def create_map_area() -> Response:
             name=data['name'],
             area_type=data['area_type'],
             parent_id=data.get('parent_id'),
-            boundary_id=data.get('boundary_id'),
             default_center_lat=data.get('default_center_lat'),
             default_center_lon=data.get('default_center_lon'),
             default_zoom=data.get('default_zoom'),
-            tile_layer=data.get('tile_layer')
         )
 
         # Create the map
@@ -322,6 +270,14 @@ def update_map_area(
 
     Args:
         map_area_id (int): Map area ID
+
+    JSON Body:
+        name (str, optional): New name for the map area
+        area_type (str, optional): New area type
+        parent_id (int, optional): New parent map area ID
+        default_center_lat (float, optional): New default center latitude
+        default_center_lon (float, optional): New default center longitude
+        default_zoom (int, optional): New default zoom level
 
     Returns:
         Response: JSON response with updated map area

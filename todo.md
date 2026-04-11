@@ -1,35 +1,36 @@
 # Bugs
 
-- [ ] Sometimes a text annotation is completed automatically without pressing enter
-  * Eg, adding a new annotation, enter a number
-  * Get two characters typed
-  * It's like I've clicked out of the box to submit it (enter would go to a new line)
-  * Has been improved, but not 100%
 - [ ] Annotation colouring doesn't update
   * I have a layer set to green
   * I add a green line
   * I update the layer colour to purple
   * The existing line stays green
   * All new lines are correct
+- [ ] Annotation colouring is not consistent
+  * Looks ok on the screen, but wrong on export
+  * Map 69 - Some blocks are purple, some are blue
+  * Map 70 - Separate annotation layer for bushland is blue, not green
+- [ ] Adding a new annotation polygon displays label twice
+  * Almost overlapping
+  * After a refresh it's fine
+- [ ] Editing annotation polygon is problematic
+  * Creating it is fine
+  * Moving points later is difficult
+  * I start to drag a point and it cancels
 
 
 # Future Features
 
-- [ ] Possibility to add more information to the map
-  * Number of houses on the block
-  * Specific POIs
 - [ ] Annotation:
-  - [x] Option to adjust line thickness
-  - [ ] Can we add a POI marker at a given address?
-    * Automatically add POIs as markers
   - [ ] Way to create an 'exclusion' zone, eg where schools or parks take up space on the map
-- [x] Region View
-  - [x] Show each suburb as a layer, so we can show and hide them
-  - [x] Show/hide individual maps
+  - [ ] Way to move a label associated with a polygon
+  - [ ] Allow polygons to have no label
 - [ ] Suburb view
-  - [x] Show individual maps as layers, so we can show/hide them
-  - [x] When hovering over a map, change the mask shading so the borders are clearly visible
   - [ ] Show peer maps for neighbouring suburbs
+- [ ] Exporting options
+  - [ ] Add Suburb name to map
+  - [ ] Add map number to map
+  - [ ] Default line thickness per map
 
 - [ ] Settings
   - [ ] Add a settings page (based on config.yaml and constants in the frontend)
@@ -47,18 +48,19 @@
   - [ ] Allow read only users and admins
   - [ ] Admins can update maps
   - [ ] System to reset passwords
-- [ ] Edit panel
-  - [ ] Create a new panel on the left, under layers
-  - [ ] Make it expandable/shrinkable
+- [x] Edit panel
+  - [x] Create a new panel on the left, under layers
+  - [x] Make it expandable/shrinkable
   - [ ] Add the zoom, lat, lon, in here so they can be edited manually
-  - [ ] Default map style
+  - [x] Default map style
+- [ ] Search for a street to get the map it is on
 
 
 # API
   - [ ] Postman collection
     - [x] App Health and config
     - [x] Projects
-    - [ ] Map Area
+    - [x] Map Area
     - [ ] Boundary
     - [ ] Layer
     - [ ] Annotation
@@ -74,7 +76,7 @@
   - [ ] Swagger Documentation
     - [x] App Health and config
     - [x] Projects
-    - [ ] Map Area
+    - [x] Map Area
     - [ ] Boundary
     - [ ] Layer
     - [ ] Annotation
@@ -90,6 +92,11 @@
         3. Delete the project
     - [ ] Test importing projects
 
+  - [ ] Can `/api/map-areas/{map_id}` be consolidated with `/api/map-areas`?
+    * GET: It just filters down to a specific map
+    * PUT: Updates, but can use a parameter
+    * DELETE: Can also use a parameter
+
 
 # Investigate
 
@@ -98,3 +105,9 @@
 - [ ] Can we get the number of houses per block?
 - [ ] Some free-tier map styles that were previously discounted (need API key)
 - [ ] PNG exports seem to be going to an exports folder within the project
+- [ ] Addresses
+  - [ ] Search for an address; Show which map this is in
+  - [ ] Auto add POIs
+  * This would require a 'geocoder', which turns addresses to lat/lon
+  * geopy includes 'Nominatim', which is OSM's geocoder (free with rate limits)
+

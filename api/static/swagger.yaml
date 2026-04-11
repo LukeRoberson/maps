@@ -103,7 +103,6 @@ paths:
                       $ref: '#/components/schemas/Project'
         '500':
           $ref: '#/components/responses/InternalServerError'
-
     post:
       tags: [Projects]
       summary: Create a project
@@ -182,7 +181,6 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
-    
     put:
       tags: [Projects]
       summary: Update a project
@@ -235,7 +233,6 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
-
     delete:
       tags: [Projects]
       summary: Delete a project
@@ -374,8 +371,53 @@ paths:
 
   # ──────────────────────────────────────────────
   # Map Areas
+  # map.py
   # ──────────────────────────────────────────────
   /api/map-areas:
+    get:
+      tags: [Map Areas]
+      summary: List map areas
+      description: |
+        Retrieve an array of map areas for a project ID.
+        Optionally filter by parent map area ID (for hierarchy).
+        If parent_id is not provided, returns all map areas for the project.
+      parameters:
+        - name: project_id
+          in: query
+          required: true
+          schema:
+            type: integer
+          description: The ID of the project to list map areas for
+        - name: parent_id
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: Filter map areas by parent map area ID (for hierarchy)
+      responses:
+        '200':
+          description: Array of map areas
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  map_areas:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MapArea'
+        '400':
+          description: Missing required project_id parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
     post:
       tags: [Map Areas]
       summary: Create a map area
@@ -431,12 +473,119 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-    # TODO: Add GET /api/map-areas (query params: project_id, parent_id)
 
-  # TODO: Add GET /api/map-areas/hierarchy (query param: project_id)
-  # TODO: Add GET /api/map-areas/{map_area_id}
-  # TODO: Add PUT /api/map-areas/{map_area_id}
-  # TODO: Add DELETE /api/map-areas/{map_area_id}
+  /api/map-areas/{map_area_id}:
+    get:
+      tags: [Map Areas]
+      summary: Get a map area by ID
+      description: |
+        Retrieve details of a specific map area by its unique ID.
+      parameters:
+        - name: map_area_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Map area ID
+      responses:
+        '200':
+          description: Map area details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MapArea'
+        '404':
+          description: Map area not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      tags: [Map Areas]
+      summary: Update a map area
+      description: |
+        Update the details of an existing map area.
+        Only fields included in the request body will be updated; others will remain unchanged.
+      parameters:
+        - name: map_area_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Map area ID
+      requestBody:
+        required: true
+        description: |
+          Fields to update for the map area.
+          Not all fields are required; only include the fields you want to update.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MapArea'
+      responses:
+        '200':
+          description: Updated map area
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MapArea'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Map area not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags: [Map Areas]
+      summary: Delete a map area
+      parameters:
+        - name: map_area_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Map area ID
+      responses:
+        '200':
+          description: Map area deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Map area deleted successfully
+        '404':
+          description: Map area not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
   # ──────────────────────────────────────────────
   # Boundaries
@@ -730,34 +879,48 @@ components:
       properties:
         id:
           type: integer
+          description: Unique map area ID
+          example: 123
         project_id:
           type: integer
+          description: ID of the project this map area belongs to
+          example: 1
         parent_id:
           type: integer
+          description: ID of the parent map area, if any
           nullable: true
+          example: 20
         name:
           type: string
+          description: Name of the map area
+          example: "Melbourne CBD"
         area_type:
           type: string
           enum: [region, suburb, individual]
-        boundary_id:
-          type: integer
-          nullable: true
+          description: Type of the map area
+          example: "suburb"
         default_center_lat:
           type: number
-          nullable: true
+          description: Default center latitude for the map area
+          example: -37.8136
         default_center_lon:
           type: number
-          nullable: true
+          description: Default center longitude for the map area
+          example: 144.9631
         default_zoom:
           type: number
-          nullable: true
+          description: Default zoom level for the map area
+          example: 13.5
         created_at:
           type: string
           format: date-time
+          description: Timestamp of map area creation
+          example: '2026-04-11T07:29:29'
         updated_at:
           type: string
           format: date-time
+          description: Timestamp of last map area update
+          example: '2026-04-12T15:45:00'
 
     Boundary:
       type: object

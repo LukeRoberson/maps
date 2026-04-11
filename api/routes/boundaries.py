@@ -207,54 +207,6 @@ def create_boundary() -> Response:
 
 
 @boundaries_bp.route(
-    '/map-area/<int:map_area_id>',
-    methods=['GET']
-)
-def get_boundary_by_map_area(
-    map_area_id: int
-) -> Response:
-    """
-    Get boundary for a map area.
-
-    Args:
-        map_area_id (int): Map area ID
-
-    Returns:
-        Response: JSON response with boundary details
-    """
-
-    try:
-        # Read boundary
-        boundary_service = BoundaryService()
-        boundary = boundary_service.read(map_id=map_area_id)
-
-        # If not found, return 404
-        if not boundary:
-            return make_response(
-                jsonify(
-                    {'error': 'Boundary not found'}
-                ),
-                404
-            )
-
-        # Return boundary
-        return make_response(
-            jsonify(
-                boundary.to_dict()
-            ),
-            200
-        )
-
-    except Exception as e:
-        return make_response(
-            jsonify(
-                {'error': str(e)}
-            ),
-            500
-        )
-
-
-@boundaries_bp.route(
     '/<int:boundary_id>',
     methods=['PUT']
 )
@@ -351,6 +303,54 @@ def delete_boundary(
         return make_response(
             jsonify(
                 {'message': 'Boundary deleted successfully'}
+            ),
+            200
+        )
+
+    except Exception as e:
+        return make_response(
+            jsonify(
+                {'error': str(e)}
+            ),
+            500
+        )
+
+
+@boundaries_bp.route(
+    '/map-area/<int:map_area_id>',
+    methods=['GET']
+)
+def get_boundary_by_map_area(
+    map_area_id: int
+) -> Response:
+    """
+    Get boundary for a map area.
+
+    Args:
+        map_area_id (int): Map area ID
+
+    Returns:
+        Response: JSON response with boundary details
+    """
+
+    try:
+        # Read boundary
+        boundary_service = BoundaryService()
+        boundary = boundary_service.read(map_id=map_area_id)
+
+        # If not found, return 404
+        if not boundary:
+            return make_response(
+                jsonify(
+                    {'error': 'Boundary not found'}
+                ),
+                404
+            )
+
+        # Return boundary
+        return make_response(
+            jsonify(
+                boundary.to_dict()
             ),
             200
         )

@@ -59,11 +59,9 @@ class MapModel:
         parent_id (Optional[int]): Parent map area ID (None for region map)
         name (str): Area name
         area_type (str): Type of area (region, suburb, individual)
-        boundary_id (Optional[int]): Associated boundary ID
         default_center_lat (Optional[float]): Default map center latitude
         default_center_lon (Optional[float]): Default map center longitude
         default_zoom (Optional[float]): Default map zoom level
-        tile_layer (Optional[str]): Preferred tile layer ID
         created_at (datetime): Creation timestamp
         updated_at (datetime): Last update timestamp
 
@@ -89,11 +87,9 @@ class MapModel:
         name: str,
         area_type: str,
         parent_id: Optional[int] = None,
-        boundary_id: Optional[int] = None,
         default_center_lat: Optional[float] = None,
         default_center_lon: Optional[float] = None,
         default_zoom: Optional[float] = None,
-        tile_layer: Optional[str] = None,
         id: Optional[int] = None,
         created_at: Optional[datetime] = None,
         updated_at: Optional[datetime] = None
@@ -106,7 +102,6 @@ class MapModel:
             name (str): Area name
             area_type (str): Type of area
             parent_id (Optional[int]): Parent area ID
-            boundary_id (Optional[int]): Boundary ID
             default_center_lat (Optional[float]): Default center latitude
             default_center_lon (Optional[float]): Default center longitude
             default_zoom (Optional[float]): Default zoom level
@@ -133,12 +128,9 @@ class MapModel:
         self.parent_id = parent_id
         self.name = name
         self.area_type = area_type
-        self.boundary_id = boundary_id
         self.default_center_lat = default_center_lat
         self.default_center_lon = default_center_lon
         self.default_zoom = default_zoom
-        self.tile_layer = tile_layer
-
         # Timestamps are in UTC
         self.created_at = created_at or datetime.now(timezone.utc)
         self.updated_at = updated_at or datetime.now(timezone.utc)
@@ -162,11 +154,9 @@ class MapModel:
             'parent_id': self.parent_id,
             'name': self.name,
             'area_type': self.area_type,
-            'boundary_id': self.boundary_id,
             'default_center_lat': self.default_center_lat,
             'default_center_lon': self.default_center_lon,
             'default_zoom': self.default_zoom,
-            'tile_layer': self.tile_layer,
             'created_at': (
                 self.created_at.isoformat()
                 if self.created_at
@@ -213,11 +203,9 @@ class MapModel:
             parent_id=data.get('parent_id'),
             name=data['name'],
             area_type=data['area_type'],
-            boundary_id=data.get('boundary_id'),
             default_center_lat=data.get('default_center_lat'),
             default_center_lon=data.get('default_center_lon'),
             default_zoom=data.get('default_zoom'),
-            tile_layer=data.get('tile_layer'),
             created_at=created_at,
             updated_at=updated_at
         )
@@ -236,8 +224,6 @@ class MapService:
             Create a new map area
         read:
             Get one or more maps
-        read_hierarchy:
-            Get hierarchical structure of map areas
         update:
             Update a map area
         delete:
@@ -276,11 +262,9 @@ class MapService:
             parent_id=row_dict['parent_id'],
             name=row_dict['name'],
             area_type=row_dict['area_type'],
-            boundary_id=row_dict['boundary_id'],
             default_center_lat=row_dict['default_center_lat'],
             default_center_lon=row_dict['default_center_lon'],
             default_zoom=row_dict['default_zoom'],
-            tile_layer=row_dict.get('tile_layer'),
             created_at=datetime.fromisoformat(row_dict['created_at']),
             updated_at=datetime.fromisoformat(row_dict['updated_at'])
         )
@@ -309,11 +293,9 @@ class MapService:
                         "parent_id": map_area.parent_id,
                         "name": map_area.name,
                         "area_type": map_area.area_type,
-                        "boundary_id": map_area.boundary_id,
                         "default_center_lat": map_area.default_center_lat,
                         "default_center_lon": map_area.default_center_lon,
                         "default_zoom": map_area.default_zoom,
-                        "tile_layer": map_area.tile_layer
                     }
                 )
 
@@ -430,43 +412,6 @@ class MapService:
 
         return map_areas
 
-    def read_hierarchy(
-        self,
-        project_id: int
-    ) -> Dict[str, Any]:
-        """
-        Get hierarchical structure of maps.
-
-        Args:
-            project_id (int): Project ID
-
-        Returns:
-            Dict[str, Any]: Hierarchical structure
-        """
-
-        # Get all map areas for the project
-        all_areas = self.read(
-            project_id=project_id
-        )
-
-        # Build the hierarchy structure
-        hierarchy = {
-            'regions': [],
-            'suburbs': [],
-            'individuals': []
-        }
-
-        # Populate the hierarchy
-        for area in all_areas:
-            if area.area_type == 'region':
-                hierarchy['regions'].append(area.to_dict())
-            elif area.area_type == 'suburb':
-                hierarchy['suburbs'].append(area.to_dict())
-            elif area.area_type == 'individual':
-                hierarchy['individuals'].append(area.to_dict())
-
-        return hierarchy
-
     def update(
         self,
         map_area_id: int,
@@ -480,18 +425,16 @@ class MapService:
             updates (Dict[str, Any]): Fields to update
 
         Returns:
-            Optional[MapArea]: Updated map area if found, None otherwise
+            Optional[MapModel]: Updated map area if found, None otherwise
         """
 
         # Fields that can be updated
         allowed_fields = [
             'name',
             'parent_id',
-            'boundary_id',
             'default_center_lat',
             'default_center_lon',
-            'default_zoom',
-            'tile_layer'
+            'default_zoom'
         ]
 
         # Build a dictionary of fields/values to update

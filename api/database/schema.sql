@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS projects (
     description TEXT,
     center_lat REAL NOT NULL,
     center_lon REAL NOT NULL,
-    zoom_level REAL DEFAULT 13,
+    zoom_level INTEGER DEFAULT 13,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -36,11 +36,9 @@ CREATE TABLE IF NOT EXISTS map_areas (
     parent_id INTEGER,
     name TEXT NOT NULL,
     area_type TEXT NOT NULL,
-    boundary_id INTEGER,
     default_center_lat REAL,
     default_center_lon REAL,
-    default_zoom REAL,
-    tile_layer TEXT,
+    default_zoom INTEGER,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
@@ -51,12 +49,11 @@ CREATE TABLE IF NOT EXISTS map_areas (
 CREATE TABLE IF NOT EXISTS boundaries (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     map_area_id INTEGER NOT NULL,
-    layer_id INTEGER,
     coordinates TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (map_area_id) REFERENCES map_areas(id) ON DELETE CASCADE,
-    FOREIGN KEY (layer_id) REFERENCES layers(id) ON DELETE SET NULL
+    layer_id INTEGER REFERENCES layers(id) ON DELETE SET NULL,
+    FOREIGN KEY (map_area_id) REFERENCES map_areas(id) ON DELETE CASCADE
 );
 
 -- Layers Table

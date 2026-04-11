@@ -251,10 +251,14 @@ class ApiClient {
   async getMapHierarchy(
     projectId: number
   ): Promise<MapHierarchy> {
-    const response: AxiosResponse<MapHierarchy> = await this.client.get(
-      `/map-areas/hierarchy?project_id=${projectId}`
-    );
-    return response.data;
+    const response: AxiosResponse<{ map_areas: MapArea[] }> =
+      await this.client.get(`/map-areas?project_id=${projectId}`);
+    const mapAreas = response.data.map_areas;
+    return {
+      regions: mapAreas.filter((m) => m.area_type === 'region'),
+      suburbs: mapAreas.filter((m) => m.area_type === 'suburb'),
+      individuals: mapAreas.filter((m) => m.area_type === 'individual'),
+    };
   }
 
   async getMapArea(
