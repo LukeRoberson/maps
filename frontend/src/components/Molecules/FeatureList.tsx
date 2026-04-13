@@ -33,12 +33,12 @@ const FeatureList: React.FC<FeatureListProps> = ({ title, features }) => {
         <section>
             {
                 title &&
-                <h2>{title}</h2>
+                <h2 className="featurelist-h2">{title}</h2>
             }
             
-            <ul className="feature-list">
+            <ul>
                 {features.map((feature, index) => (
-                    <li key={index}>{feature}</li>
+                    <li className="feature-entry-list" key={index}>{feature}</li>
                 ))}
             </ul>
             <br/>

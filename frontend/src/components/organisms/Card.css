@@ -4,26 +4,13 @@
  * Styles for the Card component including layout, typography, and spacing.
 */
 
-.about-section {
-  margin-bottom: 2.5rem;
-}
+@import "tailwindcss";
 
-.about-section h2 {
-  font-size: 1.75rem;
-  color: var(--text-primary);
-  margin-bottom: 1rem;
-  margin-top: 1.5rem;
-}
 
-.about-section h3 {
-  font-size: 1.25rem;
-  color: var(--text-primary);
-  margin-bottom: 0.5rem;
-  margin-top: 1rem;
-}
-
-.about-section p {
-  color: var(--text-secondary);
-  line-height: 1.8;                   /* The vertical spacing between lines of text */
-  margin-bottom: 1rem;
+/**
+ * Utility for styling the paragraph of the card section.
+ * This utility applies padding and text styles to the paragraph.
+ */
+@utility card-p {
+  @apply text-gray-700 mb-4 leading-loose;
 }

@@ -1,0 +1,43 @@
+/*
+  changeLogEntry.css
+
+  Styles for the ChangeLogEntry component.
+*/
+
+@import "tailwindcss";
+
+
+/*
+ * Utility for styling a changelog entry.
+ * This utility applies margin to the bottom of each entry.
+ */
+@utility changelog-entry {
+  @apply mb-8;
+}
+
+
+/*
+ * Utility for styling the header of a changelog entry.
+ * This utility applies margin and text styles to the header.
+ */
+@utility changelog-entry-h3 {
+  @apply mb-1 text-xl text-amber-900;
+}
+
+
+/*
+ * Utility for styling the list of changes within a changelog entry.
+ * This utility applies styles to the list and its markers.
+ */
+@utility changelog-entry-list {
+  @apply
+    relative
+    pl-6
+    
+    /* Style the list markers */
+    before:absolute
+    before:content-['→']
+    before:left-0 
+    before:text-blue-700
+  ;
+}

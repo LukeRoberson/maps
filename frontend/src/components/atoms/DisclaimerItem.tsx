@@ -10,6 +10,9 @@
  */
 
 
+import './DisclaimerItem.css';
+
+
 // Type definition for the props passed to the DisclaimerItem component
 type DisclaimerItemProps = {
     label: string;
@@ -27,7 +30,7 @@ type DisclaimerItemProps = {
 const DisclaimerItem: React.FC<DisclaimerItemProps> = ({ label, content }) => {
     return (
         <p>
-            <strong>{label}</strong> {content}
+            <strong className="disclaimer-item-strong">{label}</strong> {content}
         </p>
     );
 };

@@ -13,6 +13,9 @@
  */
 
 
+import './CardSection.css';
+
+
 /**
  * CardSection configuration type
  * Defines the structure of the configuration object that can be passed to the CardSection component
@@ -69,7 +72,7 @@ const CardSection: React.FC<CardSectionProps> = ({config}) => {
             <section>
                 {/* Section Title */}
                 {title &&
-                    <h2>{title}</h2>
+                    <h2 className="card-section-h2">{title}</h2>
                 }
 
                 {/* Paragraphs */}

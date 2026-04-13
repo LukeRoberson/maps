@@ -39,7 +39,7 @@ const DisclaimerBox: React.FC<DisclaimerBoxProps> = ({ title, items }) => {
         <section className="disclaimer-box">
             {
                 title &&
-                <h2>{title}</h2>
+                <h2 className="disclaimer-box-h2">{title}</h2>
             }
             
             {items.map((item, index) => (

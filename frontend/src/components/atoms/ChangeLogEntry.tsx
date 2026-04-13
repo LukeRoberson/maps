@@ -10,6 +10,9 @@
  */
 
 
+import './ChangeLogEntry.css';
+
+
 // Type definition for the props passed to the ChangeLogEntry component, including version, date, and an array of changes.
 type ChangeLogEntryProps = {
     version: string;
@@ -30,11 +33,11 @@ type ChangeLogEntryProps = {
  */
 const ChangeLogEntry: React.FC<ChangeLogEntryProps> = ({ version, date, changes }) => {
     return (
-        <div className="change-log-entry">
-            <h3>{version} - {date}</h3>
+        <div className="changelog-entry">
+            <h3 className="changelog-entry-h3">{version} - {date}</h3>
             <ul>
                 {changes.map((change, index) => (
-                    <li key={index}>{change}</li>
+                    <li className="pl-6 relative before:content-['→'] before:absolute before:left-0 before:text-blue-700" key={index}>{change}</li>
                 ))}
             </ul>
         </div>

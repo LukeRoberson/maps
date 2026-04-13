@@ -4,26 +4,32 @@
   Styles for the FeatureList component.
 */
 
-.feature-list {                         /* Unordered lists for features or options */
-  list-style: none;
-  padding: 0;
-  margin: 1rem 0;
+
+@import "tailwindcss";
+
+
+/*
+ * Utility for styling the header of the feature list.
+ * This utility applies padding and text styles to the header.
+ */
+@utility featurelist-h2 {
+  @apply pb-2 text-2xl;
 }
 
-.feature-list li {
-  padding: 0.5rem 0;
-  padding-left: 1.5rem;
-  position: relative;
-  color: var(--text-secondary);
-  line-height: 1.7;
-}
 
-.feature-list li::before {              /* Custom bullet points */
-  content: '•';
-  position: absolute;
-  left: 0;
-  color: var(--primary-color);
-  font-weight: bold;
-  font-size: 1.2rem;
+/**
+ * Utility for styling the list of features within the feature list.
+ * This utility applies styles to the list and its markers.
+ */
+@utility feature-entry-list {
+  @apply
+    relative
+    pl-6
+    
+    /* Style the list markers */
+    before:absolute
+    before:content-['→']
+    before:left-0 
+    before:text-blue-700
+  ;
 }
-

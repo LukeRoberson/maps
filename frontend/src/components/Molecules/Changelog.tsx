@@ -38,7 +38,7 @@ const Changelog: React.FC<ChangelogProps> = ({ title, entries }) => {
         <section className="changelog">
             {
                 title &&
-                <h2>{title}</h2>
+                <h2 className="changelog-h2">{title}</h2>
             }
 
             {entries.map((entry, index) => (

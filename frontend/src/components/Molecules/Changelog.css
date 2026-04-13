@@ -4,43 +4,22 @@
   Styles for the Changelog component.
 */
 
-.changelog {
-  background-color: var(--bg-secondary);
-  padding: 1.5rem;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-color);
+@import "tailwindcss";
+
+
+/*
+ * Utility for styling the changelog container.
+ * This utility applies background, padding, border, and rounded corners to the container.
+ */
+@utility changelog {
+  @apply bg-gray-50 p-8 rounded-lg border border-gray-200 mb-4 mt-8;
 }
 
-.changelog-entry {
-  margin-bottom: 1.5rem;
-}
 
-.changelog-entry:last-child {
-  margin-bottom: 0;
-}
-
-.changelog-entry h3 {
-  color: var(--primary-color);
-  font-size: 1.25rem;
-  margin-bottom: 0.75rem;
-}
-
-.changelog-entry ul {
-  list-style: none;
-  padding: 0;
-  margin-left: 0;
-}
-
-.changelog-entry li {
-  padding: 0.375rem 0;
-  padding-left: 1.5rem;
-  position: relative;
-  color: var(--text-secondary);
-}
-
-.changelog-entry li::before {
-  content: '→';
-  position: absolute;
-  left: 0;
-  color: var(--primary-color);
+/*
+ * Utility for styling the header of the changelog.
+ * This utility applies padding and text styles to the header.
+ */
+@utility changelog-h2 {
+  @apply pb-2 text-2xl;
 }

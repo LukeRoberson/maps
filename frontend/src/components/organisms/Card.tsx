@@ -61,7 +61,7 @@ const Card: React.FC<CardProps> = ({ config }) => {
             }
             
             {/* The entire page is divided into sections */}
-            <div className="about-section">
+            <div className="card-p">
                 {sections.map((sectionConfig, index) => (
                     <CardSection key={index} config={sectionConfig}/>
                 ))}
