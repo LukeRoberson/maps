@@ -1,0 +1,34 @@
+/*
+  disclaimerBox.css
+
+  Styles for the DisclaimerBox component.
+*/
+
+.disclaimer-box {
+  background-color: var(--bg-tertiary);
+  border-left: 4px solid var(--warning-color);    /* A left border to highlight the disclaimer box */
+  padding: 1.5rem;
+  border-radius: var(--radius-md);                /* Rounded corners */
+  margin-top: 1rem;
+}
+
+.disclaimer-box p {
+  margin-bottom: 1rem;
+}
+
+.disclaimer-box p:last-child {                    /* Apply to the last paragraph (child) only */
+  margin-bottom: 0;
+}
+
+.disclaimer-box strong {
+  color: var(--text-primary);
+}
+
+.disclaimer-box a {
+  color: var(--primary-color);
+  text-decoration: none;                          /* No underlining urls by default */
+}
+
+.disclaimer-box a:hover {
+  text-decoration: underline;                     /* Underline urls on hover */
+}

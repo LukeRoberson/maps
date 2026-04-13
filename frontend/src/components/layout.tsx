@@ -12,6 +12,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
 // Internal dependencies
+import NavBar from './organisms/NavBar';
 import './layout.css';
 
 
@@ -47,35 +48,7 @@ const Layout: React.FC<LayoutProps> = ({ children }: LayoutProps): React.ReactEl
         <div className="header-content">
           <h1 className="header-title">🗺️ Printable Maps</h1>
           
-          {/* 
-            Navigation bar
-            The 'active' class is applied to the link that matches the current route
-          */}
-          <nav className="header-nav">
-            {/* Projects page */}
-            <Link 
-              to="/" 
-              className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}
-            >
-              Projects
-            </Link>
-            
-            {/* Help page */}
-            <Link 
-              to="/help" 
-              className={`nav-link ${location.pathname === '/help' ? 'active' : ''}`}
-            >
-              Help
-            </Link>
-            
-            {/* About page */}
-            <Link 
-              to="/about" 
-              className={`nav-link ${location.pathname === '/about' ? 'active' : ''}`}
-            >
-              About
-            </Link>
-          </nav>
+          <NavBar />
         </div>
       </header>
 

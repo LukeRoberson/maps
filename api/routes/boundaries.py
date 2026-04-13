@@ -71,6 +71,10 @@ def create_boundary() -> Response:
     """
     Create a new boundary.
 
+    JSON body should include:
+        map_area_id (int): ID of the map area this boundary belongs to
+        coordinates (list): List of coordinate pairs defining the boundary
+
     Returns:
         Response: JSON response with created boundary
     """
@@ -218,6 +222,9 @@ def update_boundary(
 
     Args:
         boundary_id (int): Boundary ID
+
+    JSON body should include:
+        coordinates (list): List of coordinate pairs defining the boundary
 
     Returns:
         Response: JSON response with updated boundary

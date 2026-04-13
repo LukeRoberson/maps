@@ -131,6 +131,18 @@ def create_layer() -> Union[Response, Tuple[Response, int]]:
     """
     Create a new layer.
 
+    JSON body should include:
+    - map_area_id (int, required): ID of the map area this layer belongs to
+    - name (str, required): Name of the layer
+    - layer_type (str, required): Type of layer (annotation, boundary, custom)
+    - visible (bool, optional): Whether the layer is visible by default
+        (default: true)
+    - z_index (int, optional): Z-index for rendering order (default: 0)
+    - is_editable (bool, optional): Whether the layer is editable by users
+        (default: true)
+    - config (object, optional): Additional configuration for the layer
+        (e.g. color, line thickness)
+
     Returns:
         Dict[str, Any]: JSON response with created layer
     """
@@ -285,6 +297,15 @@ def update_layer(
 
     Args:
         layer_id (int): Layer ID
+
+    JSON body can include any of the following fields to update:
+    - name (str): Name of the layer
+    - layer_type (str): Type of layer (annotation, boundary, custom)
+    - visible (bool): Whether the layer is visible by default
+    - z_index (int): Z-index for rendering order
+    - is_editable (bool): Whether the layer is editable by users
+    - config (object): Additional configuration for the layer
+        (e.g. color, line thickness)
 
     Returns:
         Dict[str, Any]: JSON response with updated layer

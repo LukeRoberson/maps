@@ -590,6 +590,61 @@ paths:
   # ──────────────────────────────────────────────
   # Boundaries
   # ──────────────────────────────────────────────
+  /api/boundaries:
+    post:
+      tags: [Boundaries]
+      summary: Create a boundary for a map area
+      description: |
+        Create a polygon boundary for a map area.
+        The boundary is defined by an array of [lat, lon] pairs representing the vertices of the polygon.
+        A minimum of 3 points is required to form a valid polygon.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - map_area_id
+                - coordinates
+              properties:
+                map_area_id:
+                  type: integer
+                  description: |
+                    Map area ID to associate with this boundary.
+                    Boundaries need to belong to a map.
+                  example: 123
+                coordinates:
+                  type: array
+                  items:
+                    type: array
+                    items:
+                      type: number
+                    minItems: 2
+                    maxItems: 2
+                  minItems: 3
+                  description: Array of [lat, lon] pairs defining the polygon vertices (minimum 3 points)
+                  example: [[-37.8136, 144.9631], [-37.814, 144.964], [-37.815, 144.962]]
+      responses:
+        '201':
+          description: Created boundary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Boundary'
+        '400':
+          description: Missing required fields or invalid coordinates
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Map area not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
   /api/boundaries/map-area/{map_area_id}:
     get:
       tags: [Boundaries]
@@ -615,9 +670,100 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
-  # TODO: Add POST /api/boundaries (body: map_area_id, coordinates)
-  # TODO: Add PUT /api/boundaries/{boundary_id}
-  # TODO: Add DELETE /api/boundaries/{boundary_id}
+  /api/boundaries/{boundary_id}:
+    put:
+      tags: [Boundaries]
+      summary: Update a boundary
+      description: |
+        Update the coordinates of an existing boundary.
+        The request body should include the new array of [lat, lon] pairs defining the polygon vertices.
+        A minimum of 3 points is required to form a valid polygon.
+      parameters:
+        - name: boundary_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the boundary to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - coordinates
+              properties:
+                coordinates:
+                  type: array
+                  items:
+                    type: array
+                    items:
+                      type: number
+                    minItems: 2
+                    maxItems: 2
+                  minItems: 3
+                  description: Array of [lat, lon] pairs defining the new polygon vertices (minimum 3 points)
+                  example: [[-37.8136, 144.9631], [-37.814, 144.964], [-37.815, 144.962]]
+      responses:
+        '200':
+          description: Updated boundary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Boundary'
+        '400':
+          description: Invalid input or missing coordinates
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Boundary not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags: [Boundaries]
+      summary: Delete a boundary
+      description: Permanently delete a boundary by its ID. This action cannot be undone.
+      parameters:
+        - name: boundary_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the boundary to delete
+      responses:
+        '200':
+          description: Boundary deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Boundary deleted successfully
+        '404':
+          description: Boundary not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
   # ──────────────────────────────────────────────
   # Layers
@@ -651,11 +797,220 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-    # TODO: Add POST /api/layers
+    post:
+      tags: [Layers]
+      summary: Create a layer
+      description: |
+        Create a new layer within a map area.
+        Layers can be of different types (annotation, boundary, custom) which affect how they are rendered and behave in the frontend.
+        The request body should include the map area ID to associate the layer with, as well as the layer name and type.
+        Optional fields allow for setting visibility, z-index, editability, and additional configuration.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - map_area_id
+                - name
+                - layer_type
+              properties:
+                map_area_id:
+                  type: integer
+                  description: Map area ID to associate with this layer
+                name:
+                  type: string
+                  description: Layer name
+                layer_type:
+                  type: string
+                  enum: [annotation, boundary, custom]
+                  description: Type of layer (affects rendering and behavior)
+                visible:
+                  type: integer
+                  enum: [0, 1]
+                  default: 1
+                  description: Whether the layer is visible by default (1 = visible, 0 = hidden)
+                z_index:
+                  type: integer
+                  default: 0
+                  description: Z-index for rendering order (higher = rendered on top)
+                is_editable:
+                  type: integer
+                  enum: [0, 1]
+                  default: 1
+                  description: Whether the layer is editable by users (1 = editable, 0 = read-only)
+                config:
+                  type: string
+                  nullable: true
+                  description: |
+                    Optional JSON string for additional layer configuration (e.g. styling options)
+                    Can include 'color' (hex string) and 'line_thickness' (number) for boundary layers.
+      responses:
+        '201':
+          description: Created layer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Layer'
+        '400':
+          description: Missing required fields or invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Map area not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
-  # TODO: Add GET /api/layers/{layer_id}
-  # TODO: Add PUT /api/layers/{layer_id}
-  # TODO: Add DELETE /api/layers/{layer_id}
+  /api/layers/{layer_id}:
+    get:
+      tags: [Layers]
+      summary: Get a layer by ID
+      description: |
+        Retrieve details of a specific layer by its unique ID.
+      parameters:
+        - name: layer_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Layer ID
+      responses:
+        '200':
+          description: Layer details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Layer'
+        '404':
+          description: Layer not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      tags: [Layers]
+      summary: Update a layer
+      description: |
+        Update the details of an existing layer.
+        Only fields included in the request body will be updated; others will remain unchanged.
+      parameters:
+        - name: layer_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Layer ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: |
+                Fields to update for the layer.
+                Not all fields are required; only include the fields you want to update.
+              properties:
+                name:
+                  type: string
+                  description: Layer name
+                  nullable: true
+                  example: "Updated Layer Name"
+                layer_type:
+                  type: string
+                  enum: [annotation, boundary, custom]
+                  description: Type of layer (affects rendering and behavior)
+                  example: "annotation"
+                visible:
+                  type: integer
+                  enum: [0, 1]
+                  description: Whether the layer is visible by default (1 = visible, 0 = hidden)
+                  example: 1
+                z_index:
+                  type: integer
+                  description: Z-index for rendering order (higher = rendered on top)
+                  example: 5
+                is_editable:
+                  type: integer
+                  enum: [0, 1]
+                  description: Whether the layer is editable by users (1 = editable, 0 = read-only)
+                  example: 1
+                config:
+                  type: string
+                  nullable: true
+                  description: |
+                    Optional JSON string for additional layer configuration (e.g. styling options)
+                    Can include 'color' (hex string) and 'line_thickness' (number) for boundary layers.
+                  example: '{"color": "#FF0000", "line_thickness": 2}'
+      responses:
+        '200':
+          description: Updated layer details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Layer'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Layer not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags: [Layers]
+      summary: Delete a layer
+      description: Permanently delete a layer by its ID. This action cannot be undone.
+      parameters:
+        - name: layer_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Layer ID
+      responses:
+        '200':
+          description: Layer deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Layer deleted successfully
+        '404':
+          description: Layer not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
   # ──────────────────────────────────────────────
   # Annotations
@@ -954,36 +1309,54 @@ components:
       properties:
         id:
           type: integer
-        map_area_id:
-          type: integer
-        parent_layer_id:
-          type: integer
-          nullable: true
+          description: Unique layer ID
+          example: 456
         name:
           type: string
+          description: Name of the layer
+          example: "Boundary Layer"
+        map_area_id:
+          type: integer
+          description: ID of the map area this layer belongs to
+          example: 123
+        parent_layer_id:
+          type: integer
+          description: ID of the parent layer for hierarchy (optional)
+          nullable: true
+          example: 10
         layer_type:
           type: string
           enum: [annotation, boundary, custom]
+          description: Type of layer (affects rendering and behavior)
+          example: "boundary"
         visible:
-          type: int
-          default: 1
+          type: boolean
+          description: Whether the layer is visible by default
+          example: true
         z_index:
           type: integer
+          description: Z-index for rendering order (higher = rendered on top)
           default: 0
+          example: 5
         is_editable:
-          type: int
-          default: 1
+          type: boolean
+          default: true
+          description: Whether the layer is editable by users
+          example: true
         config:
-          type: string
+          type: object
           nullable: true
           properties:
             color:
               type: string
               description: Hex color string (max 20 chars)
+              example: "#e74c3c"
             line_thickness:
               type: number
               minimum: 1
               maximum: 20
+              description: Line thickness in pixels
+              example: 3.0
         created_at:
           type: string
           format: date-time
