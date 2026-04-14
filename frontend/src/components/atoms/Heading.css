@@ -1,0 +1,55 @@
+/*
+ * heading.css
+ *
+ * Styles for the Heading component including layout, typography, and spacing.
+*/
+
+@import "tailwindcss";
+
+
+/*
+ * H1 heading style
+ */
+@utility heading-1 {
+  @apply
+    /* Positioning */
+    pb-2
+    mb-2
+
+    /* Typography */
+    text-4xl
+    border-b-2
+    border-amber-600
+  ;
+}
+
+
+/*
+ * H2 heading style
+ */
+@utility heading-2 {
+  @apply
+    /* Positioning */
+    pb-2
+    mb-2
+
+    /* Typography */
+    text-2xl
+  ;
+}
+
+
+/*
+ * H3 heading style
+ */
+@utility heading-3 {
+  @apply
+    /* Positioning */
+    pb-2
+    mb-2
+
+    /* Typography */
+    text-xl
+    text-amber-800
+  ;
+}

@@ -1,0 +1,94 @@
+/*
+ * StrongPair.css
+ *
+ * Styles for the StrongPair component including layout, typography, and spacing.
+ * This is used when we combine strong and regular text together, such as in a label-value pair.
+*/
+
+@import "tailwindcss";
+
+
+/**
+ * Utility for styling the StrongPair component.
+ * This utility applies styles to the label and value within the StrongPair.
+ */
+@utility strong-pair {
+  @apply 
+    text-gray-900
+    mb-4
+  ;
+}
+
+
+/**
+  * Utility for styling a box that contains a strong label and accompanying text.
+  * This is used for sections that need to highlight important information with a strong label.
+  */
+@utility strong-box {
+  /* Common styles for the box */
+  @apply 
+    bg-white
+    border
+    border-gray-300
+    p-4
+    rounded-xl
+    mb-4
+  ;
+
+  /* Target strong elements */
+  & strong {
+    @apply 
+      text-blue-800
+      font-bold
+      text-lg
+      mb-2
+    ;
+  }
+
+  /* Target span elements for the accompanying text */
+  & span {
+    @apply 
+      text-gray-800
+    ;
+  }
+}
+
+
+/**
+  * Utility for styling an emphasised box that contains a strong label and accompanying text.
+  * This is used for sections that need to highlight important information with a strong label, with a more prominent style.
+  */
+@utility strong-emphasis {
+  /* Common styles for the emphasised box */
+  @apply 
+    /* Positioning */
+    p-4
+    mb-4
+
+    /* Appearance */
+    bg-amber-50
+
+    /* Boarder */
+    border
+    border-l-4
+    rounded-xl
+    border-amber-700
+    border-l-amber-500
+  ;
+
+  /* Target strong elements */
+  & strong {
+    @apply 
+      text-blue-800
+      font-bold
+      mb-2
+    ;
+  }
+
+  /* Target span elements for the accompanying text */
+  & span {
+    @apply 
+      text-gray-800
+    ;
+  }
+}

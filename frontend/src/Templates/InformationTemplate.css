@@ -1,0 +1,32 @@
+/*
+  InformationTemplate.css
+
+  Styles for the InformationTemplate component.
+*/
+
+@import "tailwindcss";
+
+
+/**
+ * Utility for styling the page wrapper of the InformationTemplate.
+ * This utility centers the content and sets a maximum width for better readability.
+ */
+@utility page-wrapper {
+  @apply 
+    max-w-4xl
+    mx-auto
+  ;
+}
+
+
+/**
+ * Utility for styling the card wrapper of the InformationTemplate.
+ * This utility applies padding, background color, and rounded corners to the card.
+ */
+@utility card-wrapper {
+  @apply 
+    p-8
+    bg-white
+    rounded-lg
+  ;
+}

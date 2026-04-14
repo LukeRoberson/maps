@@ -1,0 +1,54 @@
+/*
+ * List.css
+ *
+ * Styles for the List component including layout, typography, and spacing.
+ * This is used when we display a list of items, either ordered or unordered.
+*/
+
+@import "tailwindcss";
+
+
+/**
+ * This utility applies styles to a container that holds a list of items.
+ * It adds vertical spacing between list items for better readability.
+ */
+@utility list-group {
+  @apply 
+    /* Layout and spacing */
+    space-y-2
+  ;
+}
+
+
+/**
+ * This utility applies styles to an unordered list and its markers.
+ */
+@utility unordered-list {
+  @apply
+    /* Positioning */
+    relative
+    pl-6
+    list-inside
+
+    /* Style the list markers */
+    list-disc
+    marker:text-blue-700
+  ;
+}
+
+
+/**
+ * This utility applies styles to an ordered list and its markers.
+ */
+@utility ordered-list {
+  @apply
+    /* Positioning */
+    relative
+    pl-6
+    list-inside
+    
+    /* Style the list markers */
+    list-decimal
+    marker:text-blue-700
+  ;
+}

@@ -5,77 +5,89 @@
  *  A reusable card component for displaying content in a structured format.
  * 
  * @exports Card - The Card component itself.
- * @exports CardConfig - Type definition for the configuration object used to customize the Card component.
  */
 
 
-import CardSection from '../Molecules/CardSection';
-import FeatureList from '../Molecules/FeatureList';
-import DisclaimerBox from '../Molecules/DisclaimerBox';
-import Changelog from '../Molecules/Changelog';
-
-import type { CardSectionConfig } from '../Molecules/CardSection';
-import type { FeatureListProps } from '../Molecules/FeatureList';
-import type { DisclaimerBoxProps } from '../Molecules/DisclaimerBox';
-import type { ChangelogProps } from '../Molecules/Changelog';
-
+import Heading from '../atoms/Heading';
+import Paragraph from '../atoms/Paragraph';
+import StrongPair from '../atoms/StrongPair';
+import List from '../atoms/List';
 import './Card.css'
 
 
-/**
- * Card configuration type
+/** 
+ * Type definitions for the content structure of the Card component.
+ * Defines the various types of content nodes that can be included in a card, such as headings, paragraphs, labeled text, and lists.
  */
-export type CardConfig = {
+type CardNode =
+    | { kind: 'heading'; level: 1 | 2 | 3; text: string }
+    | { kind: 'paragraph'; align?: 'left' | 'center' | 'right'; large?: boolean; text: string }
+    | { kind: 'labeled'; style?: 'default' | 'box' | 'emphasis'; label: string; text: string }
+    | { kind: 'list'; ordered?: boolean; items: string[] };
+
+
+/**
+ * Type definition for the full card content structure.
+ * A card consists of an array of CardNodes, and can optionally have a style property to indicate emphasis.
+ */
+export type CardBox = {
+    card: CardNode[];
+    style?: 'default' | 'emphasis';
+}
+
+
+/**
+ * Type definition for the props of the Card component.
+ * This is the full card containing multiple boxes
+ */
+export type CardContent = {
     title?: string;
-    sections: CardSectionConfig[];
-    features?: FeatureListProps;
-    disclaimer?: DisclaimerBoxProps;
-    changelog?: ChangelogProps;
-
-};
-
-
-/**
- * Card component props
- */
-type CardProps = {
-    config: CardConfig;
+    content: CardBox[];
 };
 
 
 /**
  * A Card component
  * Displays a title and content sections
+ * Each full card is made up of multiple boxes, which can contain various types of content (headings, paragraphs, labeled text, lists)
  * 
  * @param config - Configuration object for the card, including title and content
  * @returns JSX element representing the card
  */
-const Card: React.FC<CardProps> = ({ config }) => {
+const Card: React.FC<CardContent> = ( config ) => {
     // Destructure props
-    const { title, sections, features, disclaimer, changelog } = config;
+    const { title, content } = config;
 
     return(
         <>
+            {/* The title for the entire card */}
             {title &&
-               <h1>{title}</h1>
+                <Heading level={1} text={title} />
             }
-            
-            {/* The entire page is divided into sections */}
-            <div className="card-p">
-                {sections.map((sectionConfig, index) => (
-                    <CardSection key={index} config={sectionConfig}/>
-                ))}
 
-                {features &&
-                    <FeatureList {...features} />
-                }
-                {disclaimer &&
-                    <DisclaimerBox {...disclaimer} />
-                }
-                {changelog &&
-                    <Changelog {...changelog} />
-                }
-            </div>
+            {/* Iterate over each content box in the card */}
+            {content?.map((card, index) => {
+                return (
+                    <section className={`card-box ${card.style === 'emphasis' ? 'card-emphasis' : ''}`} key={index}>
+                        
+                        {/* Iterate over each node in the content box */}
+                        {card.card.map((node, nodeIndex) => {
+                            switch (node.kind) {
+                                case 'heading':
+                                    return <Heading key={nodeIndex} level={node.level} text={node.text} />
+                                case 'paragraph':
+                                    return <Paragraph key={nodeIndex} align={node.align} large={node.large} text={node.text} />
+                                case 'labeled':
+                                    return <StrongPair key={nodeIndex} label={node.label} value={node.text} style={node.style} />
+                                case 'list':
+                                    return <List key={nodeIndex} ordered={node.ordered} items={node.items} />
+                                default:
+                                    return null;
+                            }
+                        })}
+                    </section>
+                )
+            })}
         </>
     )
 }

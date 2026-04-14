@@ -1,0 +1,19 @@
+/*
+ * Paragraph.css
+ *
+ * Styles for the Paragraph component including layout, typography, and spacing.
+*/
+
+@import "tailwindcss";
+
+
+/**
+ * Utility for styling the paragraph component.
+ * This utility applies padding and text styles to the paragraph.
+ */
+@utility paragraph {
+  @apply 
+    text-gray-700
+    mb-4
+  ;
+}
