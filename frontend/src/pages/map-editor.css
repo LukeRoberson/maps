@@ -22,20 +22,6 @@
   transition: width 0.3s ease, opacity 0.3s ease;
 }
 
-.editor-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 1.5rem;
-}
-
-.editor-header h2 {
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
 .btn-icon {
   background: none;
   border: none;
@@ -50,22 +36,6 @@
   opacity: 1;
 }
 
-.editor-title-input {
-  font-size: 1.5rem;
-  font-weight: 600;
-  padding: 0.25rem 0.5rem;
-  border: 2px solid var(--primary-color);
-  border-radius: var(--radius-md);
-  background-color: var(--bg-primary);
-  width: 400px;
-  max-width: 100%;
-}
-
-.editor-title-input:focus {
-  outline: none;
-  border-color: var(--primary-hover);
-}
-
 .breadcrumb {
   color: var(--text-secondary);
   font-size: 0.875rem;
@@ -77,12 +47,6 @@
   font-size: 0.875rem;
   margin: 0.25rem 0 0 0;
   font-weight: 500;
-}
-
-.editor-actions {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
 }
 
 .region-view-toggle {
@@ -117,81 +81,6 @@
 .region-view-toggle-btn.active {
   background-color: var(--primary-color, #0d6efd);
   color: #fff;
-}
-
-.suburb-filter-control {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.35rem 0.6rem;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  background-color: var(--bg-secondary);
-}
-
-.suburb-filter-label {
-  font-size: 0.875rem;
-  color: var(--text-secondary);
-  user-select: none;
-}
-
-.suburb-filter-switch {
-  position: relative;
-  width: 42px;
-  height: 24px;
-  display: inline-flex;
-}
-
-.suburb-filter-switch input {
-  position: absolute;
-  width: 0;
-  height: 0;
-  opacity: 0;
-}
-
-.suburb-filter-slider {
-  position: absolute;
-  inset: 0;
-  border-radius: 999px;
-  background-color: #bec7d0;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-.suburb-filter-slider::before {
-  content: '';
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background-color: #ffffff;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
-  transition: transform 0.2s ease;
-}
-
-.suburb-filter-switch input:checked + .suburb-filter-slider {
-  background-color: var(--primary-color);
-}
-
-.suburb-filter-switch input:checked + .suburb-filter-slider::before {
-  transform: translateX(18px);
-}
-
-.suburb-filter-switch input:focus-visible + .suburb-filter-slider {
-  outline: 2px solid var(--primary-color);
-  outline-offset: 2px;
-}
-
-.mode-hint {
-  color: var(--text-secondary);
-  font-size: 0.875rem;
-  font-style: italic;
-  margin: 0;
-  padding: 0.5rem 1rem;
-  background-color: var(--bg-secondary);
-  border-radius: var(--radius-md);
 }
 
 .map-container {

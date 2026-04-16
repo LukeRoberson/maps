@@ -30,8 +30,8 @@
 @utility heading-2 {
   @apply
     /* Positioning */
-    pb-2
-    mb-2
+    pb-2 pt-2
+    mb-2 mt-2
 
     /* Typography */
     text-2xl
@@ -45,8 +45,8 @@
 @utility heading-3 {
   @apply
     /* Positioning */
-    pb-2
-    mb-2
+    pb-2 pt-2
+    mb-2 mt-2
 
     /* Typography */
     text-xl

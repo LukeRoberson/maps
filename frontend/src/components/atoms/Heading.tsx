@@ -15,7 +15,7 @@ import './Heading.css'
  * Type definition for the props of the Heading component.
  * The level is the heading level (1, 2, or 3), and text is the content of the heading.
  */
-type HeadingProps = {
+export type HeadingProps = {
     level: 1 | 2 | 3;
     text: string;
 }

@@ -1,0 +1,15 @@
+/*
+ * HintText.css
+ *
+ * Styles for the HintText component including layout, typography, and spacing.
+*/
+
+@import "tailwindcss";
+
+@utility hint-text {
+    @apply
+        text-sm
+        text-gray-700
+        italic
+    ;
+}

@@ -1,0 +1,136 @@
+/*
+ * ToggleSlider.css
+ *
+ * Styles for the ToggleSlider component.
+ * Includes the container, label, hidden checkbox, visual slider wrapper, and sliding button.
+*/
+
+@import "tailwindcss";
+
+
+/**
+ * This utility applies styles for the toggle slider container.
+ */
+@utility slide-container {
+  @apply 
+    /* Box layout */
+    flex
+    items-center
+
+    /* Border settings */
+    border
+    border-gray-200
+    rounded-md
+
+    /* Padding and spacing */
+    p-1.5
+    gap-2                   /* Space between label and slider */
+  ;
+}
+
+
+/**
+ * The label next to the toggle slider.
+ */
+@utility slide-label {
+  @apply 
+    /* Typography */
+    text-sm
+    text-gray-500
+
+    /* Prevent text selection */
+    select-none
+  ;
+}
+
+
+/**
+ * The hidden checkbox input for the toggle slider.
+ * The checkbox is used functionally, but visually replaced with a slider.
+ */
+@utility toggle-checkbox {
+    @apply
+        /* Hide the checkbox visually but keep it accessible */
+        absolute
+        opacity-0
+        w-0
+        h-0
+    ;
+}
+
+
+/**
+ * The container for the toggle slider.
+ */
+@utility toggle-container {
+    @apply
+        relative
+        w-10
+        h-6
+    ;
+}
+
+
+/**
+  * The visual slider wrapper.
+  * This replaces the checkbox visually (the actual box part).
+  * This sits behind the sliding button, and changes color when toggled.
+  * This visually replaces the checkbox.
+  */
+@utility toggle-wrapper {
+    @apply
+        /* Positioning */
+        absolute
+        inset-0
+        
+        /* Appearance */
+        bg-gray-400
+        rounded-full
+        
+        /* Transition for smooth sliding and color change */
+        transition-colors
+        duration-200
+        ease-in-out
+
+        /* Cursor change on hover */
+        cursor-pointer
+
+        /* 
+        Background color change when toggled (when the checkbox is checked).
+        The checkbox (<input>) is marked with 'peer', so we can check its state here.
+        */
+        peer-checked:bg-blue-500
+    ;
+}
+
+
+/**
+ * The sliding button that moves when toggled.
+ * This replaces the check mark in the checkbox.
+ * This is the element that visually represents the toggle state.
+ */
+@utility toggle-button {
+    @apply
+        /* Positioning */
+        before:absolute
+        before:top-0.75                         /* Just a little inside the background */
+        before:left-0.75
+
+        /* Appearance of the sliding button */
+        before:rounded-full                     /* Circular button */
+        before:w-4.5                            /* Size of the button */
+        before:h-4.5
+        before:bg-white
+
+        /* Transition for smooth sliding */
+        before:transition-transform
+        before:duration-200
+        before:ease-in-out
+        
+        /*
+        Move the button when toggled.
+        The checkbox (<input>) is marked with 'peer', so we can check its state here.
+        */
+        peer-checked:before:translate-x-4
+    ;
+}

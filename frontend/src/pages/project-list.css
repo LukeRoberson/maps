@@ -16,26 +16,6 @@
 
 
 /*
-  -------------------------
-    Page header container
-  -------------------------
-*/
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-}
-
-/* For actions on the right side of the header (import project and new project) */
-.header-actions {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-}
-
-
-/*
   ---------------------
     Loading container
   ---------------------

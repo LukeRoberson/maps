@@ -24,32 +24,6 @@
 
 
 /*
-  ---------------
-    Page header
-  ---------------
-*/
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 2rem;
-}
-
-/* Project description text */
-.project-description {
-  color: var(--text-secondary);
-  margin: 0.5rem 0 0 0;
-}
-
-/* Container for actions (buttons) on the right side of the header */
-.header-actions {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-}
-
-
-/*
   --------------------------
     Project content (tree)
   --------------------------

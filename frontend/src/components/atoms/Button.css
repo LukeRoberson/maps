@@ -1,0 +1,108 @@
+/*
+ * Button.css
+ *
+ * Styles for the Button component including layout, typography, and spacing.
+*/
+
+@import "tailwindcss";
+
+
+
+/**
+ * Base button styles
+ * This utility defines the common styles for all button types, including layout, typography, and focus/disabled states.
+ */
+@utility button {
+  @apply
+    /* Layout */
+    inline-flex
+    items-center
+    justify-center
+    px-4
+    py-2
+    rounded-md
+
+    /* Typography */
+    font-medium
+
+    /* Disabled state */
+    disabled:bg-gray-300
+    disabled:text-gray-500
+  ;
+}
+
+
+/**
+  * Button variants
+  * These utilities define the specific styles for each button variant, including colors and hover states.
+  */
+@utility blue-button {
+  @apply
+    /* Typography */
+    text-white
+
+    /* Colors */
+    bg-blue-500
+
+    /* Hover state */
+    hover:bg-blue-700
+  ;
+}
+
+
+@utility green-button {
+  @apply
+    /* Typography */
+    text-white
+
+    /* Colors */
+    bg-green-600
+
+    /* Hover state */
+    hover:bg-green-700
+  ;
+}
+
+
+@utility red-button {
+  @apply
+    /* Typography */
+    text-white
+
+    /* Colors */
+    bg-red-500
+
+    /* Hover state */
+    hover:bg-red-700
+  ;
+}
+
+
+@utility clear-button {
+  @apply
+    /* Typography */
+    text-black
+
+    /* Colors */
+    bg-transparent
+    border border-gray-200
+
+    /* Hover state */
+    hover:bg-gray-200
+  ;
+}
+
+
+/**
+  * Icon button styles
+  * This utility defines the styles for icon buttons, which are typically smaller and may have different padding and border styles.
+  */
+@utility icon-button {
+  @apply
+    /* Colors */
+    bg-transparent
+
+    /* Size of the icon */
+    text-xl
+  ;
+}

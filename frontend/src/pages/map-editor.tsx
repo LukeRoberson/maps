@@ -15,6 +15,15 @@ import L from 'leaflet';
 import '@geoman-io/leaflet-geoman-free';
 import '@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css';
 
+// Atoms
+import Button from '../components/atoms/Button';
+import HintText from '@/components/atoms/HintText';
+
+// Molecules
+import EditableHeading from '@/components/Molecules/EditableHeading';
+import ToggleButton from '@/components/Molecules/ToggleButton';
+import ToggleSlider from '@/components/Molecules/ToggleSlider';
+
 // Internal dependencies
 import { apiClient } from '@/services/api-client';
 import { LayerManager } from '@/components/layer-manager';
@@ -442,7 +451,6 @@ const MapEditor: React.FC = () => {
   const [layers, setLayers] = useState<Layer[]>([]);
   const [activeLayerId, setActiveLayerId] = useState<number | null>(null);
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
-  const [annotationLayers, setAnnotationLayers] = useState<Map<number, L.Layer>>(new Map());
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
@@ -1481,206 +1489,209 @@ const MapEditor: React.FC = () => {
     return <div className="error">Map not found</div>;
   }
 
+
+
+
+
+  // The settings for the editable heading component for the map title.
+  const headingSettings = {
+      condition: isEditingName,
+      editBox: {
+          value: editingName,
+          onChangeFunction: (newValue: string) => setEditingName(newValue),
+          successFunction: handleRename,
+          cancelFunction: cancelRenaming,
+      },
+      heading: {
+          level: 2,
+          text: mapArea.name,
+      },
+      button: {
+          text: '✏️',
+          onClick: startRenaming,
+          type: 'icon',
+      },
+  } satisfies React.ComponentProps<typeof EditableHeading>;
+
+  // Button to edit or define a boundary
+  const buttonEditBoundary = {
+      text: boundary ? 'Edit Boundary' : 'Define Boundary',
+      onClick: () => setMode('boundary'),
+      type: 'green',
+  } satisfies React.ComponentProps<typeof Button>;
+
+  // Save Boundary button
+  const buttonSaveBoundary = {
+      text: 'Save Boundary',
+      onClick: saveBoundaryEdit,
+      type: 'green',
+  } satisfies React.ComponentProps<typeof Button>;
+
+  // Cancel Boundary Edit button
+  const buttonCancelBoundaryEdit = {
+      text: 'Cancel',
+      onClick: cancelBoundaryEdit,
+  } satisfies React.ComponentProps<typeof Button>;
+
+  // Add Suburb button (only shown in region maps)
+  const buttonAddSuburb = {
+      text: 'Add Suburb',
+      onClick: () => setMode('suburb'),
+      disabled: !boundary,
+      type: 'green',
+  } satisfies React.ComponentProps<typeof Button>;
+
+  // Add individual map button (only shown in suburb maps)
+  const buttonAddIndividual = {
+      text: 'Add Individual Map',
+      onClick: () => setMode('individual'),
+      disabled: !boundary,
+      type: 'green',
+  } satisfies React.ComponentProps<typeof Button>;
+
+  // Button to export the map as a PNG image
+  const buttonExportPNG = {
+    text: isExporting ? 'Exporting...' : 'Export PNG',
+    onClick: () => setShowExportDialog(true),
+    disabled: isExporting,
+    type: 'green',
+  } satisfies React.ComponentProps<typeof Button>;
+
+  // Button to recenter the map to the default view
+  const buttonRecenter = {
+    text: 'Recenter View',
+    onClick: handleRecenterToDefault,
+    disabled: !mapArea.default_center_lat && !project?.center_lat,
+    type: 'blue',
+  } satisfies React.ComponentProps<typeof Button>;
+
+  // Button to open the tile layer selector dialog
+  const buttonTileLayer = {
+    text: 'Map Style',
+    onClick: () => setShowTileLayerSelector(true),
+    type: 'blue',
+  } satisfies React.ComponentProps<typeof Button>;
+
+  // Button to toggle expanding the map to full screen
+  const buttonToggleExpand = {
+    text: isMapExpanded ? '⊡' : '⛶',
+    onClick: () => setIsMapExpanded(!isMapExpanded),
+    type: 'icon',
+  } satisfies React.ComponentProps<typeof Button>;
+
+  // Button to go back to the parent map area
+  const navigateToParent = {
+    text: 'Back to Parent',
+    onClick: () => navigate(`/projects/${projectId}/maps/${parentMapArea?.id}`),
+  } satisfies React.ComponentProps<typeof Button>;
+
+  // Button to navigate to the main project page
+  const navigateToProject = {
+    text: 'Back to Project',
+    onClick: () => navigate(`/projects/${projectId}`),
+  } satisfies React.ComponentProps<typeof Button>;
+
+  // Suburb/Individual view toggle (only shown in region maps)
+  const suburbIndividualToggle = {
+    firstButton: { text: 'Suburbs', onClick: () => setRegionViewMode('suburb') },
+    secondButton: { text: 'Individual', onClick: () => setRegionViewMode('individual') },
+    selectedOption: regionViewMode === 'suburb' ? 'first' : 'second',
+    onSelect: (option) => setRegionViewMode(option === 'first' ? 'suburb' : 'individual')
+  } satisfies React.ComponentProps<typeof ToggleButton>;
+
+  // Toggle slider for hiding empty suburbs (only shown in region maps)
+  const toggleHideEmptySuburbs = {
+    label: 'Hide Empty Suburbs',
+    checkedState: hideEmptySuburbs,
+    changeState: setHideEmptySuburbs,
+  } satisfies React.ComponentProps<typeof ToggleSlider>;
+
+
   return (
     <div className="map-editor-page">
-      <div className="editor-header">
-        <div>
-          {isEditingName ? (
-            <input
-              type="text"
-              className="editor-title-input"
-              value={editingName}
-              onChange={(e) => setEditingName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  handleRename();
-                } else if (e.key === 'Escape') {
-                  cancelRenaming();
-                }
-              }}
-              onBlur={handleRename}
-              autoFocus
-            />
-          ) : (
-            <h2 onDoubleClick={startRenaming}>
-              {mapArea.name}
-              <button
-                className="btn-icon"
-                onClick={startRenaming}
-                title="Rename"
-              >
-                ✏️
-              </button>
-            </h2>
-          )}
-          <p className="breadcrumb">
-            {project.name} / {mapArea.area_type}
-          </p>
-        </div>
-        <div className="editor-actions">
-          {mode === 'boundary' && pendingBoundaryEdit ? (
-            <>
-              <button
-                className="btn btn-success"
-                onClick={saveBoundaryEdit}
-              >
-                Save Boundary
-              </button>
-              <button
-                className="btn btn-outline"
-                onClick={cancelBoundaryEdit}
-              >
-                Cancel
-              </button>
-              <p className="mode-hint">
-                Changes detected. Click "Save Boundary" to keep your edits.
+      
+      {/* Header section with map title and action buttons */}
+      <div className="flex justify-between items-center mb-4">
+          {/* Heading */}
+          <div>
+              <EditableHeading {...headingSettings} />
+              <p className="breadcrumb">
+                  {project.name} / {mapArea.area_type}
               </p>
-            </>
-          ) : mode === 'boundary' ? (
-            <>
-              <button
-                className="btn btn-outline"
-                onClick={() => setMode('annotation')}
-              >
-                Cancel
-              </button>
-              <p className="mode-hint">
-                {boundary
-                  ? 'Click "Edit annotations" button on the map to modify the boundary'
-                  : 'Draw a polygon or rectangle to define the boundary'}
-              </p>
-            </>
-          ) : mode === 'suburb' ? (
-            <>
-              <button
-                className="btn btn-outline"
-                onClick={() => setMode('annotation')}
-              >
-                Cancel
-              </button>
-              <p className="mode-hint">
-                Draw a polygon or rectangle to define the suburb boundary
-              </p>
-            </>
-          ) : mode === 'individual' ? (
-            <>
-              <button
-                className="btn btn-outline"
-                onClick={() => setMode('annotation')}
-              >
-                Cancel
-              </button>
-              <p className="mode-hint">
-                Draw a polygon or rectangle to define the individual map boundary
-              </p>
-            </>
-          ) : (
-            <>
-              {mapArea.area_type === 'region' && (
-                <button
-                  className="btn btn-success"
-                  onClick={() => setMode('suburb')}
-                  disabled={!boundary}
-                  title={!boundary ? 'Define a boundary for this region before adding suburbs' : 'Add a suburb to this region'}
-                >
-                  Add Suburb
-                </button>
+          </div>
+
+          {/* Header action (buttons) */}
+          <div className="flex gap-2 items-center">
+              {mode === 'boundary' && pendingBoundaryEdit ? (
+                  /* If we're in boundary edit mode, and there are pending changes to the boundary */
+                  <>
+                      <Button {...buttonSaveBoundary} />
+                      <Button {...buttonCancelBoundaryEdit} />
+                      <HintText text="Draw a polygon or rectangle to define the boundary, or edit existing points."/>
+                  </>
+              ) : (mode === 'boundary') ? (
+                  /* If we're in boundary mode, but there are no pending edits. */
+                  <>
+                      <Button {...buttonCancelBoundaryEdit} />
+                      <HintText text="Draw a polygon or rectangle to define the boundary, or edit existing points"/>
+                  </>
+              ) : (
+                /*
+                    The main toolbar of buttons across the top.
+                    The buttons shown will depend on they type of map being viewed
+                */
+                <>
+                    {/* Region mode: Add Suburb button */}
+                    {mapArea.area_type === 'region' && (
+                        <Button {...buttonAddSuburb} />
+                    )
+                    }
+
+                    {/* Suburb mode: Add Individual Map button. */}
+                    {mapArea.area_type === 'suburb' && (
+                        <Button {...buttonAddIndividual} />
+                    )}
+
+                    {/*
+                        Toggle between 'suburb' view and 'individual map' view for region maps.
+                        Filter control to hide empty suburbs that have no child maps.
+                    */}
+                    {mapArea.area_type === 'region' && (
+                        <div className="flex flex-col">
+                            <ToggleButton {...suburbIndividualToggle} />
+                            <ToggleSlider {...toggleHideEmptySuburbs} />
+                        </div>
+                    )}
+
+                    {/* Button to create or edit the boundary of the current map area. */}
+                    <Button {...buttonEditBoundary} />
+
+                    {/* Button to export the map as a PNG image. */}
+                    <Button {...buttonExportPNG} />
+
+                    {/* Button to recenter the map to the default view (lat, lon, zoom). */}
+                    <Button {...buttonRecenter} />
+
+                    {/* Button to open the tile layer selector dialog. */}
+                    <Button {...buttonTileLayer} />
+
+                    {/* Button to toggle expanding the map to full screen. */}
+                    <Button {...buttonToggleExpand} />
+
+                    {/* Button to go back to the parent map area. */}
+                    {parentMapArea && (
+                        <Button {...navigateToParent} />
+                    )}
+
+                    {/* Button to go back to the main project page. */}
+                    <Button {...navigateToProject} />
+                </>
               )}
-              {mapArea.area_type === 'region' && (
-                <div className="region-view-toggle">
-                  <button
-                    className={`region-view-toggle-btn${regionViewMode === 'suburb' ? ' active' : ''}`}
-                    onClick={() => setRegionViewMode('suburb')}
-                  >
-                    Suburbs
-                  </button>
-                  <button
-                    className={`region-view-toggle-btn${regionViewMode === 'individual' ? ' active' : ''}`}
-                    onClick={() => setRegionViewMode('individual')}
-                  >
-                    Individual Maps
-                  </button>
-                </div>
-              )}
-              {mapArea.area_type === 'region' && regionViewMode === 'suburb' && (
-                <div className="suburb-filter-control">
-                  <span className="suburb-filter-label">Hide Empty Suburbs</span>
-                  <label className="suburb-filter-switch" title="Hide suburbs that have no child maps">
-                    <input
-                      type="checkbox"
-                      checked={hideEmptySuburbs}
-                      onChange={(e) => setHideEmptySuburbs(e.target.checked)}
-                      aria-label="Hide suburbs that have no child maps"
-                    />
-                    <span className="suburb-filter-slider" />
-                  </label>
-                </div>
-              )}
-              {mapArea.area_type === 'suburb' && (
-                <button
-                  className="btn btn-success"
-                  onClick={() => setMode('individual')}
-                  disabled={!boundary}
-                  title={!boundary ? 'Define a boundary for this suburb before adding individual maps' : 'Add an individual map to this suburb'}
-                >
-                  Add Individual Map
-                </button>
-              )}
-              <button
-                className="btn btn-primary"
-                onClick={() => setMode('boundary')}
-              >
-                {boundary ? 'Edit Boundary' : 'Define Boundary'}
-              </button>
-              <button
-                className="btn btn-secondary"
-                onClick={handleRecenterToDefault}
-                title="Recenter map to the default view"
-                disabled={!mapArea.default_center_lat && !project?.center_lat}
-              >
-                Recenter to Default
-              </button>
-              <button 
-                className="btn btn-icon" 
-                onClick={() => setIsMapExpanded(!isMapExpanded)}
-                title={isMapExpanded ? 'Collapse map view' : 'Expand map view'}
-                style={{ fontSize: '1.25rem' }}
-              >
-                {isMapExpanded ? '⊡' : '⛶'}
-              </button>
-              <button 
-                className="btn btn-info" 
-                onClick={() => setShowTileLayerSelector(!showTileLayerSelector)}
-                title="Change map style"
-              >
-                Map Style
-              </button>
-              <button 
-                className="btn btn-success" 
-                onClick={() => setShowExportDialog(true)}
-                disabled={isExporting}
-              >
-                {isExporting ? 'Exporting...' : 'Export PNG'}
-              </button>
-              {parentMapArea && (
-                <button
-                  className="btn btn-outline"
-                  onClick={() => navigate(`/projects/${projectId}/maps/${parentMapArea.id}`)}
-                  title={`Back to ${parentMapArea.name}`}
-                >
-                  Back to Parent
-                </button>
-              )}
-              <button
-                className="btn btn-outline"
-                onClick={() => navigate(`/projects/${projectId}`)}
-              >
-                Back to Project
-              </button>
-            </>
-          )}
-        </div>
+          </div>
       </div>
+
+
+
 
       <div className={`editor-content ${isMapExpanded ? 'editor-content-expanded' : ''}`}>
         {/* Sidebar for layer management */}
