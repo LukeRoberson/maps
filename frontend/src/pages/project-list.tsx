@@ -20,13 +20,13 @@ import Button from '../components/atoms/Button';
 
 // Organisms
 import Card from '../components/organisms/Card';
+import { CreateProjectModal } from '../components/organisms/CreateProjectModal';
+import { ProjectCard } from '@/components/organisms/ProjectCard';
 
 // Others
 import { useProjectList } from '../components/project/hooks';
-import { ProjectCard } from '../components/project/project-card';
-import { CreateProjectModal } from '../components/project/create-project-modal';
 
-import './project-list.css';
+import './project-list.css'
 
 
 /**
@@ -103,6 +103,7 @@ const ProjectList: React.FC = () => {
             alert('Project imported successfully!');
         } catch (error) {
             alert('Failed to import project. Please check the file and try again.');
+            console.error('Failed to import project:', error);
         } finally {
             // Clear the file input value to allow re-uploading the same file if needed
             if (fileInputRef.current) {
@@ -137,65 +138,73 @@ const ProjectList: React.FC = () => {
             setEditingName('');
         } catch (error) {
             alert('Failed to rename project. Please try again.');
+            console.error('Failed to rename project:', error);
+
         }
     };
 
 
     // While loading, show a loading indicator
     if (loading) {
-        return <div className="loading">Loading projects...</div>;
+        return <div className="loading">
+            Loading projects...
+        </div>;
     }
 
 
     // Main render
     return (
-        <div className="project-list-page">
+        /* Root element */
+        <div className="page-wrapper">
+            {/* The card/page container */}
+            <div className="card-wrapper">
 
-            {/* Page header with title and action buttons */}
-            <div className="flex justify-between items-center mb-8">
-                <Heading level={1} text="Current Projects" />
-                
-                <div className="flex gap-4 items-center">
-                    {/* Import Project Button */}
-                    <Button
-                        text={isImporting ? 'Importing...' : 'Import Project'}
-                        onClick={handleImportClick}
-                        disabled={isImporting}
-                        type="blue"
-                    />
 
-                    {/* New Project Button */}
-                    <Button
-                        text="+ New Project"
-                        onClick={() => setShowCreateModal(true)}
-                        type="green"
-                    />
+                {/* Page header with title and action buttons */}
+                <div className="page-header">
+                    <Heading level={1} text="Current Projects" />
+                    
+                    <div className="action-buttons">
+                        {/* Import Project Button */}
+                        <Button
+                            text={isImporting ? 'Importing...' : 'Import Project'}
+                            onClick={handleImportClick}
+                            disabled={isImporting}
+                            type="blue"
+                        />
+
+                        {/* New Project Button */}
+                        <Button
+                            text="+ New Project"
+                            onClick={() => setShowCreateModal(true)}
+                            type="green"
+                        />
+                    </div>
                 </div>
-            </div>
-            
-            {/*
-                File input for importing projects.
-                fileInputRef is the ref that selects this element.
-                The handleImportClick event handler makes this visible.
-                Calls handleFileChange when a file is chosen.
-            */}
-            <input
-                ref={fileInputRef}
-                type="file"
-                accept=".json"
-                style={{ display: 'none' }}
-                onChange={handleFileChange}
-            />
+                
+
+                {/*
+                    File input for importing projects.
+                    fileInputRef is the ref that selects this element.
+                    The handleImportClick event handler makes this visible.
+                    Calls handleFileChange when a file is chosen.
+                */}
+                <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".json"
+                    style={{ display: 'none' }}
+                    onChange={handleFileChange}
+                />
 
 
-            {/*
-                List of projects
-                    Displays each project in a card format with options to open, rename, or delete
-                    If no projects exist (length is zero), shows a message prompting the user to create their first project
-            */}
-            {projects.length === 0 ? (
-                /* Empty state when no projects exist */
-                <>
+                {/*
+                    List of projects
+                        Displays each project in a card format with options to open, rename, or delete
+                        If no projects exist (length is zero), shows a message prompting the user to create their first project
+                */}
+                {projects.length === 0 ? (
+                    /* Empty state when no projects exist */
                     <Card 
                         content={[{card: [{
                             kind: 'paragraph',
@@ -203,54 +212,55 @@ const ProjectList: React.FC = () => {
                             text: 'No projects yet. Create your first project to get started!'
                         }]}]}
                     />
-                </>
-            ) : (
-                /* A grid of project cards */
-                <div className="projects-grid">
-                    {/* Create a card for each project */}
-                    {projects.map((project) => (
-                        <ProjectCard
-                            key={project.id}
-                            project={project}
-                            isEditing={editingProjectId === project.id}
-                            editingName={editingName}
+                ) : (
+                    /* A grid of project cards */
+                    <div className="project-card">
+                        {/* Create a card for each project */}
+                        {projects.map((project) => (
+                            <ProjectCard
+                                key={project.id}
+                                project={project}
+                                isEditing={editingProjectId === project.id}
+                                editingName={editingName}
 
-                            // Handlers for renaming and deleting projects
-                            onStartRename={() => {
-                                setEditingProjectId(project.id!);
-                                setEditingName(project.name);
-                            }}
+                                // Handlers for renaming and deleting projects
+                                onStartRename={() => {
+                                    setEditingProjectId(project.id!);
+                                    setEditingName(project.name);
+                                }}
 
-                            // Cancel renaming
-                            onCancelRename={() => {
-                                setEditingProjectId(null);
-                                setEditingName('');
-                            }}
+                                // Cancel renaming
+                                onCancelRename={() => {
+                                    setEditingProjectId(null);
+                                    setEditingName('');
+                                }}
 
-                            // Submit rename
-                            onRename={() => handleRename(project.id!)}
+                                // Submit rename
+                                onRename={() => handleRename(project.id!)}
 
-                            // Delete project
-                            onDelete={() => deleteProject(project.id!)}
+                                // Delete project
+                                onDelete={() => deleteProject(project.id!)}
 
-                            // Update editing name state
-                            onEditingNameChange={setEditingName}
-                        />
-                    ))}
-                </div>
-            )}
+                                // Update editing name state
+                                onEditingNameChange={setEditingName}
+                            />
+                        ))}
+                    </div>
+                )}
 
-            {/*
-                Create Project Modal
-                Hidden by default, shown when showCreateModal is true
-            */}
-            {showCreateModal && (
-                // CreateProjectModal component with onClose and onCreate handlers
-                <CreateProjectModal
-                    onClose={() => setShowCreateModal(false)}
-                    onCreate={createProject}
-                />
-            )}
+                {/*
+                    Create Project Modal
+                    Hidden by default, shown when showCreateModal is true
+                */}
+                {showCreateModal && (
+                    // CreateProjectModal component with onClose and onCreate handlers
+                    <CreateProjectModal
+                        onClose={() => setShowCreateModal(false)}
+                        onCreate={createProject}
+                    />
+                )}
+
+            </div>
         </div>
     );
 };

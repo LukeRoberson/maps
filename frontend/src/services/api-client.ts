@@ -24,6 +24,7 @@ import type { MapArea, MapHierarchy } from '@/components/map/types';
 import type { Boundary } from '@/components/boundary/types';
 import type { Layer } from '@/components/layer/types';
 import type { Annotation } from '@/components/annotation/types';
+import type { CreateProjectInput } from '@/components/project/types';
 
 
 // The base URL for the API
@@ -86,7 +87,7 @@ class ApiClient {
    * @returns Requested Project object after creation.
    */
   async createProject(
-    project: Omit<Project, 'id' | 'created_at' | 'updated_at'>
+    project: CreateProjectInput
   ): Promise<Project> {
     // API call to create the project
     const response: AxiosResponse<Project> = await this.client.post(

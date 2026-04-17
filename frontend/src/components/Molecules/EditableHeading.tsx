@@ -6,6 +6,7 @@
  *  Will display a heading with an edit button when not editing, and an EditBox when editing.
  * 
  * @exports EditableHeading - The EditableHeading component itself.
+ * @exports EditHeadingProps - The props for the EditableHeading component.
  */
 
 
@@ -25,7 +26,7 @@ import type { ButtonProps } from '../atoms/Button';
  * @property {HeadingProps} heading - Props to pass to the Heading component when condition is false.
  * @property {ButtonProps} button - Props to pass to the Button component when condition is false.
  */
-type EditHeadingProps = {
+export type EditHeadingProps = {
     condition: boolean;
     editBox: EditBoxProps;
     heading: HeadingProps;

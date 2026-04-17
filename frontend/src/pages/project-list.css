@@ -1,172 +1,64 @@
 /*
-  project-list.css
-
-  Styles for the main project page.
+ * Card.css
+ *
+ * Styles for the Card component including layout, typography, and spacing.
 */
 
-/*
-  --------------------------
-    Project list container
-  --------------------------
-  Applied to the root div
-*/
-.project-list-page {
-  width: 100%;
-}
+@import "tailwindcss";
 
 
 /*
-  ---------------------
-    Loading container
-  ---------------------
-  Displayed while projects are being fetched
-*/
-.loading {
-  text-align: center;
-  padding: 3rem;
-  color: var(--text-secondary);
+ * Style for the 'loading' state of the ProjectList page.
+ */
+@utility loading {
+    @apply 
+        /* Layout styles */
+        p-8
+        mt-20
+
+        /* Text styles */
+        text-gray-900
+        text-center
+        text-xl
+    ;
 }
 
 
 /*
-  -------------------
-    Empty container
-  -------------------
-  Displayed when there are not projects to show
-*/
-.empty-state {
-  text-align: center;
-  padding: 3rem;
-  color: var(--text-secondary);
+ * Style for the header section of the ProjectList page.
+ */
+@utility page-header {
+    @apply 
+        /* Layout styles */
+        flex
+        items-center
+        justify-between
+        mb-8
+    ;
 }
 
 
 /*
-  ----------------------
-    Projects container
-  ----------------------
-  A list of project cards
-*/
-.projects-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 1.5rem;
-}
-
-/* Individual project card */
-.project-card {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-/* Hover effect for project cards */
-.project-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-}
-
-/* Project card header */
-.project-card-header h3 {
-  margin: 0;
-  color: var(--text-primary);
-  cursor: pointer;
-}
-
-/* Project description text */
-.project-description {
-  color: var(--text-secondary);
-  flex: 1;
-  margin: 0;
-}
-
-/* Project card footer */
-.project-card-footer {
-  display: flex;
-  gap: 0.5rem;
-  justify-content: flex-start;
+ * Style for the container of action buttons in the ProjectList page header.
+ */
+@utility action-buttons {
+    @apply 
+        /* Layout styles */
+        flex
+        gap-4
+        items-center
+    ;
 }
 
 
-/*
-  ------------------------
-    Rename project modal
-  ------------------------
-*/
-.rename-input {
-  width: 100%;
-  font-size: 1.25rem;
-  font-weight: 600;
-  padding: 0.25rem 0.5rem;
-  border: 2px solid var(--primary-color);
-  border-radius: var(--radius-md);
-  background-color: var(--bg-primary);
-}
-
-.rename-input:focus {
-  outline: none;
-  border-color: var(--primary-hover);
-}
-
-
-/*
-  ------------------------
-    Create project modal
-  ------------------------
-*/
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2000;
-}
-
-/* Modal content container */
-.modal-content {
-  width: 90%;
-  max-width: 500px;
-  max-height: 90vh;
-  overflow-y: auto;
-}
-
-/* Form group styling for each input */
-.form-group {
-  margin-bottom: 1rem;
-}
-
-/* Labels for form inputs */
-.form-group label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: 500;
-  color: var(--text-primary);
-}
-
-/* Inputs, textareas, and selects in form groups */
-.form-group input,
-.form-group textarea,
-.form-group select {
-  width: 100%;
-}
-
-/* Grid layout for form rows with two inputs side by side */
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-}
-
-/* Modal action buttons container */
-.modal-actions {
-  display: flex;
-  gap: 0.5rem;
-  justify-content: flex-end;
-  margin-top: 1.5rem;
+/**
+ * Style for the grid of project cards in the ProjectList page.
+ */
+@utility project-card {
+    @apply 
+        /* Layout styles */
+        grid
+        grid-cols-2
+        gap-4
+    ;
 }

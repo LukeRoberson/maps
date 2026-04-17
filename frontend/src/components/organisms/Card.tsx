@@ -8,22 +8,36 @@
  */
 
 
+// Atoms
 import Heading from '../atoms/Heading';
 import Paragraph from '../atoms/Paragraph';
 import StrongPair from '../atoms/StrongPair';
 import List from '../atoms/List';
+import Button from '../atoms/Button';
+
+// Molecules
+import EditableHeading from '../Molecules/EditableHeading';
+
+// Types
+import type { EditHeadingProps } from '../Molecules/EditableHeading';
+import type { ButtonProps } from '../atoms/Button';
+
 import './Card.css'
 
 
 /** 
  * Type definitions for the content structure of the Card component.
  * Defines the various types of content nodes that can be included in a card, such as headings, paragraphs, labeled text, and lists.
+ * Buttons are an array, so they can be used to create a row of buttons within the card.
  */
 type CardNode =
     | { kind: 'heading'; level: 1 | 2 | 3; text: string }
+    | { kind: 'editable-heading'; settings: EditHeadingProps }
     | { kind: 'paragraph'; align?: 'left' | 'center' | 'right'; large?: boolean; text: string }
     | { kind: 'labeled'; style?: 'default' | 'box' | 'emphasis'; label: string; text: string }
-    | { kind: 'list'; ordered?: boolean; items: string[] };
+    | { kind: 'list'; ordered?: boolean; items: string[] }
+    | { kind: 'button'; settings: ButtonProps[] }
+;
 
 
 /**
@@ -75,12 +89,28 @@ const Card: React.FC<CardContent> = ( config ) => {
                             switch (node.kind) {
                                 case 'heading':
                                     return <Heading key={nodeIndex} level={node.level} text={node.text} />
+                                
+                                case 'editable-heading':
+                                    return <EditableHeading key={nodeIndex} {...node.settings} />
+
                                 case 'paragraph':
                                     return <Paragraph key={nodeIndex} align={node.align} large={node.large} text={node.text} />
+
                                 case 'labeled':
                                     return <StrongPair key={nodeIndex} label={node.label} value={node.text} style={node.style} />
+
                                 case 'list':
                                     return <List key={nodeIndex} ordered={node.ordered} items={node.items} />
+
+                                case 'button':
+                                    return (
+                                        <div className="flex gap-4" key={nodeIndex}>
+                                            {node.settings.map((buttonSettings, buttonIndex) => (
+                                                <Button key={`${nodeIndex}-${buttonIndex}`} {...buttonSettings} />
+                                            ))}
+                                        </div>
+                                    )
+
                                 default:
                                     return null;
                             }

@@ -1,0 +1,17 @@
+/*
+ * Form.css
+ *
+ * Styles for the Form component including layout, typography, and spacing.
+*/
+
+@import "tailwindcss";
+
+
+@utility form-buttons {
+    @apply 
+        flex
+        justify-end
+        mt-6
+        space-x-4
+    ;
+}

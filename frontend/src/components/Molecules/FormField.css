@@ -1,0 +1,24 @@
+/*
+ * FormField.css
+ *
+ * Styles for the FormField component including layout, typography, and spacing.
+*/
+
+@import "tailwindcss";
+
+
+@utility form-group {
+    @apply 
+        mb-4
+    ;
+}
+
+
+@utility form-label {
+    @apply 
+        block
+        mb-4
+        font-medium
+        text-gray-700
+    ;
+}

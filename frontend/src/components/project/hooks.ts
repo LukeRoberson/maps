@@ -18,6 +18,7 @@ import { apiClient } from '@/services/api-client';
 // Types
 import type { Project, UseProjectListReturn, UseProjectViewReturn } from '@/components/project/types';
 import type { MapArea, RegionNode, SuburbNode } from '@/components/map/types';
+import type { CreateProjectInput } from '@/components/project/types';
 
 
 /**
@@ -74,7 +75,7 @@ export const useProjectList = (): UseProjectListReturn => {
      * @returns void
      */
     const createProject = useCallback(async (
-        projectData: Omit<Project, 'id'>
+        projectData: CreateProjectInput
     ): Promise<void> => {
         try {
             // Create project via API

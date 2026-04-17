@@ -1,0 +1,50 @@
+/*
+ * CreateProjectModal.css
+ *
+ * Styles for the CreateProjectModal component including layout, typography, and spacing.
+*/
+
+@import "tailwindcss";
+
+
+/**
+ * Utility class for the modal parent overlay.
+ * Styles the look behind the visible modal itself.
+ */
+@utility modal-parent {
+    @apply
+        flex
+
+        /* Position */
+        fixed
+        top-0 left-0 right-0 bottom-0       /* Full screen overlay */
+
+        /* Appearance */
+        bg-black/50                       /* Semi-transparent black background */
+
+        /* Child alignment (the modal itself) */
+        items-center
+        justify-center
+        z-1000                              /* Ensure it appears above other content */
+    ;
+}
+
+
+/**
+ * Utility class for the modal content container.
+ * Styles the visible modal itself including size, background, and padding.
+ */
+@utility modal-content {
+    @apply
+        /* Size */
+        w-11/12
+        max-h-[90vh]
+        max-w-125
+        
+        /* Appearance */
+        bg-white
+        rounded-lg
+        p-6
+        overflow-y-auto
+    ;
+}
