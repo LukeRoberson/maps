@@ -37,9 +37,12 @@ Not much needs to be included here, as this is implicit in the type itself.
 
 ```ts
 /**
- * @template <name> - <Description of the type>
+ * @template <name>
+ * @summary <Description of the type>
  * @remarks
  * Any additional comments needed to explain the type
+ * 
+ * @property {<type>} <name> - <Description>
  */
 ```
 </br></br>

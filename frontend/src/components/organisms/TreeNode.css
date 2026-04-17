@@ -1,0 +1,141 @@
+/*
+ * TreeNode.css
+ *
+ * Styles for the TreeNode component including layout, typography, and spacing.
+*/
+
+@import "tailwindcss";
+
+
+/*
+ * The base node style
+ */
+@utility node-box {
+    @apply mb-2;
+}
+
+
+/*
+ * Node styles
+ */
+@utility node-region {
+    @apply
+        /* Background */
+        bg-orange-200/50
+
+        /* Border */
+        border
+        border-orange-500
+        rounded-md
+    ;
+}
+
+@utility node-suburb {
+    @apply
+        /* Background */
+        bg-sky-100/50
+
+        /* Border */
+        border
+        border-sky-500
+        rounded-md
+        border-l-3
+    ;
+}
+
+@utility node-map {
+    @apply
+        /* Background */
+        bg-green-100/50
+
+        /* Border */
+        border
+        border-green-500
+        rounded-md
+        border-l-3
+    ;
+}
+
+
+/*
+ * Node content style
+ */
+@utility node-content {
+    @apply
+        flex
+        items-center    /* Align items vertically */
+        gap-2           /* The gap between the items, noticably the buttons */
+        m-1 mr-2        /* The gap between items and the border */
+    ;
+}
+
+
+/*
+ * Icon within the node content
+ */
+@utility node-icon {
+    @apply text-xl;
+}
+
+
+/*
+ * The input box for renaming a node
+ */
+@utility node-rename {
+    @apply
+        /* Positioning */
+        flex-1                      /* Input box takes up remaining space */
+        px-2 py-1
+        
+        /* Appearance */
+        bg-white
+
+        /* Border */
+        border 
+        border-gray-300
+        rounded-md
+        
+        /* Focus state */
+        focus:ring-1                /* Ring around the input when focused */
+        focus:ring-blue-700
+    ;
+}
+
+
+/*
+ * The node's label
+ */
+@utility node-label {
+    @apply
+        /* Positioning */
+        flex-1                      /* Label takes up remaining space */
+        
+        /* Appearance */
+        cursor-pointer              /* Cursor changes to pointer on hover */
+        text-gray-900
+        font-semibold
+    ;
+}
+
+
+/*
+ * Child count badge
+ */
+@utility node-child-badge {
+    @apply
+        /* Appearance */
+        bg-gray-200
+        text-gray-900
+        
+        /* border */
+        border
+        border-gray-500
+        rounded-sm
+
+        /* Typography */
+        text-sm
+
+        /* Spacing */
+        pt-1 pb-1 pl-2 pr-2
+    ;
+}

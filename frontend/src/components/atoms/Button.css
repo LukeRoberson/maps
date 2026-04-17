@@ -20,7 +20,6 @@
     justify-center
     px-4
     py-2
-    rounded-md
 
     /* Typography */
     font-medium
@@ -33,7 +32,7 @@
 
 
 /**
-  * Button variants
+  * Button Colour variants
   * These utilities define the specific styles for each button variant, including colors and hover states.
   */
 @utility blue-button {
@@ -104,5 +103,34 @@
 
     /* Size of the icon */
     text-xl
+  ;
+}
+
+
+/**
+  * Button Size variants
+  * These utilities define the specific styles for each button size, including padding and font size.
+  */
+@utility small-button {
+  @apply
+    /* Layout */
+    px-2
+    py-1
+    rounded-sm
+
+    /* Typography */
+    text-sm
+  ;
+}
+
+@utility regular-button {
+  @apply
+    /* Layout */
+    px-4
+    py-2
+    rounded-md
+
+    /* Typography */
+    text-base
   ;
 }

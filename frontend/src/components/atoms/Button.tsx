@@ -23,6 +23,7 @@ export type ButtonProps = {
     onClick: () => void;
     disabled?: boolean;
     type?: 'blue' | 'green' | 'red' | 'clear' | 'icon';
+    size?: 'small' | 'regular';
 };
 
 
@@ -42,6 +43,10 @@ const colorClass = {
     icon: 'icon-button',
 } as const;
 
+const sizeClass = {
+    small: 'small-button',
+    regular: 'regular-button',
+} as const;
 
 
 /**
@@ -50,11 +55,12 @@ const colorClass = {
  * @param onClick - The function to call when the button is clicked.
  * @param disabled - Optional boolean to disable the button.
  * @param type - Optional string to specify the button style (default is 'clear').
+ * @param size - Optional string to specify the button size (default is 'regular').
  * @returns JSX element representing the button.
  */
-const Button: React.FC<ButtonProps> = ({ text, onClick, disabled, type = 'clear' }) => {
+const Button: React.FC<ButtonProps> = ({ text, onClick, disabled, type = 'clear', size = 'regular' }) => {
     return (
-        <button className={`button ${colorClass[type]}`} onClick={onClick} disabled={disabled}>
+        <button className={`button ${colorClass[type]} ${sizeClass[size]}`} onClick={onClick} disabled={disabled}>
             {text}
         </button>
     );
