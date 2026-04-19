@@ -12,8 +12,8 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
 // Types
-import type { Project } from '@/components/project/types';
-import type { CardContent, CardBox } from '@/components/organisms/Card';
+import type { Project } from '@/hooks/useProjectView';
+import type { CardBox } from '@/components/organisms/Card';
 
 // Atoms
 import Button from '../atoms/Button';

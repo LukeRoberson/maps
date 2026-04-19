@@ -84,7 +84,15 @@ type TreeNodeProps = {
  * 
  * @returns {JSX.Element} The rendered tree node component.
  */
-const TreeNode: React.FC<TreeNodeProps> = ({ label, type, isExpanded, toggleExpand, childCount = 0, mapArea, treeData }) => {
+const TreeNode: React.FC<TreeNodeProps> = ({
+    label,
+    type,
+    isExpanded,
+    toggleExpand,
+    childCount = 0,
+    mapArea,
+    treeData 
+}) => {
     const navigate = useNavigate();
     const projectId = useParams().projectId ? useParams().projectId : '0';
     

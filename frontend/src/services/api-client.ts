@@ -19,12 +19,12 @@ import axios from 'axios';
 import { AxiosInstance, AxiosResponse } from 'axios';
 
 // Internal dependencies
-import type { Project } from '@/components/project/types';
+import type { Project } from '@/hooks/useProjectView';
 import type { MapArea, MapHierarchy } from '@/components/map/types';
 import type { Boundary } from '@/components/boundary/types';
 import type { Layer } from '@/components/layer/types';
 import type { Annotation } from '@/components/annotation/types';
-import type { CreateProjectInput } from '@/components/project/types';
+import type { CreateProjectInput } from '@/hooks/useProjectList';
 
 
 // The base URL for the API

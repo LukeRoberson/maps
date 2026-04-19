@@ -17,7 +17,7 @@ import { apiClient } from '@/services/api-client';
 import Form from './Form';
 
 // Types
-import type { CreateProjectInput } from '@/components/project/types';
+import type { CreateProjectInput } from '@/hooks/useProjectList';
 
 import './CreateProjectModal.css';
 

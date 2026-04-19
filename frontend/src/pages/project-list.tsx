@@ -5,7 +5,7 @@
  * Provides a list of user projects with options to create, rename, delete, and import projects.
  * 
  * @remarks
- * Supporting types and components are in the ../components/project/ directory.
+ * Uses the useProjectList hook to manage project state and operations.
  * 
  * @exports ProjectList
  */
@@ -23,8 +23,8 @@ import Card from '../components/organisms/Card';
 import { CreateProjectModal } from '../components/organisms/CreateProjectModal';
 import { ProjectCard } from '@/components/organisms/ProjectCard';
 
-// Others
-import { useProjectList } from '../components/project/hooks';
+// Hooks
+import { useProjectList } from '../hooks/useProjectList';
 
 import './project-list.css'
 
@@ -49,7 +49,7 @@ const ProjectList: React.FC = () => {
         importProject,
     } = useProjectList();
 
-    // Local state for modal visibility and editing
+    // State for modal visibility and editing
     const [showCreateModal, setShowCreateModal] = useState(false);
 
     // State for tracking which project is being renamed

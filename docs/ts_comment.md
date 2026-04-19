@@ -53,13 +53,13 @@ Not much needs to be included here, as this is implicit in the type itself.
 ```ts
 /**
  * @function <Function Name>
- * @summary Handles form submission to create a new project.
+ * @summary <brief outline>
  * @remarks
- * Any additional comments required to explain the function
+ * <Any additional comments required to explain the function>
  * 
  * @param {<Parameter>} - <Description of the parameter>
  * 
- * @returns {<Return>} - A description of the return
+ * @returns {<Return>} - <A description of the return>
  */
 ```
 </br></br>

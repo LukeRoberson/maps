@@ -21,7 +21,7 @@ import Card from '../components/organisms/Card';
 import TreeNode from '@/components/organisms/TreeNode';
 
 // Hooks
-import { useProjectView } from '@/components/project/hooks';
+import { useProjectView } from '@/hooks/useProjectView';
 
 import './project-view.css';
 
@@ -51,8 +51,7 @@ const ProjectView: React.FC = () => {
         editingMapId,
         editingName,
         handleCreateRegion,
-        toggleRegion,
-        toggleSuburb,
+        toggleNodeExpansion,
         startRenaming,
         cancelRenaming,
         handleRename,
@@ -160,7 +159,7 @@ const ProjectView: React.FC = () => {
                                 label={regionNode.region.name}
                                 type="region"
                                 isExpanded={expandedRegions.has(regionNode.region.id!)}
-                                toggleExpand={() => toggleRegion(regionNode.region.id!)}
+                                toggleExpand={() => toggleNodeExpansion(regionNode.region.id!, 'region')}
                                 childCount={regionNode.suburbs.length}
                                 mapArea={regionNode.region}
                                 treeData={treeData}
@@ -174,7 +173,7 @@ const ProjectView: React.FC = () => {
                                         label={suburbNode.suburb.name}
                                         type="suburb"
                                         isExpanded={expandedSuburbs.has(suburbNode.suburb.id!)}
-                                        toggleExpand={() => toggleSuburb(suburbNode.suburb.id!)}
+                                        toggleExpand={() => toggleNodeExpansion(suburbNode.suburb.id!, 'suburb')}
                                         childCount={suburbNode.individuals.length}
                                         mapArea={suburbNode.suburb}
                                         treeData={treeData}

@@ -37,7 +37,7 @@ import { isWithinBoundary } from '@/utils/geometry';
 import { DrawControls } from '@/components/draw/draw-controls';
 
 // Types
-import type { Project } from '@/components/project/types';
+import type { Project } from '@/hooks/useProjectView';
 import type { MapArea } from '@/components/map/types';
 import type { Boundary, BoundaryFadeOverlayProps } from '@/components/boundary/types';
 import type { Layer } from '@/components/layer/types';
