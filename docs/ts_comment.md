@@ -19,8 +19,6 @@ This goes at the top of each TS file.
  * @remarks
  * Any additional comments about the file
  * 
- * @imports <Imports>
- * 
  * @exports <Exports>
  */
 ```

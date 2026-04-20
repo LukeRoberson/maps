@@ -1,0 +1,140 @@
+/*
+ * ToastNotification.css
+ *
+ * Styles for the ToastNotification component including layout, typography, and spacing.
+*/
+
+@import "tailwindcss";
+
+
+/*
+ * Theme for the toast notification appearance and animations
+ */
+@theme {
+    --animate-slide-in: slideIn 0.5s ease-out;
+    --animate-fade-out: fadeOut 0.5s ease-in 3.5s forwards;
+
+    /* Animation to slide in from the right */
+    @keyframes slideIn {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    /* Animation to fade out */
+    @keyframes fadeOut {
+        from {
+            opacity: 1;
+        }
+        to {
+            opacity: 0;
+        }
+    }
+}
+
+
+/*
+ * Main toast container
+ */
+@utility toast-container {
+    @apply
+        flex
+        flex-col
+        
+        /* Positioning */
+        fixed               /* Fixed to the top right of the screen */
+        top-4
+        right-4
+        
+        /* Layout */
+        z-1000
+        gap-2
+        max-w-md
+    ;
+}
+
+
+/*
+ * Individual toast content styling
+ */
+@utility toast-panel {
+    @apply
+        flex
+
+        /* Border */
+        rounded-md
+        border-l-4
+
+        /* Positioning and spacing */
+        p-4
+        items-center
+        gap-4
+        justify-between
+
+        /* Appearance */
+        bg-white
+        shadow-md
+        cursor-pointer
+        
+        /* Animations */
+        animate-slide-in
+        animate-fade-out
+        transition-all
+        duration-300
+    ;
+}
+
+
+/*
+ * Styles for each type of toast notification
+ */
+@utility success {
+    @apply border-l-black;
+}
+
+@utility error {
+    @apply border-l-red-500;
+}
+
+@utility warning {
+    @apply border-l-yellow-500;
+}
+
+@utility info {
+    @apply border-l-green-500;
+}
+
+
+/*
+ * Text and icon styling within the toast
+ */
+@utility toast-content {
+    @apply
+        flex
+        flex-1
+        
+        items-center
+        gap-3
+    ;
+}
+
+@utility toast-icon {
+    @apply
+        text-xl
+        font-bold
+        shrink-0
+    ;
+}
+
+@utility toast-message {
+    @apply
+        text-black
+        text-base
+        leading-snug
+    ;
+}
